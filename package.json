@@ -1,0 +1,39 @@
+{
+  "name": "panel-de-ventas",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/shared/calculo/*.test.ts",
+    "portar-css": "python3 scripts/portar-css.py",
+    "instalar": "node --env-file=.env.local --conditions=react-server --import tsx scripts/instalar.mjs",
+    "usuario": "node --env-file=.env.local --conditions=react-server --import tsx scripts/usuario.mjs",
+    "semilla": "node --env-file=.env.local --conditions=react-server --import tsx scripts/semilla.mjs",
+    "verificar": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verificar.mjs",
+    "sin-cliente": "python3 scripts/sin-cliente.py"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.6.0",
+    "@supabase/supabase-js": "^2.49.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "eslint": "^9.0.0",
+    "eslint-config-next": "^16.0.0",
+    "pg": "^8.23.0",
+    "@types/pg": "^8.23.1",
+    "tsx": "^4.23.12",
+    "typescript": "^5.7.0"
+  }
+}

@@ -1,0 +1,865 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LP · Panel de Ventas — PAPEL v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   Panel de Ventas · LP The CEO
+   PAPEL v1 — la identidad es del CLIENTE. Claro por defecto,
+   superficies solidas, el acento es el hex de su marca.
+
+   🔴 Toda regla responsive esta DOS veces: como @media real y
+   como body[data-view="mobile"] (la simulacion de la demo).
+   El script de porteo se queda con la primera y tira la segunda.
+   ============================================================ */
+:root{
+  --marca:#00D97E;
+  --m1:#E4F6EC; --m3:#8ADCB6; --m4:#3FC48C; --m5:#0A9E63; --m6:#04804E; --m7:#025C38;
+  --ambar:#D89A00; --ambar-bg:#FEF6E0; --ambar-ink:#7A5600;
+  --azul:#2C82C9;  --azul-bg:#EAF6FF;
+  --rojo:#C0453C;  --rojo-bg:#FBECEA;
+  --bg:#F5F9F6; --card:#FFFFFF; --border:#E7EFEA; --line:#EEF4F0;
+  --ink:#0D1A13; --muted:#64786C; --faint:#92A69A;
+  --shadow:0 1px 2px rgba(13,26,19,.03), 0 8px 24px rgba(13,26,19,.025);
+  --glow:0 2px 8px rgba(4,128,78,.26);
+  --r-card:18px; --r-tile:13px; --r-inner:11px; --r-nav:10px; --r-ctl:9px; --r-pill:999px;
+  --display:"Plus Jakarta Sans","Avenir Next",system-ui,sans-serif;
+  --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  --sobre-marca:#FFFFFF;
+}
+:root[data-theme="dark"]{
+  --m1:#0B2A1E; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
+  --ambar:#E8B84B; --ambar-bg:#2E2510; --ambar-ink:#F0CC72;
+  --azul:#5AA9E6;  --azul-bg:#0F2231;
+  --rojo:#E07A70;  --rojo-bg:#2E1614;
+  --bg:#060D0A; --card:#0E1713; --border:#1C2A24; --line:#17231E;
+  --ink:#E9F1EC; --muted:#93A89E; --faint:#6A7D74;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+  --glow:0 2px 10px rgba(47,224,154,.20);
+  --sobre-marca:#04231A;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --m1:#0B2A1E; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
+    --ambar:#E8B84B; --ambar-bg:#2E2510; --ambar-ink:#F0CC72; --azul:#5AA9E6; --azul-bg:#0F2231;
+    --rojo:#E07A70; --rojo-bg:#2E1614;
+    --bg:#060D0A; --card:#0E1713; --border:#1C2A24; --line:#17231E;
+    --ink:#E9F1EC; --muted:#93A89E; --faint:#6A7D74;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+    --glow:0 2px 10px rgba(47,224,154,.20);
+    --sobre-marca:#04231A;
+  }
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;
+  -webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--m5);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+[hidden]{display:none!important}
+
+/* ---------- andamiaje de la demo (NO se porta) ---------- */
+.demo-bar{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:9px 16px;background:#0D1A13;color:#E9F1EC;font-size:12.5px}
+.demo-bar b{font-family:var(--display);font-weight:800;letter-spacing:-.2px}
+.demo-bar .sep{opacity:.3}
+.demo-bar .seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.08);padding:3px;border-radius:9px}
+.demo-bar .seg button{background:none;border:0;color:rgba(233,241,236,.66);padding:5px 11px;
+  border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--body)}
+.demo-bar .seg button[aria-pressed="true"]{background:#00D97E;color:#04231A}
+.demo-note{margin-left:auto;opacity:.55;font-size:11.5px}
+.ghl{padding:22px 16px 60px;display:flex;justify-content:center}
+.ghl-frame{width:100%;max-width:1320px;border:1px solid var(--border);border-radius:14px;
+  overflow:hidden;background:var(--bg);box-shadow:0 30px 70px -35px rgba(0,0,0,.35)}
+body[data-view="mobile"] .ghl-frame{max-width:412px}
+.sc{display:none}
+.sc.on{display:block}
+
+/* ---------- topbar ---------- */
+.topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--card);
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-tile{width:32px;height:32px;border-radius:var(--r-tile);background:var(--m6);
+  color:var(--sobre-marca);display:grid;place-items:center;font-family:var(--display);
+  font-weight:800;font-size:13px;letter-spacing:-.4px}
+.brand-txt strong{display:block;font-family:var(--display);font-weight:800;font-size:14px;
+  letter-spacing:-.3px;line-height:1.2}
+.brand-txt span{font-size:11px;color:var(--faint)}
+.nav{display:flex;gap:4px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;
+  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);
+  mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
+@media (min-width:940px){.nav{-webkit-mask-image:none;mask-image:none}}
+.nav::-webkit-scrollbar{display:none}
+.nav button{background:none;border:0;padding:7px 13px;border-radius:var(--r-nav);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.nav button:hover{background:var(--m1);color:var(--m6)}
+.nav button[aria-current="page"]{background:var(--m6);color:var(--sobre-marca);box-shadow:var(--glow)}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
+.icon-btn{width:32px;height:32px;border-radius:var(--r-ctl);border:1px solid var(--border);
+  background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.icon-btn:hover{border-color:var(--m4);color:var(--m6)}
+.btn-primary{border:0;background:var(--m6);color:var(--sobre-marca);padding:8px 15px;
+  border-radius:var(--r-ctl);font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--glow);
+  white-space:nowrap}
+.btn-ghost{border:1px solid var(--border);background:var(--card);color:var(--muted);
+  padding:8px 15px;border-radius:var(--r-ctl);font-size:13px;font-weight:600;cursor:pointer}
+.btn-ghost:hover{border-color:var(--m4);color:var(--m6)}
+.btn-sm{padding:6px 11px;font-size:12px}
+.quien{display:flex;align-items:center;gap:8px;padding-left:10px;border-left:1px solid var(--line)}
+.quien .av{width:28px;height:28px;border-radius:50%;background:var(--m1);color:var(--m7);
+  display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:11.5px}
+.quien .qn{font-size:12px;font-weight:600;line-height:1.2}
+.quien .qn small{display:block;font-size:10.5px;color:var(--faint);font-weight:400}
+
+/* ---------- contenido ---------- */
+.wrap{padding:18px 18px 34px;max-width:1320px;margin:0 auto}
+.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;margin-bottom:12px}
+.page-head h1{font-family:var(--display);font-weight:800;font-size:23px;letter-spacing:-.5px;line-height:1.2}
+.page-head .sub{font-size:13px;color:var(--faint);margin-top:2px}
+.head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.modo{display:inline-flex;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-ctl);padding:3px;gap:2px;flex-shrink:0}
+.modo button{background:none;border:0;padding:6px 14px;border-radius:6px;font-size:12px;
+  font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body)}
+.modo button[aria-pressed="true"]{background:var(--m6);color:var(--sobre-marca)}
+
+/* banda que dice QUE ES la pantalla */
+.what{display:flex;align-items:center;gap:10px;border-radius:var(--r-inner);padding:10px 14px;
+  margin-bottom:14px;font-size:12.5px}
+.what.read{background:var(--bg);border:1px dashed var(--border);color:var(--muted)}
+.what.write{background:var(--m1);color:var(--m7)}
+.what b{font-weight:700}
+.what svg{flex-shrink:0}
+.what .badge-w{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;
+  padding:3px 8px;border-radius:var(--r-pill);white-space:nowrap;flex-shrink:0;margin-left:auto}
+.what.read .badge-w{background:var(--card);color:var(--faint);border:1px solid var(--border)}
+.what.write .badge-w{background:var(--m6);color:var(--sobre-marca)}
+
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
+  padding:16px 17px;box-shadow:var(--shadow)}
+.card-head{margin-bottom:12px;display:flex;justify-content:space-between;gap:12px;
+  align-items:flex-start;flex-wrap:wrap}
+.card-head h3{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.card-head h3.h3i{display:flex;align-items:center;gap:8px}
+.card-head h3.h3i svg{color:var(--m6);flex-shrink:0}
+.m-lbl svg{color:currentColor;flex-shrink:0}
+.card-head p{font-size:11.5px;color:var(--faint);margin-top:1px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.note{background:var(--m1);border-radius:var(--r-inner);padding:12px 14px;font-size:12.5px;
+  color:var(--m7);margin-top:12px;display:flex;gap:9px;align-items:flex-start;line-height:1.5}
+.note.warn{background:var(--ambar-bg);color:var(--ambar-ink)}
+.note svg{flex-shrink:0;margin-top:2px}
+.chip{background:var(--m1);color:var(--m7);border-radius:var(--r-pill);padding:4px 11px;
+  font-size:11px;font-weight:700;display:inline-block}
+.chip.n{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
+.chip.bad{background:var(--rojo-bg);color:var(--rojo)}
+.bar{display:block;height:7px;border-radius:var(--r-pill);background:var(--line);overflow:hidden;margin-top:7px}
+.bar i{display:block;height:100%;border-radius:var(--r-pill);background:linear-gradient(90deg,var(--m4),var(--m6))}
+
+/* ---------- dinero ---------- */
+.money{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin-bottom:14px}
+.mc{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
+  padding:16px 17px;box-shadow:var(--shadow)}
+.mc.hero{border-color:var(--m4);background:var(--m1)}
+.mc .m-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--muted);display:flex;align-items:center;gap:7px}
+.mc.hero .m-lbl{color:var(--m7)}
+.mc .m-val{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-1.2px;
+  line-height:1.1;margin-top:6px}
+.mc.hero .m-val{font-size:40px;color:var(--m7)}
+.mc .m-ctx{font-size:12px;color:var(--faint);margin-top:5px}
+.mc .m-ctx b{font-weight:600;color:var(--muted)}
+.mc.hero .m-ctx{color:var(--m7);opacity:.85}
+.mc.hero .m-ctx b{color:var(--m7)}
+
+/* ---------- KPIs ---------- */
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
+  padding:15px 16px;box-shadow:var(--shadow)}
+.tile{width:32px;height:32px;border-radius:var(--r-tile);background:var(--m1);color:var(--m6);
+  display:grid;place-items:center;margin-bottom:10px}
+.kpi-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.kpi-val{font-family:var(--display);font-weight:800;font-size:29px;letter-spacing:-1px;
+  line-height:1.1;margin-top:2px}
+.kpi-ctx{font-size:11.5px;color:var(--faint);margin-top:4px}
+.kpi-ctx b{font-weight:600;color:var(--muted)}
+.delta{font-size:11.5px;font-weight:700;margin-top:8px;display:inline-block}
+.down{color:var(--rojo)} .up{color:var(--m6)} .nil{color:var(--faint)}
+
+/* ---------- totales derivados ---------- */
+.derived{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.dv{background:var(--card);border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
+.dv span{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--faint)}
+.dv b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px;
+  display:block;margin-top:2px}
+
+/* ---------- embudo ---------- */
+.fn{display:flex;flex-direction:column;gap:11px}
+.fnr{display:grid;grid-template-columns:104px 1fr 118px;align-items:center;gap:12px}
+.fnr .fn-n{font-size:12.5px;font-weight:600;color:var(--muted)}
+.fn-track{display:block;height:30px;border-radius:var(--r-inner);background:var(--line);overflow:hidden}
+.fn-track i{font-style:normal;display:flex;align-items:center;height:100%;border-radius:var(--r-inner);
+  background:linear-gradient(90deg,var(--m4),var(--m6));color:var(--sobre-marca);
+  font-family:var(--display);font-weight:800;font-size:12.5px;padding:0 11px;min-width:62px}
+.fnr .fn-cv{text-align:right;font-size:11.5px;color:var(--faint);white-space:nowrap}
+.fnr .fn-cv b{color:var(--m6);font-weight:700}
+
+/* ---------- grafico de dias ---------- */
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:9px;align-items:end;height:132px;margin-top:6px}
+.day{display:flex;flex-direction:column;justify-content:flex-end;gap:7px;height:100%}
+.day i{display:block;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,var(--m4),var(--m6))}
+.day.hl i{background:linear-gradient(180deg,var(--m5),var(--m7))}
+.day small{font-size:10.5px;color:var(--faint);text-align:center;font-weight:600}
+.day em{font-size:10px;color:var(--faint);text-align:center;font-style:normal}
+
+/* ---------- ranking ---------- */
+.lb{display:flex;flex-direction:column}
+.lbrow{display:grid;grid-template-columns:20px auto 1fr auto;align-items:center;gap:11px;
+  padding:11px 0;border-bottom:1px solid var(--line)}
+.lbrow:last-child{border-bottom:0}
+.rk{font-family:var(--display);font-weight:800;font-size:12px;color:var(--faint);text-align:center}
+.rk.g1{color:var(--m6)}
+.av2{display:grid;width:32px;height:32px;border-radius:50%;background:var(--m1);color:var(--m7);display:grid;
+  place-items:center;font-family:var(--display);font-weight:800;font-size:11.5px}
+.lbn{min-width:0}
+.lbn strong{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.lbn small{display:block;font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbv{text-align:right;min-width:96px}
+.lbv b{font-family:var(--display);font-weight:800;font-size:15.5px;letter-spacing:-.4px}
+.lbv .bar{width:88px;margin-left:auto}
+
+/* ---------- formularios ---------- */
+.formcard{max-width:760px}
+.section-title{font-family:var(--display);font-weight:800;font-size:12px;
+  text-transform:uppercase;color:var(--faint);margin:18px 0 10px;letter-spacing:.8px}
+.section-title:first-child{margin-top:0}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field.full{grid-column:1/-1}
+.field label{font-size:11.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;
+  gap:6px;flex-wrap:wrap}
+.field label .req{color:var(--m6);font-weight:800}
+.field .hint{font-size:11px;color:var(--faint);font-weight:400;line-height:1.45}
+.field input,.field select{background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-ctl);padding:9px 11px;font-size:13.5px;font-family:var(--body);width:100%}
+.field input:focus,.field select:focus{border-color:var(--m5);outline:none}
+.step{display:grid;grid-template-columns:38px 1fr 38px;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-ctl);overflow:hidden}
+.step button{border:0;background:none;color:var(--muted);font-size:17px;cursor:pointer;height:37px;
+  font-family:var(--body)}
+.step button:hover{background:var(--m1);color:var(--m6)}
+.step input{border:0!important;background:none!important;text-align:center;
+  font-family:var(--display);font-weight:800;font-size:16px;padding:0!important}
+.money-inp{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);
+  border-radius:var(--r-ctl);overflow:hidden}
+.money-inp .cur{padding:0 2px 0 11px;font-family:var(--display);font-weight:800;font-size:14px;color:var(--faint)}
+.money-inp input{border:0!important;background:none!important;font-family:var(--display);
+  font-weight:800;font-size:16px;padding:9px 11px 9px 4px!important}
+.money-inp:focus-within{border-color:var(--m5)}
+.money-inp.hero{border-color:var(--m4);background:var(--m1)}
+.money-inp.hero input,.money-inp.hero .cur{color:var(--m7)}
+.calc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;padding-top:16px;
+  border-top:1px solid var(--line)}
+.calc.c2{grid-template-columns:repeat(2,1fr)}
+.form-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;align-items:center}
+.form-actions .helper{margin-right:auto;font-size:11.5px;color:var(--faint)}
+
+/* ---------- equipo ---------- */
+.entry{border:1px solid var(--border);border-radius:var(--r-inner);background:var(--bg);
+  padding:11px 13px;margin-bottom:9px;display:grid;
+  grid-template-columns:auto 1fr auto auto auto;gap:11px;align-items:center}
+.entry.off{opacity:.6}
+.entry .en{min-width:0}
+.entry .en strong{display:block;font-size:13.5px;font-weight:600}
+.entry .en small{display:block;font-size:11px;color:var(--faint)}
+.entry .del{border:1px solid var(--border);background:var(--card);color:var(--faint);
+  border-radius:var(--r-ctl);width:33px;height:33px;cursor:pointer;display:grid;place-items:center}
+.entry .del:hover{border-color:var(--rojo);color:var(--rojo)}
+.pill{border-radius:var(--r-pill);padding:3px 9px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.pill.set{background:var(--azul-bg);color:var(--azul)}
+.pill.clo{background:var(--m1);color:var(--m7)}
+.pill.amb{background:var(--ambar-bg);color:var(--ambar-ink)}
+.pill.no{background:var(--bg);color:var(--faint);border:1px solid var(--border)}
+.addrow{display:grid;grid-template-columns:1.6fr .9fr auto;gap:9px;align-items:end;margin-top:14px;
+  padding-top:14px;border-top:1px solid var(--border)}
+
+/* ---------- ajustes ---------- */
+.cfgrow{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--line)}
+.cfgrow:last-child{border-bottom:0}
+.cfg-n{font-weight:600;font-size:13.5px}
+.cfg-src{font-size:11px;color:var(--faint);margin-top:2px;line-height:1.45}
+.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--muted)}
+.sw input[type=checkbox]{appearance:none;width:36px!important;height:20px;flex:0 0 36px;
+  border-radius:var(--r-pill);background:var(--border);position:relative;cursor:pointer;
+  flex-shrink:0;transition:background .15s;padding:0!important;border:0!important}
+.sw input[type=checkbox]:checked{background:var(--m6)}
+.sw input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
+  border-radius:50%;background:var(--card);transition:transform .15s}
+.sw input[type=checkbox]:checked::after{transform:translateX(16px)}
+
+/* ---------- vacio ---------- */
+.empty{text-align:center;padding:34px 20px}
+.empty .tile{margin:0 auto 12px}
+.empty h3{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.3px}
+.empty p{font-size:12.5px;color:var(--faint);margin-top:5px;max-width:44ch;margin-left:auto;margin-right:auto}
+.empty .btn-primary{margin-top:14px}
+.vacio .kpi-val,.vacio .m-val,.vacio .dv b{color:var(--faint)}
+
+/* ============ RESPONSIVE — cada regla, dos veces ============ */
+@media (max-width:1000px){
+  .money{grid-template-columns:1fr}
+  .kpis{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+}
+body[data-view="mobile"] .money{grid-template-columns:1fr}
+body[data-view="mobile"] .kpis{grid-template-columns:1fr}
+body[data-view="mobile"] .grid2{grid-template-columns:1fr}
+
+@media (max-width:600px){
+  .topbar{padding:9px 12px;gap:9px;row-gap:9px}
+  .brand-txt span{display:none}
+  .nav{order:3;width:100%;flex:0 0 100%;border-top:1px solid var(--line);padding-top:8px}
+  .quien .qn{display:none}
+  .wrap{padding:14px 12px 30px}
+  .page-head h1{font-size:19px}
+  .derived{grid-template-columns:1fr 1fr;gap:9px}
+  .kpi{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:13px}
+  .kpi .tile{margin-bottom:0}
+  .kpi-val{font-size:24px;text-align:right}
+  .kpi .kdx{text-align:right}
+  .mc .m-val{font-size:28px}
+  .mc.hero .m-val{font-size:33px}
+  .fnr{grid-template-columns:78px 1fr}
+  .fnr .fn-cv{display:none}
+  .form-grid{grid-template-columns:1fr}
+  .calc,.calc.c2{grid-template-columns:1fr 1fr}
+  .days{gap:5px;height:112px}
+  .day em{display:none}
+  .lbv{min-width:78px}
+  .lbv .bar{display:none}
+  .entry{grid-template-columns:auto 1fr auto;row-gap:8px}
+  .entry .pill.est{grid-column:2/3;justify-self:start}
+  .entry .del{grid-row:1;grid-column:3}
+  .addrow{grid-template-columns:1fr}
+  .cfgrow{grid-template-columns:1fr;gap:7px}
+  .form-actions .helper{margin-right:0;width:100%;order:3}
+  .what{flex-wrap:wrap}
+  .what .badge-w{margin-left:0;order:3}
+  .form-actions .btn-primary{width:100%}
+}
+body[data-view="mobile"] .topbar{padding:9px 12px;gap:9px;row-gap:9px}
+body[data-view="mobile"] .brand-txt span{display:none}
+body[data-view="mobile"] .nav{order:3;width:100%;flex:0 0 100%;border-top:1px solid var(--line);padding-top:8px}
+body[data-view="mobile"] .quien .qn{display:none}
+body[data-view="mobile"] .wrap{padding:14px 12px 30px}
+body[data-view="mobile"] .page-head h1{font-size:19px}
+body[data-view="mobile"] .derived{grid-template-columns:1fr 1fr;gap:9px}
+body[data-view="mobile"] .kpi{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:13px}
+body[data-view="mobile"] .kpi .tile{margin-bottom:0}
+body[data-view="mobile"] .kpi-val{font-size:24px;text-align:right}
+body[data-view="mobile"] .kpi .kdx{text-align:right}
+body[data-view="mobile"] .mc .m-val{font-size:28px}
+body[data-view="mobile"] .mc.hero .m-val{font-size:33px}
+body[data-view="mobile"] .fnr{grid-template-columns:78px 1fr}
+body[data-view="mobile"] .fnr .fn-cv{display:none}
+body[data-view="mobile"] .form-grid{grid-template-columns:1fr}
+body[data-view="mobile"] .calc,body[data-view="mobile"] .calc.c2{grid-template-columns:1fr 1fr}
+body[data-view="mobile"] .days{gap:5px;height:112px}
+body[data-view="mobile"] .day em{display:none}
+body[data-view="mobile"] .lbv{min-width:78px}
+body[data-view="mobile"] .lbv .bar{display:none}
+body[data-view="mobile"] .entry{grid-template-columns:auto 1fr auto;row-gap:8px}
+body[data-view="mobile"] .entry .pill.est{grid-column:2/3;justify-self:start}
+body[data-view="mobile"] .entry .del{grid-row:1;grid-column:3}
+body[data-view="mobile"] .addrow{grid-template-columns:1fr}
+body[data-view="mobile"] .cfgrow{grid-template-columns:1fr;gap:7px}
+body[data-view="mobile"] .form-actions .helper{margin-right:0;width:100%;order:3}
+body[data-view="mobile"] .what{flex-wrap:wrap}
+body[data-view="mobile"] .what .badge-w{margin-left:0;order:3}
+body[data-view="mobile"] .form-actions .btn-primary{width:100%}
+</style>
+
+<div class="demo-bar">
+  <b>Panel de Ventas · LP The CEO</b> <span class="sep">·</span> <span>PAPEL v1 — mockup con datos de ejemplo</span>
+  <div class="seg" role="group" aria-label="Vista">
+    <button data-v="pc" aria-pressed="true">💻 Escritorio</button>
+    <button data-v="mobile" aria-pressed="false">📱 Celular</button>
+  </div>
+  <div class="seg" role="group" aria-label="Tema">
+    <button data-t="light" aria-pressed="true">☀️ Claro</button>
+    <button data-t="dark" aria-pressed="false">🌙 Oscuro</button>
+  </div>
+  <div class="seg" role="group" aria-label="Estado">
+    <button data-e="datos" aria-pressed="true">Con datos</button>
+    <button data-e="vacio" aria-pressed="false">Recién instalado</button>
+  </div>
+  <span class="demo-note">Toda la data sale de los reportes de fin de día.</span>
+</div>
+
+<div class="ghl"><div class="ghl-frame">
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-tile">LP</span>
+      <span class="brand-txt"><strong>LP Ventas</strong><span>Panel de métricas</span></span>
+    </div>
+    <nav class="nav">
+      <button data-nav="panel" aria-current="page">Panel</button>
+      <button data-nav="setter">Reporte Setter</button>
+      <button data-nav="closer">Reporte Closer</button>
+      <button data-nav="equipo">Equipo</button>
+      <button data-nav="ajustes">Ajustes</button>
+    </nav>
+    <div class="topbar-right">
+      <button class="icon-btn" title="Cambiar tema" data-tema aria-label="Cambiar tema"></button>
+      <div class="quien">
+        <span class="av">LP</span>
+        <span class="qn">Leandro P.<small>Dueño</small></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+  <!-- ==================== PANEL ==================== -->
+  <section class="sc on" data-s="panel">
+    <div class="page-head">
+      <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
+      <div class="head-actions">
+        <div class="modo" role="group" aria-label="Período">
+          <button aria-pressed="false">Día</button>
+          <button aria-pressed="true">Semana</button>
+          <button aria-pressed="false">Mes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="what read">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+      <span>Todo lo que ves acá <b>se calcula</b> a partir de los reportes de fin de día del equipo. Ningún número se teclea dos veces.</span>
+      <span class="badge-w">Solo lectura</span>
+    </div>
+
+    <div class="money">
+      <div class="mc hero">
+        <div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg> Cash collected</div>
+        <div class="m-val num">$41,400</div>
+        <div class="m-ctx num">Cobrado de <b>$69,000</b> vendidos · <b>60%</b> de cobro</div>
+        <div class="bar"><i style="width:60%"></i></div>
+      </div>
+      <div class="mc">
+        <div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> Revenue contratado</div>
+        <div class="m-val num">$69,000</div>
+        <div class="m-ctx num">Ticket promedio <b>$3,000</b> · <b>23</b> cierres</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+        <div><div class="kpi-label">Tasa de agenda</div>
+        <div class="kpi-val num">30.4%</div>
+        <div class="kpi-ctx num"><b>104</b> agendas de <b>342</b> leads</div></div>
+        <div class="kdx"><span class="delta up">▲ +2.1 pts</span></div>
+      </div>
+      <div class="kpi">
+        <div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 5.2 2 2 0 0 1 4 3h4.1a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 11a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg></div>
+        <div><div class="kpi-label">Tasa de asistencia</div>
+        <div class="kpi-val num">65.6%</div>
+        <div class="kpi-ctx num"><b>63</b> asistieron de <b>96</b> llamadas</div></div>
+        <div class="kdx"><span class="delta up">▲ +4.0 pts</span></div>
+      </div>
+      <div class="kpi">
+        <div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <div><div class="kpi-label">Tasa de cierre</div>
+        <div class="kpi-val num">36.5%</div>
+        <div class="kpi-ctx num"><b>23</b> cierres de <b>63</b> asistencias</div></div>
+        <div class="kdx"><span class="delta down">▼ −1.5 pts</span></div>
+      </div>
+    </div>
+
+    <div class="derived">
+      <div class="dv"><span>Leads</span><b class="num">342</b></div>
+      <div class="dv"><span>Agendas</span><b class="num">104</b></div>
+      <div class="dv"><span>Llamadas</span><b class="num">96</b></div>
+      <div class="dv"><span>Cierres</span><b class="num">23</b></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><div><h3>Embudo de la semana</h3><p>de leads a cash collected</p></div></div>
+        <div class="fn">
+          <div class="fnr"><span class="fn-n">Leads</span><span class="fn-track"><i class="num" style="width:100%">342</i></span><span class="fn-cv">100%</span></div>
+          <div class="fnr"><span class="fn-n">Agendas</span><span class="fn-track"><i class="num" style="width:70%">104</i></span><span class="fn-cv">agenda <b>30%</b></span></div>
+          <div class="fnr"><span class="fn-n">Llamadas</span><span class="fn-track"><i class="num" style="width:66%">96</i></span><span class="fn-cv">de agenda <b>92%</b></span></div>
+          <div class="fnr"><span class="fn-n">Asistieron</span><span class="fn-track"><i class="num" style="width:48%">63</i></span><span class="fn-cv">asist. <b>66%</b></span></div>
+          <div class="fnr"><span class="fn-n">Cierres</span><span class="fn-track"><i class="num" style="width:26%">23</i></span><span class="fn-cv">cierre <b>37%</b></span></div>
+          <div class="fnr"><span class="fn-n">Cash</span><span class="fn-track"><i class="num" style="width:16%">$41.4k</i></span><span class="fn-cv">cobro <b>60%</b></span></div>
+        </div>
+        <div class="note">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+          <span><b>104 agendas</b> y <b>96 llamadas</b> no tienen por qué coincidir: la agenda la carga el setter y la llamada el closer. La diferencia es la que se cae entre los dos.</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><div><h3>Cash collected por día</h3><p>lunes a domingo</p></div><span class="chip num">$41,400</span></div>
+        <div class="days">
+          <div class="day"><i style="height:60%"></i><em class="num">5.2k</em><small>L</small></div>
+          <div class="day"><i style="height:83%"></i><em class="num">7.2k</em><small>M</small></div>
+          <div class="day"><i style="height:72%"></i><em class="num">6.3k</em><small>M</small></div>
+          <div class="day hl"><i style="height:100%"></i><em class="num">8.7k</em><small>J</small></div>
+          <div class="day"><i style="height:76%"></i><em class="num">6.6k</em><small>V</small></div>
+          <div class="day"><i style="height:52%"></i><em class="num">4.5k</em><small>S</small></div>
+          <div class="day"><i style="height:33%"></i><em class="num">2.9k</em><small>D</small></div>
+        </div>
+        <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 17 6-6 4 4 8-8"/></svg>
+          <span>El jueves entró el <b>21%</b> de todo el cash de la semana.</span></div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <div class="card-head"><div><h3 class="h3i"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H4a2 2 0 0 0 0 4h2M18 5h2a2 2 0 0 1 0 4h-2M9 21h6M12 14v7"/></svg> Ranking · Closers</h3><p>por cash collected</p></div></div>
+        <div class="lb">
+          <div class="lbrow"><span class="rk g1">1</span><span class="av2">AR</span>
+            <span class="lbn"><strong>Andrea Ríos</strong><small class="num">11 cierres · 42% de cierre</small></span>
+            <span class="lbv"><b class="num">$19,800</b><span class="bar"><i style="width:100%"></i></span></span></div>
+          <div class="lbrow"><span class="rk">2</span><span class="av2">DT</span>
+            <span class="lbn"><strong>Diego Torres</strong><small class="num">8 cierres · 35% de cierre</small></span>
+            <span class="lbv"><b class="num">$14,400</b><span class="bar"><i style="width:73%"></i></span></span></div>
+          <div class="lbrow"><span class="rk">3</span><span class="av2">CM</span>
+            <span class="lbn"><strong>Carlos Méndez</strong><small class="num">4 cierres · 29% de cierre</small></span>
+            <span class="lbv"><b class="num">$7,200</b><span class="bar"><i style="width:36%"></i></span></span></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><div><h3 class="h3i"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="m9 9-3-7M15 9l3-7M12 13v4M10.5 15h3"/></svg> Ranking · Setters</h3><p>por agendas</p></div></div>
+        <div class="lb">
+          <div class="lbrow"><span class="rk g1">1</span><span class="av2">SL</span>
+            <span class="lbn"><strong>Sofía Lara</strong><small class="num">32% de agenda · 119 leads</small></span>
+            <span class="lbv"><b class="num">38</b><span class="bar"><i style="width:100%"></i></span></span></div>
+          <div class="lbrow"><span class="rk">2</span><span class="av2">MG</span>
+            <span class="lbn"><strong>Mateo Gil</strong><small class="num">30% de agenda · 120 leads</small></span>
+            <span class="lbv"><b class="num">36</b><span class="bar"><i style="width:95%"></i></span></span></div>
+          <div class="lbrow"><span class="rk">3</span><span class="av2">VP</span>
+            <span class="lbn"><strong>Valentina Paz</strong><small class="num">29% de agenda · 103 leads</small></span>
+            <span class="lbv"><b class="num">30</b><span class="bar"><i style="width:79%"></i></span></span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PANEL VACÍO ==================== -->
+  <section class="sc vacio" data-s="panel-vacio">
+    <div class="page-head">
+      <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
+      <div class="head-actions">
+        <div class="modo" role="group" aria-label="Período">
+          <button aria-pressed="false">Día</button><button aria-pressed="true">Semana</button><button aria-pressed="false">Mes</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="note warn" style="margin-top:0;margin-bottom:14px">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <span><b>Todavía no hay nadie en el equipo.</b> Cargá a tus setters y closers en <b>Equipo</b> y después van a poder mandar su reporte de fin de día. Hasta entonces el panel no tiene de dónde calcular.</span>
+    </div>
+
+    <div class="money">
+      <div class="mc hero"><div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg> Cash collected</div><div class="m-val num">$0</div>
+        <div class="m-ctx">Sin reportes en este período</div></div>
+      <div class="mc"><div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> Revenue contratado</div><div class="m-val num">$0</div>
+        <div class="m-ctx">Ticket promedio <b>—</b></div></div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><div class="kpi-label">Tasa de agenda</div>
+        <div class="kpi-val">—</div><div class="kpi-ctx">0 agendas de 0 leads</div></div>
+        <div class="kdx"><span class="delta nil">—</span></div></div>
+      <div class="kpi"><div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92V21a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 5.2 2 2 0 0 1 4 3h4.1a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 11a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg></div><div><div class="kpi-label">Tasa de asistencia</div>
+        <div class="kpi-val">—</div><div class="kpi-ctx">0 asistieron de 0 llamadas</div></div>
+        <div class="kdx"><span class="delta nil">—</span></div></div>
+      <div class="kpi"><div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="kpi-label">Tasa de cierre</div>
+        <div class="kpi-val">—</div><div class="kpi-ctx">0 cierres de 0 asistencias</div></div>
+        <div class="kdx"><span class="delta nil">—</span></div></div>
+    </div>
+
+    <div class="derived">
+      <div class="dv"><span>Leads</span><b class="num">0</b></div>
+      <div class="dv"><span>Agendas</span><b class="num">0</b></div>
+      <div class="dv"><span>Llamadas</span><b class="num">0</b></div>
+      <div class="dv"><span>Cierres</span><b class="num">0</b></div>
+    </div>
+
+    <div class="card">
+      <div class="empty">
+        <div class="tile" style="width:44px;height:44px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
+        <h3>El panel se llena solo</h3>
+        <p>En cuanto tu equipo empiece a mandar el reporte de fin de día, acá aparecen las tasas, el embudo y el ranking. No hay nada que configurar.</p>
+        <button class="btn-primary">Cargar mi equipo</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REPORTE SETTER ==================== -->
+  <section class="sc" data-s="setter">
+    <div class="page-head">
+      <div><h1>Reporte del Setter</h1><div class="sub">fin de día · uno por persona y por día</div></div>
+    </div>
+    <div class="what write">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <span>Al terminar tu día, registrá tus números. Con esto el panel calcula la <b>tasa de agenda</b> del equipo.</span>
+      <span class="badge-w">Se carga a mano</span>
+    </div>
+
+    <div class="card formcard">
+      <div class="form-grid">
+        <div class="field"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
+        <div class="field"><label>Setter <span class="req">*</span></label>
+          <select><option>Sofía Lara</option><option>Mateo Gil</option><option>Valentina Paz</option></select></div>
+        <div class="field"><label>Conversaciones iniciadas <span class="req">*</span></label>
+          <div class="step"><button type="button">−</button><input class="num" value="24" inputmode="numeric"><button type="button">＋</button></div>
+          <span class="hint">Con cuántas personas empezaste una conversación hoy.</span></div>
+        <div class="field"><label>Agendas <span class="req">*</span></label>
+          <div class="step"><button type="button">−</button><input class="num" value="8" inputmode="numeric"><button type="button">＋</button></div>
+          <span class="hint">Cuántas llamadas quedaron agendadas.</span></div>
+      </div>
+
+      <div class="calc c2">
+        <div class="dv"><span>Tu tasa de agenda hoy</span><b class="num">33.3%</b></div>
+        <div class="dv"><span>Agendas de conversaciones</span><b class="num">8 de 24</b></div>
+      </div>
+
+      <div class="form-actions">
+        <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
+        <button class="btn-ghost">Cancelar</button>
+        <button class="btn-primary">Enviar reporte</button>
+      </div>
+    </div>
+
+    <div class="card formcard" style="margin-top:12px">
+      <div class="note warn" style="margin-top:0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <span><b>Sofía Lara ya cargó el 26 de julio</b> — 24 conversaciones y 8 agendas.
+          Si enviás de nuevo, se <b>reemplaza</b> lo anterior. No se suma.</span>
+      </div>
+      <div class="form-actions">
+        <span class="helper">Así el día no se cuenta dos veces.</span>
+        <button class="btn-ghost">Dejar como estaba</button>
+        <button class="btn-primary">Reemplazar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== REPORTE CLOSER ==================== -->
+  <section class="sc" data-s="closer">
+    <div class="page-head">
+      <div><h1>Reporte del Closer</h1><div class="sub">fin de día · uno por persona y por día</div></div>
+    </div>
+    <div class="what write">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <span>Registrá el resultado de tu día de llamadas. Con esto el panel calcula <b>asistencia</b>, <b>cierre</b> y el <b>dinero</b> de la semana.</span>
+      <span class="badge-w">Se carga a mano</span>
+    </div>
+
+    <div class="card formcard">
+      <div class="form-grid">
+        <div class="field"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
+        <div class="field"><label>Closer <span class="req">*</span></label>
+          <select><option>Andrea Ríos</option><option>Diego Torres</option><option>Carlos Méndez</option></select></div>
+        <div class="field"><label>Llamadas en agenda <span class="req">*</span></label>
+          <div class="step"><button type="button">−</button><input class="num" value="6" inputmode="numeric"><button type="button">＋</button></div></div>
+        <div class="field"><label>Asistieron (show-ups) <span class="req">*</span></label>
+          <div class="step"><button type="button">−</button><input class="num" value="4" inputmode="numeric"><button type="button">＋</button></div></div>
+        <div class="field"><label>Reagendadas <span class="req">*</span></label>
+          <div class="step"><button type="button">−</button><input class="num" value="1" inputmode="numeric"><button type="button">＋</button></div></div>
+        <div class="field"><label>Cierres <span class="req">*</span></label>
+          <div class="step"><button type="button">−</button><input class="num" value="2" inputmode="numeric"><button type="button">＋</button></div></div>
+
+        <div class="field"><label>Revenue contratado <span class="req">*</span></label>
+          <div class="money-inp"><span class="cur">$</span><input class="num" value="6,000" inputmode="decimal"></div>
+          <span class="hint">El total que firmaron hoy, aunque lo paguen en cuotas.</span></div>
+        <div class="field"><label>Cash collected <span class="req">*</span></label>
+          <div class="money-inp hero"><span class="cur">$</span><input class="num" value="3,500" inputmode="decimal"></div>
+          <span class="hint">Solo lo que <b>entró hoy</b>. Si pagó el 50%, va el 50%.</span></div>
+      </div>
+
+      <div class="calc">
+        <div class="dv"><span>Asistencia</span><b class="num">67%</b></div>
+        <div class="dv"><span>Cierre</span><b class="num">50%</b></div>
+        <div class="dv"><span>Cobrado</span><b class="num">$3,500</b></div>
+        <div class="dv"><span>% de cobro</span><b class="num">58%</b></div>
+      </div>
+
+      <div class="form-actions">
+        <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
+        <button class="btn-ghost">Cancelar</button>
+        <button class="btn-primary">Enviar reporte</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== EQUIPO ==================== -->
+  <section class="sc" data-s="equipo">
+    <div class="page-head">
+      <div><h1>Equipo</h1><div class="sub">quiénes pueden mandar reporte</div></div>
+    </div>
+    <div class="what write">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg>
+      <span>Los nombres que cargues acá son los que aparecen en los dos formularios y en el ranking.</span>
+      <span class="badge-w">Se carga a mano</span>
+    </div>
+
+    <div class="card formcard">
+      <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 dado de baja</p></div></div>
+
+      <div class="entry"><span class="av2">SL</span>
+        <span class="en"><strong>Sofía Lara</strong><small class="num">38 agendas esta semana</small></span>
+        <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
+        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+      <div class="entry"><span class="av2">MG</span>
+        <span class="en"><strong>Mateo Gil</strong><small class="num">36 agendas esta semana</small></span>
+        <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
+        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+      <div class="entry"><span class="av2">AR</span>
+        <span class="en"><strong>Andrea Ríos</strong><small class="num">11 cierres · $19,800</small></span>
+        <span class="pill clo">Closer</span><span class="pill clo est" hidden></span>
+        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+      <div class="entry"><span class="av2">DT</span>
+        <span class="en"><strong>Diego Torres</strong><small class="num">8 cierres · $14,400</small></span>
+        <span class="pill amb">Setter y closer</span><span class="pill clo est" hidden></span>
+        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+      <div class="entry off"><span class="av2">CM</span>
+        <span class="en"><strong>Carlos Méndez</strong><small>ya no está en el equipo</small></span>
+        <span class="pill clo">Closer</span><span class="pill no est">De baja</span>
+        <button class="del" title="Reactivar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button></div>
+
+      <div class="note">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <span>Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los formularios, pero sus números siguen contando en las semanas que ya trabajó.</span>
+      </div>
+
+      <div class="addrow">
+        <div class="field"><label>Nombre</label><input placeholder="Nombre y apellido"></div>
+        <div class="field"><label>Rol</label><select><option>Setter</option><option>Closer</option><option>Setter y closer</option></select></div>
+        <button class="btn-primary">Agregar</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== AJUSTES ==================== -->
+  <section class="sc" data-s="ajustes">
+    <div class="page-head">
+      <div><h1>Ajustes</h1><div class="sub">cómo se llama y cómo cuenta</div></div>
+    </div>
+    <div class="what read">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2 2 2 0 1 1-4 0 1.7 1.7 0 0 0-2.9-1.2l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 15a2 2 0 1 1 0-4 1.7 1.7 0 0 0 1.2-2.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 10 4.1a2 2 0 1 1 4 0 1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1A1.7 1.7 0 0 0 21 11a2 2 0 1 1 0 4Z"/></svg>
+      <span>Esto es lo único que hay que tocar para que el panel sea <b>tuyo</b> y no de otro. Nada de esto está escrito en el código.</span>
+      <span class="badge-w">Se carga a mano</span>
+    </div>
+
+    <div class="card formcard">
+      <div class="card-head"><div><h3>Tu negocio</h3><p>lo que se ve arriba a la izquierda</p></div></div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Nombre del panel</div><div class="cfg-src">Aparece en la barra de arriba y en la pestaña del navegador.</div></div>
+        <div class="field"><input value="LP Ventas"></div>
+      </div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Iniciales</div><div class="cfg-src">Las dos letras del cuadradito verde.</div></div>
+        <div class="field"><input value="LP" maxlength="2"></div>
+      </div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Tu nombre</div><div class="cfg-src">Quién está usando el panel.</div></div>
+        <div class="field"><input value="Leandro P."></div>
+      </div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Color de tu marca</div><div class="cfg-src">Todo el verde del panel sale de acá. Cambiálo y cambia todo.</div></div>
+        <div class="field"><input value="#00D97E"></div>
+      </div>
+    </div>
+
+    <div class="card formcard" style="margin-top:12px">
+      <div class="card-head"><div><h3>Cómo cuenta</h3><p>moneda, fechas y semanas</p></div></div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Moneda</div><div class="cfg-src">El símbolo que va delante de todos los montos.</div></div>
+        <div class="field"><select><option>USD — dólar ($)</option><option>MXN — peso mexicano ($)</option><option>EUR — euro (€)</option><option>COP — peso colombiano ($)</option></select></div>
+      </div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Zona horaria</div><div class="cfg-src">Decide a qué día pertenece un reporte cargado de noche.</div></div>
+        <div class="field"><select><option>America/New_York</option><option>America/Chicago</option><option>America/Mexico_City</option><option>America/Bogota</option><option>Europe/Madrid</option></select></div>
+      </div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">La semana empieza el</div><div class="cfg-src">Cambia el corte de "Semana" en el panel y en el gráfico por día.</div></div>
+        <div class="field"><select><option>Lunes</option><option>Domingo</option></select></div>
+      </div>
+      <div class="cfgrow">
+        <div><div class="cfg-n">Mostrar el ranking al equipo</div><div class="cfg-src">Si lo apagás, el ranking solo lo ves vos.</div></div>
+        <div><label class="sw"><input type="checkbox" checked> Visible para todos</label></div>
+      </div>
+      <div class="form-actions">
+        <span class="helper">Los cambios se aplican al guardar.</span>
+        <button class="btn-primary">Guardar ajustes</button>
+      </div>
+    </div>
+  </section>
+
+  </main>
+</div></div>
+
+<script>
+  // Estado por URL para que el gate de fotos sea repetible:
+  //   ?v=pc|mobile & t=light|dark & s=panel|setter|closer|equipo|ajustes & e=datos|vacio
+  var q = new URLSearchParams(location.search);
+  var estado = {
+    vista:    q.get('v') === 'mobile' ? 'mobile' : 'pc',
+    // sin ?t= no se estampa nada: manda el tema del sistema / del visor
+    tema:     q.get('t') === 'dark' ? 'dark' : (q.get('t') === 'light' ? 'light' : null),
+    pantalla: ['panel','setter','closer','equipo','ajustes'].indexOf(q.get('s')) >= 0 ? q.get('s') : 'panel',
+    datos:    q.get('e') === 'vacio'  ? 'vacio'  : 'datos'
+  };
+
+  function pintar(){
+    document.body.dataset.view = estado.vista;
+    var raiz = document.documentElement;
+    if (estado.tema) raiz.dataset.theme = estado.tema; else delete raiz.dataset.theme;
+    var oscuroAhora = estado.tema
+      ? estado.tema === 'dark'
+      : window.matchMedia('(prefers-color-scheme: dark)').matches;
+    var p = (estado.pantalla === 'panel' && estado.datos === 'vacio') ? 'panel-vacio' : estado.pantalla;
+    document.querySelectorAll('.sc').forEach(function(s){ s.classList.toggle('on', s.dataset.s === p); });
+    document.querySelectorAll('[data-v]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.v === estado.vista); });
+    document.querySelectorAll('[data-t]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.t === (oscuroAhora ? 'dark' : 'light')); });
+    document.querySelectorAll('[data-e]').forEach(function(b){ b.setAttribute('aria-pressed', b.dataset.e === estado.datos); });
+    document.querySelectorAll('[data-nav]').forEach(function(b){
+      if (b.dataset.nav === estado.pantalla) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current');
+    });
+    var t = document.querySelector('[data-tema]');
+    if (t) t.innerHTML = oscuroAhora
+      ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+      : '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>';
+  }
+  document.querySelectorAll('[data-v]').forEach(function(b){ b.onclick = function(){ estado.vista = b.dataset.v; pintar(); }; });
+  document.querySelectorAll('[data-t]').forEach(function(b){ b.onclick = function(){ estado.tema = b.dataset.t; pintar(); }; });
+  document.querySelectorAll('[data-e]').forEach(function(b){ b.onclick = function(){ estado.datos = b.dataset.e; pintar(); }; });
+  document.querySelectorAll('[data-nav]').forEach(function(b){ b.onclick = function(){ estado.pantalla = b.dataset.nav; pintar(); }; });
+  var tt = document.querySelector('[data-tema]');
+  if (tt) tt.onclick = function(){ estado.tema = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; pintar(); };
+  pintar();
+</script>
