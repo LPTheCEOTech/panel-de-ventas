@@ -96,10 +96,11 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
 @media (min-width:940px){.nav{-webkit-mask-image:none;mask-image:none}}
 .nav::-webkit-scrollbar{display:none}
-.nav button{background:none;border:0;padding:7px 13px;border-radius:var(--r-nav);
-  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
-.nav button:hover{background:var(--m1);color:var(--m6)}
-.nav button[aria-current="page"]{background:var(--m6);color:var(--sobre-marca);box-shadow:var(--glow)}
+.nav button,.nav a{background:none;border:0;padding:7px 13px;border-radius:var(--r-nav);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;
+  text-decoration:none;display:inline-flex;align-items:center}
+.nav button:hover,.nav a:hover{background:var(--m1);color:var(--m6)}
+.nav button[aria-current="page"],.nav a[aria-current="page"]{background:var(--m6);color:var(--sobre-marca);box-shadow:var(--glow)}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
 .icon-btn{width:32px;height:32px;border-radius:var(--r-ctl);border:1px solid var(--border);
   background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
@@ -126,9 +127,11 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .modo{display:inline-flex;background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-ctl);padding:3px;gap:2px;flex-shrink:0}
-.modo button{background:none;border:0;padding:6px 14px;border-radius:6px;font-size:12px;
-  font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body)}
-.modo button[aria-pressed="true"]{background:var(--m6);color:var(--sobre-marca)}
+.modo button,.modo a{background:none;border:0;padding:6px 14px;border-radius:6px;font-size:12px;
+  font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body);
+  text-decoration:none;display:inline-flex;align-items:center}
+.modo button[aria-pressed="true"],.modo a[aria-pressed="true"]{background:var(--m6);color:var(--sobre-marca)}
+.modo a:hover{color:var(--m6)}
 
 /* banda que dice QUE ES la pantalla */
 .what{display:flex;align-items:center;gap:10px;border-radius:var(--r-inner);padding:10px 14px;

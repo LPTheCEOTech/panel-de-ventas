@@ -98,12 +98,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .nav::-webkit-scrollbar{display:none}
 
-.nav button{background:none;border:0;padding:7px 13px;border-radius:var(--r-nav);
-  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap}
+.nav button,.nav a{background:none;border:0;padding:7px 13px;border-radius:var(--r-nav);
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;
+  text-decoration:none;display:inline-flex;align-items:center}
 
-.nav button:hover{background:var(--m1);color:var(--m6)}
+.nav button:hover,.nav a:hover{background:var(--m1);color:var(--m6)}
 
-.nav button[aria-current="page"]{background:var(--m6);color:var(--sobre-marca);box-shadow:var(--glow)}
+.nav button[aria-current="page"],.nav a[aria-current="page"]{background:var(--m6);color:var(--sobre-marca);box-shadow:var(--glow)}
 
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
 
@@ -147,10 +148,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 .modo{display:inline-flex;background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-ctl);padding:3px;gap:2px;flex-shrink:0}
 
-.modo button{background:none;border:0;padding:6px 14px;border-radius:6px;font-size:12px;
-  font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body)}
+.modo button,.modo a{background:none;border:0;padding:6px 14px;border-radius:6px;font-size:12px;
+  font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body);
+  text-decoration:none;display:inline-flex;align-items:center}
 
-.modo button[aria-pressed="true"]{background:var(--m6);color:var(--sobre-marca)}
+.modo button[aria-pressed="true"],.modo a[aria-pressed="true"]{background:var(--m6);color:var(--sobre-marca)}
+
+.modo a:hover{color:var(--m6)}
 
 /* banda que dice QUE ES la pantalla */
 .what{display:flex;align-items:center;gap:10px;border-radius:var(--r-inner);padding:10px 14px;
