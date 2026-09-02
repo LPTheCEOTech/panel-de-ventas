@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { datos } from '@/shared/datos/indice'
 import { MENSAJE_ERROR, destinoSeguro, type CodigoError } from '@/shared/datos/sesion-reglas'
 import estilos from './login.module.css'
 
@@ -24,13 +25,26 @@ export default async function Login({
   const error = CODIGOS.includes(crudo as CodigoError) ? (crudo as CodigoError) : null
   const next = destinoSeguro(Array.isArray(sp.next) ? sp.next[0] : sp.next)
 
+  // 🔴 Con try/catch y no sin él: ésta es una página PÚBLICA. Si la base está
+  // caída o dormida y esto reventara, nadie podría ni ver el formulario — y el
+  // error diría «error del servidor» sin ninguna pista de dónde mirar. Con la
+  // base caída conviene que el login se vea igual, se intente, y ahí sí falle
+  // diciendo que el problema es del servidor y no de la contraseña.
+  let marca = { iniciales: '·', nombre: 'Panel de Ventas' }
+  try {
+    const c = await datos().leerConfiguracion()
+    marca = { iniciales: c.iniciales, nombre: c.nombreNegocio }
+  } catch {
+    // se queda el genérico
+  }
+
   return (
     <div className={estilos.pantalla}>
       <div className={estilos.caja}>
         <div className={estilos.marca}>
-          <span className={estilos.tile}>·</span>
+          <span className={estilos.tile}>{marca.iniciales}</span>
           <span>
-            <strong>Panel de Ventas</strong>
+            <strong>{marca.nombre}</strong>
             <span>Entrá con tu correo y contraseña</span>
           </span>
         </div>
