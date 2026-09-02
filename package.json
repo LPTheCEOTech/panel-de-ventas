@@ -8,13 +8,15 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/shared/calculo/*.test.ts",
+    "test": "node --import tsx --test src/shared/calculo/*.test.ts src/shared/datos/*.test.ts",
     "portar-css": "python3 scripts/portar-css.py",
     "instalar": "node --env-file=.env.local --conditions=react-server --import tsx scripts/instalar.mjs",
     "usuario": "node --env-file=.env.local --conditions=react-server --import tsx scripts/usuario.mjs",
     "semilla": "node --env-file=.env.local --conditions=react-server --import tsx scripts/semilla.mjs",
     "verificar": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verificar.mjs",
-    "sin-cliente": "python3 scripts/sin-cliente.py"
+    "sin-cliente": "python3 scripts/sin-cliente.py",
+    "dev:vacio": "DEMO_VACIA=1 next dev --turbopack --port 3110",
+    "gate": "npm run typecheck && npm run lint && npm test && npm run sin-cliente && npm run build"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.0",

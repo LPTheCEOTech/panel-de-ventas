@@ -44,7 +44,7 @@ export function numero(n: number): string {
   return n.toLocaleString('en-US')
 }
 
-/** `LP` a partir de `Leandro Pascual`; `SL` de `Sofía Lara`. */
+/** Las iniciales de un nombre: `AT` de `Ana Torres`, `MP` de `Marco Pérez`. */
 export function iniciales(nombre: string): string {
   const partes = nombre.trim().split(/\s+/).filter(Boolean)
   if (partes.length === 0) return '?'

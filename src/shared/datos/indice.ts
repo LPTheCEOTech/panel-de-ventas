@@ -34,10 +34,14 @@ export function datos(): CapaDeDatos {
     )
   }
 
+  // `DEMO_VACIA=1` simula una instalación recién hecha: sin equipo y sin
+  // reportes. Es la única forma de validar por foto la primera pantalla que ve
+  // un alumno, que es justo la que ningún dato de ejemplo deja ver.
+  const vacia = process.env.DEMO_VACIA === '1'
   console.warn(
-    '\n⚠️  Sin credenciales de Supabase: corriendo con la SEMILLA DEL MOCKUP en memoria.\n' +
+    `\n⚠️  Sin credenciales de Supabase: corriendo con ${vacia ? 'una BASE VACÍA' : 'la SEMILLA DEL MOCKUP'} en memoria.\n` +
       '   Sirve para construir y validar pantallas. NO prueba que los números salgan de una base.\n'
   )
-  capa = capaDemo()
+  capa = capaDemo(vacia)
   return capa
 }

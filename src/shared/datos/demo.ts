@@ -10,22 +10,77 @@
  * datos de ejemplo de otra persona: el peor final posible. Por eso
  * `indice.ts` tira en producción en vez de caer acá.
  */
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
+
 import type { Configuracion, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
 import { dentro } from '@/shared/calculo/periodo'
 import { PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO } from './semilla'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from './interfaz'
 
-const config: Configuracion = {
-  ...CONFIGURACION_POR_DEFECTO,
-  nombreNegocio: 'LP Ventas',
-  iniciales: 'LP',
-  usuarioNombre: 'Leandro P.',
+interface EstadoDemo {
+  config: Configuracion
+  personas: Persona[]
+  setter: ReporteSetter[]
+  closer: ReporteCloser[]
 }
 
-const personas: Persona[] = PERSONAS_DEMO.map((p) => ({ ...p }))
-const setter: ReporteSetter[] = REPORTES_SETTER_DEMO.map((r) => ({ ...r }))
-const closer: ReporteCloser[] = REPORTES_CLOSER_DEMO.map((r) => ({ ...r }))
+/**
+ * 🔴 El estado se guarda en un ARCHIVO, no en memoria.
+ *
+ * Se intentó primero con variables del módulo y después con `globalThis`, y las
+ * dos fallaron igual: en `next dev` la ruta de API y el render del servidor no
+ * comparten proceso, así que cada lado tiene su propia memoria. El síntoma
+ * engaña de manual — agregar a alguien devuelve **200 OK**, el refresco corre,
+ * y la lista sigue vacía. El POST escribió donde la página no lee.
+ *
+ * Un archivo es lo único que ven los dos procesos. Vive en el directorio
+ * temporal del sistema: no ensucia el repo y se lo lleva el reinicio.
+ *
+ * Con Supabase nada de esto existe (los dos lados hablan con la misma base).
+ */
+function archivo(vacia: boolean): string {
+  return join(tmpdir(), 'panel-de-ventas-demo', vacia ? 'vacia.json' : 'semilla.json')
+}
 
+function inicial(vacia: boolean): EstadoDemo {
+  if (vacia) {
+    return {
+      config: { ...CONFIGURACION_POR_DEFECTO, nombreNegocio: 'Mi Negocio', iniciales: 'MN', usuarioNombre: 'Yo' },
+      personas: [], setter: [], closer: [],
+    }
+  }
+  return {
+    config: { ...CONFIGURACION_POR_DEFECTO, nombreNegocio: 'LP Ventas', iniciales: 'LP', usuarioNombre: 'Leandro P.' },
+    personas: PERSONAS_DEMO.map((p) => ({ ...p })),
+    setter: REPORTES_SETTER_DEMO.map((r) => ({ ...r })),
+    closer: REPORTES_CLOSER_DEMO.map((r) => ({ ...r })),
+  }
+}
+
+function leer(vacia: boolean): EstadoDemo {
+  const f = archivo(vacia)
+  if (existsSync(f)) {
+    try {
+      return JSON.parse(readFileSync(f, 'utf8')) as EstadoDemo
+    } catch {
+      // un archivo a medio escribir no puede dejar la app sin arrancar
+    }
+  }
+  const e = inicial(vacia)
+  escribir(vacia, e)
+  return e
+}
+
+function escribir(vacia: boolean, e: EstadoDemo): void {
+  const f = archivo(vacia)
+  mkdirSync(dirname(f), { recursive: true })
+  writeFileSync(f, JSON.stringify(e, null, 2))
+}
+
+/** Reemplaza la fila de esa persona y ese día, o la agrega. Es el mismo
+ *  comportamiento que el `upsert` con `onConflict` de la capa real. */
 function upsert<T extends { fecha: string; personaId: string }>(lista: T[], fila: T) {
   const i = lista.findIndex((r) => r.fecha === fila.fecha && r.personaId === fila.personaId)
   if (i >= 0) lista[i] = fila
@@ -33,32 +88,43 @@ function upsert<T extends { fecha: string; personaId: string }>(lista: T[], fila
 }
 
 export function capaDemo(vacia = false): CapaDeDatos {
-  const P = vacia ? [] : personas
-  const S = vacia ? [] : setter
-  const C = vacia ? [] : closer
+  // se relee en CADA operación: el otro proceso pudo haber escrito
+  const con = <T,>(f: (e: EstadoDemo) => T): T => {
+    const e = leer(vacia)
+    const r = f(e)
+    escribir(vacia, e)
+    return r
+  }
   return {
     motor: 'demo',
-    async leerConfiguracion() { return { ...config } },
-    async guardarConfiguracion(c) { Object.assign(config, c) },
-    async leerPersonas() { return P.map((p) => ({ ...p })) },
+    async leerConfiguracion() { return { ...leer(vacia).config } },
+    async guardarConfiguracion(c) { con((e) => Object.assign(e.config, c)) },
+    async leerPersonas() { return leer(vacia).personas.map((p) => ({ ...p })) },
     async crearPersona(nombre, rol: Rol) {
-      const p: Persona = { id: `demo-${Date.now()}`, nombre, rol, activo: true, orden: P.length + 1 }
-      P.push(p)
-      return p
+      return con((e) => {
+        if (e.personas.some((x) => x.nombre.trim().toLowerCase() === nombre.trim().toLowerCase())) {
+          throw new Error('duplicate: ya hay alguien con ese nombre')
+        }
+        const p: Persona = { id: `demo-${Date.now()}`, nombre, rol, activo: true, orden: e.personas.length + 1 }
+        e.personas.push(p)
+        return p
+      })
     },
     async cambiarActivo(id, activo) {
-      const p = P.find((x) => x.id === id)
-      if (p) p.activo = activo
+      con((e) => {
+        const p = e.personas.find((x) => x.id === id)
+        if (p) p.activo = activo
+      })
     },
-    async leerReportesSetter(v: Ventana) { return S.filter((r) => dentro(r.fecha, v)).map((r) => ({ ...r })) },
-    async leerReportesCloser(v: Ventana) { return C.filter((r) => dentro(r.fecha, v)).map((r) => ({ ...r })) },
+    async leerReportesSetter(v: Ventana) { return leer(vacia).setter.filter((r) => dentro(r.fecha, v)) },
+    async leerReportesCloser(v: Ventana) { return leer(vacia).closer.filter((r) => dentro(r.fecha, v)) },
     async buscarReporteSetter(fecha, personaId) {
-      return S.find((r) => r.fecha === fecha && r.personaId === personaId) ?? null
+      return leer(vacia).setter.find((r) => r.fecha === fecha && r.personaId === personaId) ?? null
     },
     async buscarReporteCloser(fecha, personaId) {
-      return C.find((r) => r.fecha === fecha && r.personaId === personaId) ?? null
+      return leer(vacia).closer.find((r) => r.fecha === fecha && r.personaId === personaId) ?? null
     },
-    async guardarReporteSetter(r) { upsert(S, r) },
-    async guardarReporteCloser(r) { upsert(C, r) },
+    async guardarReporteSetter(r) { con((e) => upsert(e.setter, r)) },
+    async guardarReporteCloser(r) { con((e) => upsert(e.closer, r)) },
   }
 }

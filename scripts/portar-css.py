@@ -44,8 +44,8 @@ def sin_comentario(t):
     return COMENTARIO_INICIAL.sub('', t)
 
 CABECERA = """/* ============================================================
-   Panel de Ventas · LP The CEO
-   PAPEL v1 — PORTADO LITERAL de MOCKUP-APROBADO.html.
+   Panel de Ventas — PAPEL v1
+   PORTADO LITERAL de MOCKUP-APROBADO.html.
 
    🔴 Este archivo NO se edita a mano. Sale de scripts/portar-css.py,
    que copia el <style> del mockup y solo saca el andamiaje de la demo.

@@ -19,8 +19,9 @@ export async function POST(request: NextRequest) {
     const persona = await datos().crearPersona(p.data.nombre, p.data.rol)
     return NextResponse.json({ persona })
   } catch (e) {
-    // el índice único por nombre es lo que impide dos "Sofía Lara" en el
-    // selector; el mensaje tiene que decir eso y no "error 23505".
+    // el índice único por nombre es lo que impide que haya dos personas con
+    // el mismo nombre en el selector, donde serían indistinguibles. El mensaje
+    // tiene que decir eso y no "error 23505".
     const msg = e instanceof Error && /duplicate|unique/i.test(e.message)
       ? 'Ya hay alguien con ese nombre en el equipo.'
       : 'No se pudo agregar. Probá de nuevo.'

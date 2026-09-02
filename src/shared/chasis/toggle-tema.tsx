@@ -1,26 +1,52 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
+
 import { CLAVE_TEMA, type Tema } from './tema'
 import { IconoLuna, IconoSol } from './iconos'
 
-export function ToggleTema() {
-  // Arranca en `null` y no en el tema real: en el servidor no se sabe qué eligió
-  // el usuario, y pintar un icono distinto al del cliente sería un error de
-  // hidratación. Se resuelve después del primer render.
-  const [oscuro, setOscuro] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    const guardado = document.documentElement.dataset.theme as Tema | undefined
-    setOscuro(guardado ? guardado === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches)
-  }, [])
-
-  function alternar() {
-    const nuevo: Tema = oscuro ? 'light' : 'dark'
-    document.documentElement.dataset.theme = nuevo
-    try { localStorage.setItem(CLAVE_TEMA, nuevo) } catch { /* modo privado: el tema no persiste y ya */ }
-    setOscuro(!oscuro)
+/**
+ * ¿Está oscuro AHORA? La respuesta vive en el navegador (el atributo del `<html>`
+ * o la preferencia del sistema), no en React.
+ *
+ * 🔴 Por eso se lee con `useSyncExternalStore` y no con `useState` + `useEffect`.
+ * El servidor no puede saber qué tema eligió la persona: si el primer render del
+ * cliente dijera algo distinto al del servidor, habría un error de hidratación.
+ * `useSyncExternalStore` toma un valor distinto en el servidor (el tercer
+ * argumento) a propósito, y además vuelve a renderizar si el sistema cambia de
+ * tema mientras la pestaña está abierta.
+ */
+function suscribir(avisar: () => void): () => void {
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
+  mq.addEventListener('change', avisar)
+  const observador = new MutationObserver(avisar)
+  observador.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+  return () => {
+    mq.removeEventListener('change', avisar)
+    observador.disconnect()
   }
+}
+
+function leerEnCliente(): boolean {
+  const elegido = document.documentElement.dataset.theme as Tema | undefined
+  if (elegido) return elegido === 'dark'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+}
+
+export function ToggleTema() {
+  // En el servidor devuelve `null`: no se dibuja icono hasta saber cuál va.
+  const oscuro = useSyncExternalStore(suscribir, leerEnCliente, () => null)
+
+  const alternar = useCallback(() => {
+    const nuevo: Tema = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
+    document.documentElement.dataset.theme = nuevo
+    try {
+      localStorage.setItem(CLAVE_TEMA, nuevo)
+    } catch {
+      // en modo privado `localStorage` puede tirar: el tema no persiste y ya.
+      // No es motivo para que el botón deje de funcionar.
+    }
+  }, [])
 
   return (
     <button

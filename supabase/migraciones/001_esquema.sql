@@ -53,7 +53,8 @@ create table if not exists personas (
   constraint personas_nombre_no_vacio check (length(trim(nombre)) > 0)
 );
 
--- dos "Sofía Lara" en el selector son indistinguibles y el ranking las separa
+-- dos personas con el mismo nombre son indistinguibles en el selector, y el
+-- ranking las mostraría como dos filas iguales
 create unique index if not exists personas_nombre_unico on personas (lower(trim(nombre)));
 
 -- ---------- REPORTES ----------
