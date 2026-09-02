@@ -109,7 +109,7 @@ export default async function PanelDeVentas({
                   : barrasPorDia(vGrafico, periodo === 'dia' ? closersGrafico : closers)
               }
               simbolo={config.simbolo}
-              total={m.cashCents}
+              unidad={periodo === 'mes' ? 'semana' : 'día'}
               subtitulo={
                 periodo === 'semana'
                   ? (config.inicioSemana === 1 ? 'lunes a domingo' : 'domingo a sábado')

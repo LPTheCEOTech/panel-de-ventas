@@ -124,9 +124,18 @@ export function Embudo({ pasos, simbolo, avisoAgendas, deQue }: { pasos: PasoEmb
   )
 }
 
-export function CashPorDia({ barras, simbolo, total, subtitulo }: { barras: Barra[]; simbolo: string; total: number; subtitulo: string }) {
+export function CashPorDia({ barras, simbolo, subtitulo, unidad }: { barras: Barra[]; simbolo: string; subtitulo: string; unidad: 'día' | 'semana' }) {
+  // 🔴 El total sale de LAS BARRAS, no de las métricas del período.
+  //
+  // En modo "Día" el gráfico muestra los últimos 7 días pero las métricas son
+  // de uno solo: al dividir el pico por el total del período daba 100% siempre.
+  // Sumando las barras, el encabezado y el aviso hablan de lo mismo que se ve.
+  const total = barras.reduce((s, b) => s + b.cashCents, 0)
   const pico = barras.find((b) => b.esMaxima)
-  const share = pico && total > 0 ? Math.round((pico.cashCents / total) * 100) : null
+  // 🔴 Con un solo período con plata, «se llevó el 100%» no dice nada: es
+  // aritmética, no un hallazgo. El aviso aparece solo cuando hay con qué comparar.
+  const conPlata = barras.filter((b) => b.cashCents > 0).length
+  const share = pico && total > 0 && conPlata > 1 ? Math.round((pico.cashCents / total) * 100) : null
   return (
     <div className="card">
       <div className="card-head">
@@ -145,7 +154,7 @@ export function CashPorDia({ barras, simbolo, total, subtitulo }: { barras: Barr
       {share !== null && pico && (
         <div className="note">
           <IconoTendencia />
-          <span>El día más fuerte se llevó el <b>{share}%</b> de todo el cash del período.</span>
+          <span>{unidad === 'día' ? 'El día' : 'La semana'} más fuerte se llevó el <b>{share}%</b> de todo el cash del período.</span>
         </div>
       )}
     </div>
