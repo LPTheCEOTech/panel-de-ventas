@@ -35,30 +35,36 @@ if (comando !== 'cargar') {
   process.exit(1)
 }
 
-// las personas primero: los reportes cuelgan de ellas
-const { data: personas, error: errP } = await sb
-  .from('personas')
-  .upsert(
-    PERSONAS_DEMO.map((p) => ({ nombre: p.nombre, rol: p.rol, orden: p.orden, es_demo: true })),
-    { onConflict: 'nombre' }
-  )
-  .select()
-if (errP) {
-  // el índice único es sobre `lower(trim(nombre))`, que no se puede usar como
-  // onConflict: si ya estaban, se leen en vez de insertarse
-  const { data, error } = await sb.from('personas').select().eq('es_demo', true)
-  if (error) morir(`No se pudo plantar las personas: ${errP.message}`)
-  if (!data?.length) morir(`No se pudo plantar las personas: ${errP.message}`)
-  console.log(`✅ personas: ${data.length} ya estaban`)
-  var mapa = new Map(data.map((p) => [p.nombre, p.id]))
-} else {
-  console.log(`✅ personas: ${personas.length}`)
-  var mapa = new Map(personas.map((p) => [p.nombre, p.id]))
+// Las personas primero: los reportes cuelgan de ellas.
+//
+// 🔴 Acá NO se puede usar `upsert(..., { onConflict: 'nombre' })`. El índice
+// único del esquema es sobre `lower(trim(nombre))` — una EXPRESIÓN — y
+// `ON CONFLICT` solo apunta a columnas o a restricciones con nombre. Postgres
+// responde "there is no unique or exclusion constraint matching the ON CONFLICT
+// specification", que no dice nada de expresiones.
+//
+// Se hace a mano: leer quién está, insertar solo lo que falta. Y así también es
+// idempotente si la semilla ya se cargó antes.
+const { data: existentes, error: errLeer } = await sb.from('personas').select('id, nombre')
+if (errLeer) morir(`No se pudieron leer las personas: ${errLeer.message}`)
+
+const clave = (n) => n.trim().toLowerCase()
+const mapa = new Map(existentes.map((p) => [clave(p.nombre), p.id]))
+
+const faltan = PERSONAS_DEMO.filter((p) => !mapa.has(clave(p.nombre)))
+if (faltan.length > 0) {
+  const { data: nuevas, error } = await sb
+    .from('personas')
+    .insert(faltan.map((p) => ({ nombre: p.nombre, rol: p.rol, orden: p.orden, es_demo: true })))
+    .select('id, nombre')
+  if (error) morir(`No se pudo plantar las personas: ${error.message}`)
+  for (const p of nuevas) mapa.set(clave(p.nombre), p.id)
 }
+console.log(`✅ personas: ${faltan.length} nuevas, ${PERSONAS_DEMO.length - faltan.length} ya estaban`)
 
 const idDe = (demoId) => {
   const p = PERSONAS_DEMO.find((x) => x.id === demoId)
-  const id = p && mapa.get(p.nombre)
+  const id = p && mapa.get(clave(p.nombre))
   if (!id) morir(`No encuentro en la base a ${p?.nombre ?? demoId}`)
   return id
 }

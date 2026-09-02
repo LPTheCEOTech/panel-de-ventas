@@ -15,10 +15,9 @@
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { createInterface } from 'node:readline'
 import pg from 'pg'
 
-import { conectar, morir, preguntar } from './comun.mjs'
+import { abrirPreguntas, conectar, morir } from './comun.mjs'
 
 const RAIZ = dirname(dirname(fileURLToPath(import.meta.url)))
 const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql']
@@ -57,20 +56,20 @@ if (!cadena) {
 // ---------- 3. la configuración ----------
 const { data: yaHay } = await sb.from('configuracion').select('id').eq('id', 1).maybeSingle()
 
-const rl = createInterface({ input: process.stdin, output: process.stdout })
+const { preguntar, cerrar } = await abrirPreguntas()
 
 if (yaHay) {
   console.log('\n✅ Ya había configuración. No se toca (el instalador no pisa lo que cargaste).')
 } else {
   console.log('\nAhora lo que hace que el panel sea tuyo. Enter para dejar lo de la izquierda.\n')
-  const nombreNegocio = await preguntar(rl, 'Nombre del panel', 'Mi Panel de Ventas')
-  const iniciales = (await preguntar(rl, 'Dos letras para el logo', nombreNegocio.slice(0, 2).toUpperCase())).slice(0, 2).toUpperCase()
-  const usuarioNombre = await preguntar(rl, 'Tu nombre', 'Yo')
-  const marca = await preguntar(rl, 'Color de tu marca (#RRGGBB)', '#00D97E')
-  const simbolo = await preguntar(rl, 'Símbolo de la moneda', '$')
-  const moneda = await preguntar(rl, 'Código de la moneda', 'USD')
-  const zonaHoraria = await preguntar(rl, 'Zona horaria', 'America/New_York')
-  const inicioSemana = (await preguntar(rl, '¿La semana empieza el lunes? (s/n)', 's')).toLowerCase().startsWith('s') ? 1 : 0
+  const nombreNegocio = await preguntar('Nombre del panel', 'Mi Panel de Ventas')
+  const iniciales = (await preguntar('Dos letras para el logo', nombreNegocio.slice(0, 2).toUpperCase())).slice(0, 2).toUpperCase()
+  const usuarioNombre = await preguntar('Tu nombre', 'Yo')
+  const marca = await preguntar('Color de tu marca (#RRGGBB)', '#00D97E')
+  const simbolo = await preguntar('Símbolo de la moneda', '$')
+  const moneda = await preguntar('Código de la moneda', 'USD')
+  const zonaHoraria = await preguntar('Zona horaria', 'America/New_York')
+  const inicioSemana = (await preguntar('¿La semana empieza el lunes? (s/n)', 's')).toLowerCase().startsWith('s') ? 1 : 0
 
   if (!/^#[0-9a-fA-F]{6}$/.test(marca)) morir(`"${marca}" no es un color #RRGGBB.`)
   try { new Intl.DateTimeFormat('en-CA', { timeZone: zonaHoraria }) }
@@ -92,9 +91,9 @@ if (usuarios.users.length > 0) {
   console.log(`✅ Ya hay ${usuarios.users.length} usuario(s). No se crea otro.`)
 } else {
   console.log('\nY el usuario con el que vas a entrar.\n')
-  const correo = await preguntar(rl, 'Tu correo')
+  const correo = await preguntar('Tu correo')
   if (!correo.includes('@')) morir('Eso no parece un correo.')
-  const contrasena = await preguntar(rl, `Contraseña (mínimo ${MINIMO_CONTRASENA})`)
+  const contrasena = await preguntar(`Contraseña (mínimo ${MINIMO_CONTRASENA})`, undefined, true)
   if (contrasena.length < MINIMO_CONTRASENA) morir(`La contraseña necesita al menos ${MINIMO_CONTRASENA} caracteres.`)
 
   const { error } = await sb.auth.admin.createUser({ email: correo, password: contrasena, email_confirm: true })
@@ -102,7 +101,7 @@ if (usuarios.users.length > 0) {
   console.log(`\n✅ Usuario ${correo} creado y confirmado (sin mandar ningún correo).`)
 }
 
-rl.close()
+cerrar()
 
 console.log(`
 ────────────────────────────────────────────────
