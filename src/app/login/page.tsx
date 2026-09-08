@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 
+import { estiloDeMarca } from '@/shared/chasis/marca'
 import { datos } from '@/shared/datos/indice'
 import { MENSAJE_ERROR, destinoSeguro, type CodigoError } from '@/shared/datos/sesion-reglas'
 import estilos from './login.module.css'
@@ -31,15 +32,20 @@ export default async function Login({
   // base caída conviene que el login se vea igual, se intente, y ahí sí falle
   // diciendo que el problema es del servidor y no de la contraseña.
   let marca = { iniciales: '·', nombre: 'Panel de Ventas' }
+  let paleta: string | null = null
   try {
     const c = await datos().leerConfiguracion()
     marca = { iniciales: c.iniciales, nombre: c.nombreNegocio }
+    // el login es lo primero que se ve del panel: entrar con el verde del
+    // mockup y que adentro sea violeta es un cambio de app a mitad de camino
+    paleta = estiloDeMarca(c.marca)
   } catch {
     // se queda el genérico
   }
 
   return (
     <div className={estilos.pantalla}>
+      {paleta && <style dangerouslySetInnerHTML={{ __html: paleta }} />}
       <div className={estilos.caja}>
         <div className={estilos.marca}>
           <span className={estilos.tile}>{marca.iniciales}</span>

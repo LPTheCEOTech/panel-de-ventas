@@ -1,3 +1,4 @@
+import { estiloDeMarca } from '@/shared/chasis/marca'
 import { Topbar } from '@/shared/chasis/topbar'
 import { datos } from '@/shared/datos/indice'
 
@@ -17,8 +18,15 @@ export const dynamic = 'force-dynamic'
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
   const config = await datos().leerConfiguracion()
+  // 🔴 La rampa de la marca va PRIMERO y como <style>, no como estilos en línea.
+  // Los siete peldaños los usan 60 reglas del CSS portado; pasarlos por
+  // variables es lo único que hace que cambiar un hex en Ajustes cambie el
+  // panel entero, que es lo que esa pantalla promete. Si el hex está a medio
+  // escribir, no se inyecta nada y manda la rampa del mockup.
+  const marca = estiloDeMarca(config.marca)
   return (
     <>
+      {marca && <style dangerouslySetInnerHTML={{ __html: marca }} />}
       <Topbar config={config} />
       <main className="wrap">{children}</main>
     </>

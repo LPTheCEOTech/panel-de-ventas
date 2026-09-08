@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test src/shared/calculo/*.test.ts src/shared/datos/*.test.ts",
+    "test": "node --import tsx --test src/shared/calculo/*.test.ts src/shared/datos/*.test.ts src/shared/chasis/*.test.ts",
     "portar-css": "python3 scripts/portar-css.py",
     "instalar": "node --env-file=.env.local --conditions=react-server --import tsx scripts/instalar.mjs",
     "usuario": "node --env-file=.env.local --conditions=react-server --import tsx scripts/usuario.mjs",
