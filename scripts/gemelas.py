@@ -25,6 +25,13 @@ import os
 import re
 import sys
 
+# Un comentario pegado ARRIBA de una regla viaja dentro del mismo trozo. En la
+# gemela hay que sacarlo: el prefijo va antes del selector, y si el comentario
+# queda en el medio (`body[...] /* … */ .entry`) el selector deja de parecerse
+# al de su regla de verdad y `portar-css.py` la marca huerfana. El comentario
+# ya vive en la @media original, que es donde se lee.
+COMENTARIO_INICIAL = re.compile(r"^\s*(?:/\*.*?\*/\s*)+", re.S)
+
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(RAIZ, "MOCKUP-APROBADO.html")
 
@@ -86,6 +93,7 @@ def main():
             continue
         interior = trozo[trozo.index("{") + 1 : trozo.rindex("}")]
         for regla in partir_en_reglas(interior):
+            regla = COMENTARIO_INICIAL.sub("", regla)
             sel = regla[: regla.index("{")].strip()
             cuerpo = regla[regla.index("{") :].strip()
             gemelas.append(f"{prefijar(sel)}{cuerpo}")

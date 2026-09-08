@@ -33,9 +33,15 @@
   --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
   --sobre-marca:#FFFFFF;
   --chevron:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235C7167' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  /* 🔴 Le avisa al navegador con que tema pintar lo que NO es nuestro: el
+     calendario del <input type=date>, la lista del <select> y el scroll. Sin
+     esto, en oscuro el date picker se abre blanco y el icono del calendario
+     queda negro sobre negro. */
+  color-scheme:light;
 }
 
 :root[data-theme="dark"]{
+  color-scheme:dark;
   --m1:#0C2A1E; --m2:#14402D; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
   --ambar:#E8B84B; --ambar-bg:#2C2411; --ambar-ink:#F0CC72;
   --azul:#5AA9E6;  --azul-bg:#0F2231;
@@ -50,6 +56,7 @@
 
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
+    color-scheme:dark;
     --m1:#0C2A1E; --m2:#14402D; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
     --ambar:#E8B84B; --ambar-bg:#2C2411; --ambar-ink:#F0CC72; --azul:#5AA9E6; --azul-bg:#0F2231;
     --rojo:#E07A70; --rojo-bg:#2E1614;
@@ -548,6 +555,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .entry .en small{display:block;font-size:11px;color:var(--faint);margin-top:1px}
 
+/* Lo que solo se dice en pantalla chica, porque ahi no entra la pastilla.
+   🔴 Con el selector de la clase pelada no alcanza: `.entry .en small` pesa
+   mas y el renglon se colaba en escritorio, repetido con la pastilla. */
+.entry .en small.solo-chico{display:none}
+
 /* lo que hizo esta semana es una COLUMNA, no un renglon chico debajo del
    nombre: es el dato por el que se entra a esta pantalla */
 .entry .hizo{width:152px;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;
@@ -706,7 +718,12 @@ button,input,select,textarea{font:inherit;color:inherit}
   .wrap{padding:14px 14px 32px}
   .page-head h1{font-size:19px}
   .page-head{margin-bottom:14px}
-  .what{margin-bottom:14px;flex-wrap:wrap}
+  /* 🔴 En pantalla chica la insignia baja a su propio renglon. Con el texto
+     encogible comparte linea con ella, y la frase queda leyendose en una
+     columna de 240 px: cuatro renglones cortados. Este pseudo-elemento de
+     ancho completo es el corte de linea. */
+  .what{margin-bottom:14px;flex-wrap:wrap;row-gap:6px}
+  .what::before{content:'';order:2;flex:0 0 100%;height:0}
   .what .badge-w{margin-left:0;order:3}
   .card{padding:14px 15px}
   .grid2{gap:12px;margin-bottom:12px}
@@ -731,10 +748,13 @@ button,input,select,textarea{font:inherit;color:inherit}
   .form-actions{justify-content:stretch}
   .form-actions .helper{margin-right:0;width:100%;order:3}
   .form-actions .btn-primary{width:100%}
-  .entry{flex-wrap:wrap;row-gap:6px;gap:11px;padding:12px 8px}
+  /* sin la pastilla de rol —que el renglon chico ya dice— la actividad entra
+     en la misma linea: mandarla abajo dejaba dos renglones por persona con
+     una sola palabra en el segundo */
+  .entry{gap:10px;padding:11px 6px}
   .entry .pill.rol{display:none}
-  .entry .hizo{order:5;flex:1 1 100%;width:auto;text-align:left;padding-left:44px;font-size:11.5px}
-  .entry .del{order:4}
+  .entry .en small.solo-chico{display:block}
+  .entry .hizo{width:auto;flex:0 1 auto;font-size:11.5px}
   .cfgrow{grid-template-columns:1fr;gap:8px}
   .barra-guardar{flex-wrap:wrap}
   .barra-guardar .helper{width:100%;order:3;margin-right:0}

@@ -78,7 +78,13 @@ export function ListaEquipo({
             <span className="av2">{iniciales(p.nombre)}</span>
             <span className="en">
               <strong>{p.nombre}</strong>
-              {!p.activo && <small>ya no está en el equipo</small>}
+              {/* 🔴 El rol se dice UNA vez por vista. En escritorio lo dice la
+                  pastilla; en el celular la pastilla no entra y lo dice este
+                  renglón, que ahí se enciende. La baja, en cambio, se dice
+                  siempre: es lo que explica por qué el renglón está apagado. */}
+              <small className={p.activo ? 'solo-chico' : undefined}>
+                {p.activo ? ETIQUETA[p.rol] : 'ya no está en el equipo'}
+              </small>
             </span>
             <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
             {!p.activo && <span className="pill no">De baja</span>}

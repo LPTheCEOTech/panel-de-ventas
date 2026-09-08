@@ -1,6 +1,11 @@
 /* La pantalla de login. Es la única con CSS propio: no está en el mockup
    (que arranca ya adentro), así que se arma con los mismos tokens de PAPEL
-   y nada más. Cero colores literales. */
+   y nada más. Cero colores literales.
+
+   🔴 Los nombres de los tokens los define el mockup, y este archivo no se
+   entera cuando cambian: `var(--shadow)` siguió escrito después de que el
+   token pasara a llamarse `--sombra`, y la caja se quedó sin sombra sin que
+   nada fallara. Un `var()` que no existe no es un error: es silencio. */
 .pantalla {
   min-height: 100vh;
   display: grid;
@@ -14,7 +19,7 @@
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: var(--r-card);
-  box-shadow: var(--shadow);
+  box-shadow: var(--sombra-alta);
   padding: 28px 26px;
 }
 .marca {
@@ -41,8 +46,14 @@
   font-weight: 800;
   font-size: 16px;
   letter-spacing: -0.3px;
+  color: var(--ink);
 }
-.marca span { font-size: 11.5px; color: var(--faint); }
+/* 🔴 `.marca span` a secas alcanzaba TAMBIÉN al cuadradito de las iniciales y
+   al span que envuelve al nombre: las iniciales salían grises sobre el verde
+   y el nombre del negocio heredaba el color apagado. El descendiente directo
+   que hay que pintar es solo el subtítulo. */
+.marca > span:last-child > span { font-size: 11.5px; color: var(--faint); display: block; }
+.marca > span:last-child { min-width: 0; }
 .campos { display: flex; flex-direction: column; gap: 13px; }
 .error {
   background: var(--rojo-bg);
