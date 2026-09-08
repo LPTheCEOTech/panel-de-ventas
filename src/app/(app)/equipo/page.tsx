@@ -2,7 +2,7 @@ import { rankingClosers, rankingSetters } from '@/shared/calculo/metricas'
 import { hoyEn, ventana } from '@/shared/calculo/periodo'
 import { IconoEquipo } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
-import { dinero, numero } from '@/shared/formato'
+import { dinero, numero, plural } from '@/shared/formato'
 import { ListaEquipo } from '@/features/equipo/lista'
 
 export default async function Equipo() {
@@ -31,7 +31,7 @@ export default async function Equipo() {
   for (const f of rankingClosers(personas, closers)) {
     resumen[f.persona.id] = {
       valor: dinero(f.valor, config.simbolo),
-      unidad: `· ${f.detalle.cierres} ${f.detalle.cierres === 1 ? 'cierre' : 'cierres'}`,
+      unidad: `· ${plural(f.detalle.cierres ?? 0, 'cierre')}`,
     }
   }
 

@@ -44,6 +44,16 @@ export function numero(n: number): string {
   return n.toLocaleString('en-US')
 }
 
+/**
+ * `1 cierre` · `5 cierres`.
+ *
+ * 🔴 El ranking del modo "Día" decía «1 cierres». Un panel que le muestra a
+ * alguien su propio día mal escrito se lee como un panel descuidado.
+ */
+export function plural(n: number, singular: string, plural = `${singular}s`): string {
+  return `${numero(n)} ${n === 1 ? singular : plural}`
+}
+
 /** Las iniciales de un nombre: `AT` de `Ana Torres`, `MP` de `Marco Pérez`. */
 export function iniciales(nombre: string): string {
   const partes = nombre.trim().split(/\s+/).filter(Boolean)

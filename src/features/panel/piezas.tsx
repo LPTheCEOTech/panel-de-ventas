@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import type { Barra, FilaRanking, Metricas, PasoEmbudo, Tasa } from '@/shared/calculo/metricas'
 import {
-  dinero, dineroCorto, iniciales, numero, porcentaje, porcentajeEntero, puntos,
+  dinero, dineroCorto, iniciales, numero, plural, porcentaje, porcentajeEntero, puntos,
 } from '@/shared/formato'
 import {
   IconoAviso, IconoCash, IconoEquipo, IconoInfo, IconoMedalla, IconoTendencia, IconoTrofeo,
@@ -233,7 +233,7 @@ export function RankingClosers({ filas, simbolo }: { filas: FilaRanking[]; simbo
     <Ranking
       titulo="Ranking · Closers" subtitulo="por cash collected" Icono={IconoTrofeo} filas={filas}
       formatear={(v) => dinero(v, simbolo)}
-      detalle={(f) => `${f.detalle.cierres} cierres · ${porcentajeEntero(f.detalle.tasa)} de cierre`}
+      detalle={(f) => `${plural(f.detalle.cierres ?? 0, 'cierre')} · ${porcentajeEntero(f.detalle.tasa)} de cierre`}
     />
   )
 }
@@ -243,7 +243,7 @@ export function RankingSetters({ filas }: { filas: FilaRanking[] }) {
     <Ranking
       titulo="Ranking · Setters" subtitulo="por agendas" Icono={IconoMedalla} filas={filas}
       formatear={(v) => numero(v)}
-      detalle={(f) => `${porcentajeEntero(f.detalle.tasa)} de agenda · ${numero(f.detalle.leads ?? 0)} leads`}
+      detalle={(f) => `${porcentajeEntero(f.detalle.tasa)} de agenda · ${plural(f.detalle.leads ?? 0, 'lead')}`}
     />
   )
 }
