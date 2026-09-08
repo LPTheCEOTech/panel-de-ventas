@@ -178,7 +178,7 @@ button,input,select,textarea{font:inherit;color:inherit}
    nota al pie arriba, no una tarjeta mas que compite con los datos. */
 .what{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;margin-bottom:16px;line-height:1.45}
 
-.what svg + span{flex:1 1 auto;min-width:0}
+.what svg + span{flex:1 1 0;min-width:0}
 
 .what.read{color:var(--muted);padding:0 2px}
 
@@ -530,6 +530,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .calc.apilado .dv.principal b{font-size:34px;letter-spacing:-1.2px;color:var(--m7)}
 
+.calc.apilado .dv.principal b.sin{color:var(--m7);opacity:.4}
+
 /* ---------- equipo ---------- */
 /* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es
    flex, no grid: la pastilla de estado aparece y desaparece, y con columnas
@@ -720,7 +722,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   .day em{display:none}
   .lbrow{grid-template-columns:14px 28px minmax(0,1fr) auto;gap:9px;padding:8px 2px 12px}
   .lbv b{font-size:14px}
-  .form-grid > .c3,.form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
+  .form-grid > .c3{grid-column:span 6}
+  .form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
   .calc,.calc.c2{grid-template-columns:1fr 1fr}
   .calc.apilado{grid-template-columns:1fr 1fr}
   .form-actions{justify-content:stretch}

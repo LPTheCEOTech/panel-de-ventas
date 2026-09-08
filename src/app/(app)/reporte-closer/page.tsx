@@ -13,7 +13,11 @@ export default async function ReporteCloser() {
   )
 
   return (
-    <>
+    /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
+       en 1320 no queda "amplio": queda estirado, con un contador de dos
+       digitos ocupando 400 px de ancho. El tablero es ancho porque muestra
+       muchas cosas a la vez; esto no. */
+    <div className="hoja">
       <div className="page-head">
         <div>
           <h1>Reporte del Closer</h1>
@@ -43,6 +47,6 @@ export default async function ReporteCloser() {
           simbolo={config.simbolo}
         />
       )}
-    </>
+    </div>
   )
 }

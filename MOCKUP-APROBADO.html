@@ -169,7 +169,7 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 /* banda que dice QUE ES la pantalla. La de solo lectura no lleva caja: es una
    nota al pie arriba, no una tarjeta mas que compite con los datos. */
 .what{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;margin-bottom:16px;line-height:1.45}
-.what svg + span{flex:1 1 auto;min-width:0}
+.what svg + span{flex:1 1 0;min-width:0}
 .what.read{color:var(--muted);padding:0 2px}
 .what.read svg{color:var(--faint)}
 .what.write{background:var(--m1);color:var(--m7);border-radius:var(--r-inner);padding:9px 13px}
@@ -391,6 +391,7 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   margin-bottom:8px;border-bottom:0}
 .calc.apilado .dv.principal span{color:var(--m7);opacity:.65}
 .calc.apilado .dv.principal b{font-size:34px;letter-spacing:-1.2px;color:var(--m7)}
+.calc.apilado .dv.principal b.sin{color:var(--m7);opacity:.4}
 
 /* ---------- equipo ---------- */
 /* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es
@@ -535,7 +536,8 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   .day em{display:none}
   .lbrow{grid-template-columns:14px 28px minmax(0,1fr) auto;gap:9px;padding:8px 2px 12px}
   .lbv b{font-size:14px}
-  .form-grid > .c3,.form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
+  .form-grid > .c3{grid-column:span 6}
+  .form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
   .calc,.calc.c2{grid-template-columns:1fr 1fr}
   .calc.apilado{grid-template-columns:1fr 1fr}
   .form-actions{justify-content:stretch}
@@ -590,7 +592,8 @@ body[data-view="mobile"] .days{gap:5px;min-height:128px}
 body[data-view="mobile"] .day em{display:none}
 body[data-view="mobile"] .lbrow{grid-template-columns:14px 28px minmax(0,1fr) auto;gap:9px;padding:8px 2px 12px}
 body[data-view="mobile"] .lbv b{font-size:14px}
-body[data-view="mobile"] .form-grid > .c3,body[data-view="mobile"] .form-grid > .c4,body[data-view="mobile"] .form-grid > .c6,body[data-view="mobile"] .form-grid > .c8{grid-column:span 12}
+body[data-view="mobile"] .form-grid > .c3{grid-column:span 6}
+body[data-view="mobile"] .form-grid > .c4,body[data-view="mobile"] .form-grid > .c6,body[data-view="mobile"] .form-grid > .c8{grid-column:span 12}
 body[data-view="mobile"] .calc,body[data-view="mobile"] .calc.c2{grid-template-columns:1fr 1fr}
 body[data-view="mobile"] .calc.apilado{grid-template-columns:1fr 1fr}
 body[data-view="mobile"] .form-actions{justify-content:stretch}

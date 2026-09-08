@@ -13,7 +13,11 @@ export default async function ReporteSetter() {
   )
 
   return (
-    <>
+    /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
+       en 1320 no queda "amplio": queda estirado, con un contador de dos
+       digitos ocupando 400 px de ancho. El tablero es ancho porque muestra
+       muchas cosas a la vez; esto no. */
+    <div className="hoja">
       <div className="page-head">
         <div>
           <h1>Reporte del Setter</h1>
@@ -26,7 +30,7 @@ export default async function ReporteSetter() {
       ) : (
         <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} />
       )}
-    </>
+    </div>
   )
 }
 

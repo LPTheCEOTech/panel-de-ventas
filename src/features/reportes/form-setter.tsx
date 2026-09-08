@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { tasa } from '@/shared/calculo/metricas'
 import { IconoAviso, IconoLapiz } from '@/shared/chasis/iconos'
-import { numero, porcentaje } from '@/shared/formato'
+import { fechaLarga, numero, porcentaje } from '@/shared/formato'
 import type { Persona } from '@/shared/tipos'
 import { Derivado, Stepper } from './piezas'
 
@@ -71,6 +71,10 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
 
       <div className="trabajo">
       <div className="card formcard">
+        {/* 🔴 Dos grupos con título, no ocho campos en fila. El formulario
+            pregunta dos cosas distintas —quién sos y qué hiciste— y verlas
+            separadas es lo que hace que se llene sin releer. */}
+        <div className="section-title">Quién y cuándo</div>
         <div className="form-grid">
           <div className="field c4">
             <label htmlFor="f-fecha">Fecha <span className="req">*</span></label>
@@ -82,6 +86,10 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
               {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
+        </div>
+
+        <div className="section-title">Tu día</div>
+        <div className="form-grid">
           <Stepper ancho="c6" nombre="conversaciones" etiqueta="Conversaciones iniciadas" valor={conversaciones}
             onCambio={setConversaciones} pista="Con cuántas personas empezaste una conversación hoy." />
           <Stepper ancho="c6" nombre="agendas" etiqueta="Agendas" valor={agendas}
@@ -102,7 +110,7 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
 
       <div className="lado">
         <div className="card">
-          <div className="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
           <div className="calc apilado">
             <Derivado principal etiqueta="Tasa de agenda" valor={porcentaje(t)} />
             <Derivado etiqueta="Agendas" valor={numero(agendas)} />
@@ -111,11 +119,11 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
         </div>
 
       {existente && (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card">
           <div className="note warn" style={{ marginTop: 0 }}>
             <IconoAviso />
             <span>
-              <b>{persona?.nombre} ya cargó el {fecha}</b> — {numero(existente.conversaciones)} conversaciones
+              <b>{persona?.nombre} ya cargó el {fechaLarga(fecha)}</b> — {numero(existente.conversaciones)} conversaciones
               y {numero(existente.agendas)} agendas. Si enviás de nuevo, se <b>reemplaza</b> lo
               anterior. No se suma.
             </span>

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { tasa } from '@/shared/calculo/metricas'
 import { IconoAviso, IconoLapiz } from '@/shared/chasis/iconos'
-import { dinero, numero, porcentajeEntero } from '@/shared/formato'
+import { dinero, fechaLarga, numero, porcentajeEntero } from '@/shared/formato'
 import type { Persona } from '@/shared/tipos'
 import { CampoDinero, Derivado, Stepper } from './piezas'
 
@@ -89,6 +89,10 @@ export function FormCloser({
 
       <div className="trabajo">
       <div className="card formcard">
+        {/* 🔴 Tres grupos con título, no diez campos en fila. Son tres
+            preguntas distintas —quién sos, cómo te fue en las llamadas y
+            cuánta plata entró— y el que llena esto lo hace cansado, de noche. */}
+        <div className="section-title">Quién y cuándo</div>
         <div className="form-grid">
           <div className="field c4">
             <label htmlFor="c-fecha">Fecha <span className="req">*</span></label>
@@ -100,10 +104,18 @@ export function FormCloser({
               {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
-          <Stepper ancho="c3" nombre="llamadas" etiqueta="Llamadas en agenda" valor={llamadas} onCambio={setLlamadas} />
+        </div>
+
+        <div className="section-title">Las llamadas del día</div>
+        <div className="form-grid">
+          <Stepper ancho="c3" nombre="llamadas" etiqueta="En agenda" valor={llamadas} onCambio={setLlamadas} />
           <Stepper ancho="c3" nombre="asistieron" etiqueta="Asistieron" valor={asistieron} onCambio={setAsistieron} />
           <Stepper ancho="c3" nombre="reagendadas" etiqueta="Reagendadas" valor={reagendadas} onCambio={setReagendadas} />
           <Stepper ancho="c3" nombre="cierres" etiqueta="Cierres" valor={cierres} onCambio={setCierres} />
+        </div>
+
+        <div className="section-title">El dinero del día</div>
+        <div className="form-grid">
           <CampoDinero ancho="c6" nombre="revenue" etiqueta="Revenue contratado" valorCents={revenueCents}
             onCambio={setRevenue} simbolo={simbolo}
             pista="El total que firmaron hoy, aunque lo paguen en cuotas." />
@@ -127,7 +139,7 @@ export function FormCloser({
 
       <div className="lado">
         <div className="card">
-          <div className="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
           <div className="calc apilado">
             <Derivado principal etiqueta="Cobrado" valor={dinero(cashCents, simbolo)} />
             <Derivado etiqueta="Asistencia" valor={porcentajeEntero(tasa(asistieron, llamadas))} />
@@ -137,11 +149,11 @@ export function FormCloser({
         </div>
 
       {existente && (
-        <div className="card" style={{ marginTop: 12 }}>
+        <div className="card">
           <div className="note warn" style={{ marginTop: 0 }}>
             <IconoAviso />
             <span>
-              <b>{persona?.nombre} ya cargó el {fecha}</b> — {numero(existente.llamadas)} llamadas,{' '}
+              <b>{persona?.nombre} ya cargó el {fechaLarga(fecha)}</b> — {numero(existente.llamadas)} llamadas,{' '}
               {numero(existente.cierres)} cierres y {dinero(existente.cashCents, simbolo)} cobrados.
               Si enviás de nuevo, se <b>reemplaza</b> lo anterior. No se suma.
             </span>

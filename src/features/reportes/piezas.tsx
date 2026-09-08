@@ -2,6 +2,8 @@
 
 import { useId } from 'react'
 
+import { EL_GUION } from '@/shared/formato'
+
 /** El `− n ＋` del mockup. El input queda editable: escribir 24 es más rápido
  *  que apretar 24 veces, y en el celular abre el teclado numérico. */
 export function Stepper({
@@ -67,7 +69,9 @@ export function Derivado({ etiqueta, valor, principal }: { etiqueta: string; val
   return (
     <div className={`dv${principal ? ' principal' : ''}`}>
       <span>{etiqueta}</span>
-      <b className="num">{valor}</b>
+      {/* 🔴 El guion de "todavía no se puede calcular" se apaga: en display 800
+          a 34 px un — es una barra negra que parece un dato tachado. */}
+      <b className={`num${valor === EL_GUION ? ' sin' : ''}`}>{valor}</b>
     </div>
   )
 }

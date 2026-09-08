@@ -60,6 +60,17 @@ export function inicialDelDia(iso: string): string {
   return INICIAL_DIA[new Date(Date.UTC(a, m - 1, d)).getUTCDay()]
 }
 
+/**
+ * `24 de julio` — para hablarle a una persona.
+ *
+ * 🔴 El aviso de "ya cargaste este día" decía `2026-07-24`: el formato de la
+ * base, no el de alguien que termina su día de llamadas.
+ */
+export function fechaLarga(iso: string): string {
+  const [, m, d] = iso.split('-').map(Number)
+  return `${d} de ${MESES[m - 1]}`
+}
+
 /** `Semana 20–26 de julio de 2026` · `Jueves 23 de julio` · `Julio de 2026` */
 export function tituloDeVentana(periodo: 'dia' | 'semana' | 'mes', desde: string, hasta: string): string {
   const [a1, m1, d1] = desde.split('-').map(Number)
