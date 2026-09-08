@@ -13,3 +13,5 @@ next-env.d.ts
 # secretos del proyecto — NUNCA se versionan
 .db-password
 .login-password
+.vercel-token
+.mcp.json
