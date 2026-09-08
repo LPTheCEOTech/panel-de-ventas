@@ -1,72 +1,92 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LP · Panel de Ventas — PAPEL v1</title>
+<title>LP · Panel de Ventas — PAPEL v2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
    Panel de Ventas · LP The CEO
-   PAPEL v1 — la identidad es del CLIENTE. Claro por defecto,
+   PAPEL v2 — la identidad es del CLIENTE. Claro por defecto,
    superficies solidas, el acento es el hex de su marca.
 
+   Las tres decisiones que gobiernan todo lo de abajo:
+
+   1. EL VERDE ES EL DINERO. Se reserva para la plata, para la
+      accion primaria y para "estas aca" (la pestana activa). Un
+      icono, una pista de barra o un contador NO son verdes: si
+      todo es acento, no hay acento.
+   2. TRES SUPERFICIES, NO UNA. --bg es el papel, --card la
+      tarjeta y --hueco lo hundido (campos, pistas, tiras). La
+      profundidad la dan las superficies, no un borde mas.
+   3. EL ANCHO SE USA, NO SE ESTIRA. El tablero mide 1320 porque
+      muestra muchas cosas a la vez; las pantallas de trabajo
+      miden 1080 (.hoja) y sus controles miden lo que mide su
+      dato: un contador de dos digitos no ocupa 400 px.
+
    🔴 Toda regla responsive esta DOS veces: como @media real y
-   como body[data-view="mobile"] (la simulacion de la demo).
-   El script de porteo se queda con la primera y tira la segunda.
+   como body[data-view="mobile"] (la simulacion de la demo). El
+   bloque de gemelas lo GENERA scripts/gemelas.py — no se
+   escribe a mano. El script de porteo se queda con la primera
+   y tira la segunda.
    ============================================================ */
 :root{
   --marca:#00D97E;
-  --m1:#E4F6EC; --m3:#8ADCB6; --m4:#3FC48C; --m5:#0A9E63; --m6:#04804E; --m7:#025C38;
-  --ambar:#D89A00; --ambar-bg:#FEF6E0; --ambar-ink:#7A5600;
-  --azul:#2C82C9;  --azul-bg:#EAF6FF;
-  --rojo:#C0453C;  --rojo-bg:#FBECEA;
-  --bg:#F5F9F6; --card:#FFFFFF; --border:#E7EFEA; --line:#EEF4F0;
-  --ink:#0D1A13; --muted:#64786C; --faint:#92A69A;
-  --shadow:0 1px 2px rgba(13,26,19,.03), 0 8px 24px rgba(13,26,19,.025);
-  --glow:0 2px 8px rgba(4,128,78,.26);
-  --r-card:18px; --r-tile:13px; --r-inner:11px; --r-nav:10px; --r-ctl:9px; --r-pill:999px;
+  --m1:#E7F6EE; --m2:#CCEBDB; --m3:#8ADCB6; --m4:#3FC48C; --m5:#0A9E63; --m6:#04804E; --m7:#02533A;
+  --ambar:#B57F08; --ambar-bg:#FDF5E3; --ambar-ink:#6E4C00;
+  --azul:#2C82C9;  --azul-bg:#EAF4FD;
+  --rojo:#C0453C;  --rojo-bg:#FBEDEB;
+  --bg:#F4F8F5; --card:#FFFFFF; --hueco:#F2F7F4; --border:#E2EBE5; --line:#EDF3EF;
+  --ink:#0C1A12; --muted:#5C7167; --faint:#8B9E93;
+  --sombra:0 1px 2px rgba(12,26,18,.04);
+  --sombra-alta:0 1px 2px rgba(12,26,18,.05), 0 16px 32px -18px rgba(12,26,18,.22);
+  --anillo:0 0 0 3px var(--m1);
+  --r-card:14px; --r-tile:10px; --r-inner:10px; --r-nav:9px; --r-ctl:9px; --r-pill:999px;
   --display:"Plus Jakarta Sans","Avenir Next",system-ui,sans-serif;
   --body:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
   --sobre-marca:#FFFFFF;
+  --chevron:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235C7167' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 :root[data-theme="dark"]{
-  --m1:#0B2A1E; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
-  --ambar:#E8B84B; --ambar-bg:#2E2510; --ambar-ink:#F0CC72;
+  --m1:#0C2A1E; --m2:#14402D; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
+  --ambar:#E8B84B; --ambar-bg:#2C2411; --ambar-ink:#F0CC72;
   --azul:#5AA9E6;  --azul-bg:#0F2231;
   --rojo:#E07A70;  --rojo-bg:#2E1614;
-  --bg:#060D0A; --card:#0E1713; --border:#1C2A24; --line:#17231E;
-  --ink:#E9F1EC; --muted:#93A89E; --faint:#6A7D74;
-  --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
-  --glow:0 2px 10px rgba(47,224,154,.20);
+  --bg:#070E0B; --card:#0E1714; --hueco:#131E19; --border:#1E2C26; --line:#18241F;
+  --ink:#E9F1EC; --muted:#94A99F; --faint:#6B7E75;
+  --sombra:0 1px 2px rgba(0,0,0,.5);
+  --sombra-alta:0 1px 2px rgba(0,0,0,.5), 0 16px 32px -18px rgba(0,0,0,.75);
   --sobre-marca:#04231A;
+  --chevron:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A99F' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --m1:#0B2A1E; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
-    --ambar:#E8B84B; --ambar-bg:#2E2510; --ambar-ink:#F0CC72; --azul:#5AA9E6; --azul-bg:#0F2231;
+    --m1:#0C2A1E; --m2:#14402D; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
+    --ambar:#E8B84B; --ambar-bg:#2C2411; --ambar-ink:#F0CC72; --azul:#5AA9E6; --azul-bg:#0F2231;
     --rojo:#E07A70; --rojo-bg:#2E1614;
-    --bg:#060D0A; --card:#0E1713; --border:#1C2A24; --line:#17231E;
-    --ink:#E9F1EC; --muted:#93A89E; --faint:#6A7D74;
-    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
-    --glow:0 2px 10px rgba(47,224,154,.20);
+    --bg:#070E0B; --card:#0E1714; --hueco:#131E19; --border:#1E2C26; --line:#18241F;
+    --ink:#E9F1EC; --muted:#94A99F; --faint:#6B7E75;
+    --sombra:0 1px 2px rgba(0,0,0,.5);
+    --sombra-alta:0 1px 2px rgba(0,0,0,.5), 0 16px 32px -18px rgba(0,0,0,.75);
     --sobre-marca:#04231A;
+    --chevron:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A99F' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   }
 }
 
 *{margin:0;padding:0;box-sizing:border-box}
 html{-webkit-text-size-adjust:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.55;
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:13px;line-height:1.55;
   -webkit-font-smoothing:antialiased}
 button,input,select,textarea{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--m5);outline-offset:2px;border-radius:4px}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--m5);outline-offset:2px;border-radius:5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
 [hidden]{display:none!important}
 
 /* ---------- andamiaje de la demo (NO se porta) ---------- */
 .demo-bar{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  padding:9px 16px;background:#0D1A13;color:#E9F1EC;font-size:12.5px}
+  padding:9px 16px;background:#0C1A12;color:#E9F1EC;font-size:12.5px}
 .demo-bar b{font-family:var(--display);font-weight:800;letter-spacing:-.2px}
 .demo-bar .sep{opacity:.3}
 .demo-bar .seg{display:inline-flex;gap:3px;background:rgba(255,255,255,.08);padding:3px;border-radius:9px}
@@ -75,265 +95,349 @@ button,input,select,textarea{font:inherit;color:inherit}
 .demo-bar .seg button[aria-pressed="true"]{background:#00D97E;color:#04231A}
 .demo-note{margin-left:auto;opacity:.55;font-size:11.5px}
 .ghl{padding:22px 16px 60px;display:flex;justify-content:center}
-.ghl-frame{width:100%;max-width:1320px;border:1px solid var(--border);border-radius:14px;
+.ghl-frame{width:100%;max-width:1460px;border:1px solid var(--border);border-radius:14px;
   overflow:hidden;background:var(--bg);box-shadow:0 30px 70px -35px rgba(0,0,0,.35)}
 body[data-view="mobile"] .ghl-frame{max-width:412px}
 .sc{display:none}
 .sc.on{display:block}
 
 /* ---------- topbar ---------- */
-.topbar{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--card);
-  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40;flex-wrap:wrap}
+/* La barra ocupa todo el ancho pero su CONTENIDO se alinea con el de la
+   pagina: la marca arranca en la misma vertical que el titulo. */
+.topbar{background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:40}
+.topbar-in{max-width:1320px;margin:0 auto;display:flex;align-items:center;gap:16px;
+  padding:9px 22px;flex-wrap:wrap}
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
-.brand-tile{width:32px;height:32px;border-radius:var(--r-tile);background:var(--m6);
+.brand-tile{width:31px;height:31px;border-radius:9px;background:var(--m6);
   color:var(--sobre-marca);display:grid;place-items:center;font-family:var(--display);
-  font-weight:800;font-size:13px;letter-spacing:-.4px}
-.brand-txt strong{display:block;font-family:var(--display);font-weight:800;font-size:14px;
-  letter-spacing:-.3px;line-height:1.2}
-.brand-txt span{font-size:11px;color:var(--faint)}
-.nav{display:flex;gap:4px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;
-  -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);
-  mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
-@media (min-width:940px){.nav{-webkit-mask-image:none;mask-image:none}}
+  font-weight:800;font-size:12.5px;letter-spacing:-.3px}
+.brand-txt strong{display:block;font-family:var(--display);font-weight:800;font-size:13.5px;
+  letter-spacing:-.25px;line-height:1.25}
+.brand-txt span{display:block;font-size:10.5px;color:var(--faint);line-height:1.3}
+.nav{display:flex;gap:3px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none;
+  border-left:1px solid var(--line);padding-left:14px}
 .nav::-webkit-scrollbar{display:none}
-.nav button,.nav a{background:none;border:0;padding:7px 13px;border-radius:var(--r-nav);
-  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;
-  text-decoration:none;display:inline-flex;align-items:center}
-.nav button:hover,.nav a:hover{background:var(--m1);color:var(--m6)}
-.nav button[aria-current="page"],.nav a[aria-current="page"]{background:var(--m6);color:var(--sobre-marca);box-shadow:var(--glow)}
+.nav button,.nav a{background:none;border:0;padding:7px 12px;border-radius:var(--r-nav);
+  font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;
+  text-decoration:none;display:inline-flex;align-items:center;font-family:var(--body)}
+.nav button:hover,.nav a:hover{background:var(--hueco);color:var(--ink)}
+.nav button[aria-current="page"],.nav a[aria-current="page"]{background:var(--m6);color:var(--sobre-marca)}
 .topbar-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:auto}
-.icon-btn{width:32px;height:32px;border-radius:var(--r-ctl);border:1px solid var(--border);
+.icon-btn{width:31px;height:31px;border-radius:var(--r-ctl);border:1px solid var(--border);
   background:var(--card);display:grid;place-items:center;cursor:pointer;color:var(--muted)}
 .icon-btn:hover{border-color:var(--m4);color:var(--m6)}
-.btn-primary{border:0;background:var(--m6);color:var(--sobre-marca);padding:8px 15px;
-  border-radius:var(--r-ctl);font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--glow);
-  white-space:nowrap}
-.btn-ghost{border:1px solid var(--border);background:var(--card);color:var(--muted);
-  padding:8px 15px;border-radius:var(--r-ctl);font-size:13px;font-weight:600;cursor:pointer}
-.btn-ghost:hover{border-color:var(--m4);color:var(--m6)}
-.btn-sm{padding:6px 11px;font-size:12px}
-.quien{display:flex;align-items:center;gap:8px;padding-left:10px;border-left:1px solid var(--line)}
-.quien .av{width:28px;height:28px;border-radius:50%;background:var(--m1);color:var(--m7);
-  display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:11.5px}
-.quien .qn{font-size:12px;font-weight:600;line-height:1.2}
+.quien{display:flex;align-items:center;gap:8px;padding-left:11px;border-left:1px solid var(--line)}
+.quien .av{width:27px;height:27px;border-radius:50%;background:var(--m1);color:var(--m7);
+  display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:11px}
+.quien .qn{font-size:12px;font-weight:600;line-height:1.25}
 .quien .qn small{display:block;font-size:10.5px;color:var(--faint);font-weight:400}
 
-/* ---------- contenido ---------- */
-.wrap{padding:18px 18px 34px;max-width:1320px;margin:0 auto}
-.page-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;
-  flex-wrap:wrap;margin-bottom:12px}
-.page-head h1{font-family:var(--display);font-weight:800;font-size:23px;letter-spacing:-.5px;line-height:1.2}
-.page-head .sub{font-size:13px;color:var(--faint);margin-top:2px}
+/* ---------- lienzo ---------- */
+/* El ritmo vertical: 16 px entre bandas, 14 dentro de una tarjeta, 8 y 4 para
+   lo que va pegado. No hay un cuarto valor. */
+.wrap{padding:20px 22px 44px;max-width:1320px;margin:0 auto}
+/* La hoja: las cuatro pantallas de trabajo no son tableros. Un formulario de
+   cuatro campos en 1320 px no queda "amplio", queda estirado. */
+.hoja{max-width:1080px;margin:0 auto}
+.page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
+  flex-wrap:wrap;margin-bottom:16px}
+.page-head h1{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.55px;line-height:1.15}
+.page-head .sub{font-size:12.5px;color:var(--faint);margin-top:3px}
 .head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.modo{display:inline-flex;background:var(--card);border:1px solid var(--border);
+
+/* el segmentado: el activo es una pastilla LEVANTADA, no un bloque verde.
+   El verde de la barra ya dice en que pantalla estas; que lo diga dos veces
+   convierte el acento en ruido. */
+.modo{display:inline-flex;background:var(--hueco);border:1px solid var(--border);
   border-radius:var(--r-ctl);padding:3px;gap:2px;flex-shrink:0}
-.modo button,.modo a{background:none;border:0;padding:6px 14px;border-radius:6px;font-size:12px;
+.modo button,.modo a{background:none;border:0;padding:5px 13px;border-radius:6px;font-size:12px;
   font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body);
   text-decoration:none;display:inline-flex;align-items:center}
-.modo button[aria-pressed="true"],.modo a[aria-pressed="true"]{background:var(--m6);color:var(--sobre-marca)}
-.modo a:hover{color:var(--m6)}
+.modo button:hover,.modo a:hover{color:var(--ink)}
+.modo button[aria-pressed="true"],.modo a[aria-pressed="true"]{background:var(--card);
+  color:var(--ink);font-weight:700;box-shadow:var(--sombra)}
+/* el paso de fecha: ‹ hoy › */
+.fnav{display:inline-flex;align-items:stretch;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-ctl);overflow:hidden}
+.fnav a,.fnav button{background:none;border:0;color:var(--muted);padding:6px 10px;cursor:pointer;
+  display:inline-flex;align-items:center;text-decoration:none;font-size:12px;font-weight:600;
+  font-family:var(--body)}
+.fnav a:hover,.fnav button:hover{background:var(--hueco);color:var(--ink)}
+.fnav .div{width:1px;background:var(--line);flex-shrink:0}
+.fnav [aria-disabled="true"]{opacity:.3;pointer-events:none}
 
-/* banda que dice QUE ES la pantalla */
-.what{display:flex;align-items:center;gap:10px;border-radius:var(--r-inner);padding:10px 14px;
-  margin-bottom:14px;font-size:12.5px}
-.what.read{background:var(--bg);border:1px dashed var(--border);color:var(--muted)}
-.what.write{background:var(--m1);color:var(--m7)}
+/* banda que dice QUE ES la pantalla. La de solo lectura no lleva caja: es una
+   nota al pie arriba, no una tarjeta mas que compite con los datos. */
+.what{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;margin-bottom:16px;line-height:1.45}
+.what svg + span{flex:1 1 auto;min-width:0}
+.what.read{color:var(--muted);padding:0 2px}
+.what.read svg{color:var(--faint)}
+.what.write{background:var(--m1);color:var(--m7);border-radius:var(--r-inner);padding:9px 13px}
 .what b{font-weight:700}
-.what svg{flex-shrink:0}
-.what .badge-w{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;
-  padding:3px 8px;border-radius:var(--r-pill);white-space:nowrap;flex-shrink:0;margin-left:auto}
-.what.read .badge-w{background:var(--card);color:var(--faint);border:1px solid var(--border)}
+.what svg{flex-shrink:0;margin-top:2px}
+.what .badge-w{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;
+  padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap;flex-shrink:0;margin-left:auto}
+.what.read .badge-w{color:var(--faint);border:1px solid var(--border)}
 .what.write .badge-w{background:var(--m6);color:var(--sobre-marca)}
 
-.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
-  padding:16px 17px;box-shadow:var(--shadow)}
-.card-head{margin-bottom:12px;display:flex;justify-content:space-between;gap:12px;
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);padding:16px 18px}
+.card.crece{display:flex;flex-direction:column}
+.card-head{margin-bottom:14px;display:flex;justify-content:space-between;gap:12px;
   align-items:flex-start;flex-wrap:wrap}
-.card-head h3{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.card-head h3{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:-.25px}
 .card-head h3.h3i{display:flex;align-items:center;gap:8px}
-.card-head h3.h3i svg{color:var(--m6);flex-shrink:0}
-.m-lbl svg{color:currentColor;flex-shrink:0}
-.card-head p{font-size:11.5px;color:var(--faint);margin-top:1px}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
-.note{background:var(--m1);border-radius:var(--r-inner);padding:12px 14px;font-size:12.5px;
-  color:var(--m7);margin-top:12px;display:flex;gap:9px;align-items:flex-start;line-height:1.5}
-.note.warn{background:var(--ambar-bg);color:var(--ambar-ink)}
-.note svg{flex-shrink:0;margin-top:2px}
-.chip{background:var(--m1);color:var(--m7);border-radius:var(--r-pill);padding:4px 11px;
-  font-size:11px;font-weight:700;display:inline-block}
-.chip.n{background:var(--bg);color:var(--muted);border:1px solid var(--border)}
-.chip.bad{background:var(--rojo-bg);color:var(--rojo)}
-.bar{display:block;height:7px;border-radius:var(--r-pill);background:var(--line);overflow:hidden;margin-top:7px}
-.bar i{display:block;height:100%;border-radius:var(--r-pill);background:linear-gradient(90deg,var(--m4),var(--m6))}
-
-/* ---------- dinero ---------- */
-.money{display:grid;grid-template-columns:1.15fr 1fr;gap:12px;margin-bottom:14px}
-.mc{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
-  padding:16px 17px;box-shadow:var(--shadow)}
-.mc.hero{border-color:var(--m4);background:var(--m1)}
-.mc .m-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;
-  color:var(--muted);display:flex;align-items:center;gap:7px}
-.mc.hero .m-lbl{color:var(--m7)}
-.mc .m-val{font-family:var(--display);font-weight:800;font-size:34px;letter-spacing:-1.2px;
-  line-height:1.1;margin-top:6px}
-.mc.hero .m-val{font-size:40px;color:var(--m7)}
-.mc .m-ctx{font-size:12px;color:var(--faint);margin-top:5px}
-.mc .m-ctx b{font-weight:600;color:var(--muted)}
-.mc.hero .m-ctx{color:var(--m7);opacity:.85}
-.mc.hero .m-ctx b{color:var(--m7)}
-
-/* ---------- KPIs ---------- */
-.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
-.kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--r-card);
-  padding:15px 16px;box-shadow:var(--shadow)}
+.card-head h3.h3i svg{color:var(--m5);flex-shrink:0}
+.card-head p{font-size:11.5px;color:var(--faint);margin-top:2px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.grid2:last-child{margin-bottom:0}
+.note{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-inner);
+  padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;display:flex;gap:9px;
+  align-items:flex-start;line-height:1.5}
+.note b{font-weight:600;color:var(--ink)}
+.note svg{flex-shrink:0;margin-top:2px;color:var(--faint)}
+.note.warn{background:var(--ambar-bg);border-color:transparent;color:var(--ambar-ink)}
+.note.warn svg{color:var(--ambar)}
+.note.warn b{color:var(--ambar-ink)}
+.chip{background:var(--m1);color:var(--m7);border-radius:var(--r-pill);padding:4px 10px;
+  font-size:11px;font-weight:700;display:inline-block;white-space:nowrap}
+.chip.n{background:var(--hueco);color:var(--muted);border:1px solid var(--border)}
 .tile{width:32px;height:32px;border-radius:var(--r-tile);background:var(--m1);color:var(--m6);
-  display:grid;place-items:center;margin-bottom:10px}
-.kpi-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
-.kpi-val{font-family:var(--display);font-weight:800;font-size:29px;letter-spacing:-1px;
-  line-height:1.1;margin-top:2px}
-.kpi-ctx{font-size:11.5px;color:var(--faint);margin-top:4px}
-.kpi-ctx b{font-weight:600;color:var(--muted)}
-.delta{font-size:11.5px;font-weight:700;margin-top:8px;display:inline-block}
-.down{color:var(--rojo)} .up{color:var(--m6)} .nil{color:var(--faint)}
+  display:grid;place-items:center}
+/* el medidor: una sola pieza para el cobro, las tasas y el ranking */
+.medidor{display:block;height:8px;border-radius:var(--r-pill);background:var(--line);overflow:hidden}
+.medidor i{display:block;height:100%;border-radius:var(--r-pill);background:var(--m6)}
+.medidor.fino{height:4px}
+.medidor.fino i{background:var(--m4)}
 
-/* ---------- totales derivados ---------- */
-.derived{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
-.dv{background:var(--card);border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
-.dv span{display:block;font-size:10.5px;font-weight:600;text-transform:uppercase;
-  letter-spacing:.6px;color:var(--faint)}
-.dv b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px;
-  display:block;margin-top:2px}
+/* ---------- el resumen: la banda que manda ---------- */
+/* 🔴 Antes habia TRES bandas arriba: dinero (2 tarjetas), tasas (3) y totales
+   (4). Nueve cajas iguales, tres ritmos distintos, y los cuatro totales
+   repetian lo que el embudo dice 20 px mas abajo. Ahora es UNA banda de dos
+   piezas con roles opuestos: a la izquierda la plata (una cifra que manda), a
+   la derecha las tres tasas como renglones. Los cuatro contadores no se
+   perdieron: viven en el contexto de cada tasa ("104 de 342 leads"). */
+.resumen{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:16px;margin-bottom:16px}
+.plata{background:var(--m1);border:1px solid var(--m2);border-radius:var(--r-card);
+  padding:18px 20px;box-shadow:var(--sombra-alta);display:flex;flex-direction:column}
+.plata-h{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.m-lbl{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--m7);display:flex;align-items:center;gap:7px;opacity:.72}
+.m-lbl svg{color:currentColor;flex-shrink:0}
+.plata .chip{background:var(--m2);color:var(--m7)}
+.plata-v{font-family:var(--display);font-weight:800;font-size:44px;letter-spacing:-1.9px;
+  line-height:1.02;margin-top:12px;color:var(--m7)}
+.plata-ctx{font-size:12px;color:var(--m7);opacity:.78;margin-top:5px}
+.plata-ctx b{font-weight:700;opacity:1}
+.plata .medidor{margin-top:14px;background:var(--m2)}
+.plata-pie{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:auto;
+  padding-top:15px;border-top:1px solid var(--m2)}
+.plata .medidor + .plata-pie{margin-top:18px}
+.plata-pie > div{display:flex;flex-direction:column;justify-content:flex-end}
+.plata-pie span{display:block;font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--m7);opacity:.6}
+.plata-pie b{display:block;font-family:var(--display);font-weight:800;font-size:17px;
+  letter-spacing:-.4px;color:var(--m7);margin-top:3px}
+
+/* las tres tasas: renglones con medidor, no tres tarjetas globo */
+.tasas{display:flex;flex-direction:column;justify-content:center;padding:4px 18px}
+.tasa{padding:13px 0;border-bottom:1px solid var(--line)}
+.tasa:last-child{border-bottom:0}
+.tasa-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tasa-l{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:var(--muted)}
+.tasa-b{display:flex;align-items:baseline;gap:10px;margin-top:3px}
+.tasa-v{font-family:var(--display);font-weight:800;font-size:26px;letter-spacing:-1px;line-height:1.1}
+.tasa-c{font-size:11.5px;color:var(--faint);min-width:0}
+.tasa-c b{font-weight:600;color:var(--muted)}
+.tasa .medidor{margin-top:9px}
+.delta{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:var(--r-pill);white-space:nowrap}
+.delta.up{background:var(--m1);color:var(--m6)}
+.delta.down{background:var(--rojo-bg);color:var(--rojo)}
+.delta.nil{color:var(--faint);padding-left:0;padding-right:0}
 
 /* ---------- embudo ---------- */
-.fn{display:flex;flex-direction:column;gap:11px}
-.fnr{display:grid;grid-template-columns:104px 1fr 118px;align-items:center;gap:12px}
-.fnr .fn-n{font-size:12.5px;font-weight:600;color:var(--muted)}
-.fn-track{display:block;height:30px;border-radius:var(--r-inner);background:var(--line);overflow:hidden}
-.fn-track i{font-style:normal;display:flex;align-items:center;height:100%;border-radius:var(--r-inner);
-  background:linear-gradient(90deg,var(--m4),var(--m6));color:var(--sobre-marca);
-  font-family:var(--display);font-weight:800;font-size:12.5px;padding:0 11px;min-width:62px}
-.fnr .fn-cv{text-align:right;font-size:11.5px;color:var(--faint);white-space:nowrap}
-.fnr .fn-cv b{color:var(--m6);font-weight:700}
+/* El paso y su conversion van APILADOS a la izquierda: el ojo lee "Agendas /
+   30% de leads" de un saque, y la barra se queda con todo el ancho. El valor
+   sale de adentro de la barra — un numero adentro obliga a un ancho minimo, y
+   ese minimo le miente a la proporcion. */
+.fn{display:flex;flex-direction:column}
+.fnr{display:grid;grid-template-columns:126px minmax(0,1fr) 78px;align-items:center;gap:14px;
+  padding:6px 0}
+.fn-n{min-width:0}
+.fn-n strong{display:block;font-size:12.5px;font-weight:600}
+.fn-n small{display:block;font-size:10.5px;color:var(--faint);margin-top:1px}
+.fn-n small b{font-weight:700;color:var(--muted)}
+.fn-track{display:block;height:26px;border-radius:8px;background:var(--line);overflow:hidden}
+.fn-track i{display:block;height:100%;border-radius:8px;background:var(--m3);min-width:3px}
+.fnr:nth-child(3) .fn-track i,.fnr:nth-child(4) .fn-track i{background:var(--m4)}
+.fnr:nth-child(5) .fn-track i{background:var(--m5)}
+.fnr:nth-child(6) .fn-track i{background:var(--m6)}
+.fn-v{text-align:right;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.4px}
+.fnr:nth-child(6) .fn-v{color:var(--m6)}
 
 /* ---------- grafico de dias ---------- */
-.chart{width:100%;height:auto;display:block;overflow:visible}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:9px;align-items:end;height:132px;margin-top:6px}
-.day{display:flex;flex-direction:column;justify-content:flex-end;gap:7px;height:100%}
-.day i{display:block;border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,var(--m4),var(--m6))}
-.day.hl i{background:linear-gradient(180deg,var(--m5),var(--m7))}
+/* 🔴 La barra vive en su PROPIA pista. Cuando el porcentaje se aplicaba a la
+   columna entera —que ademas contenia las dos etiquetas— el dia de $8.7k y el
+   de $5.2k salian casi iguales: el flex le comia a la barra alta lo que las
+   etiquetas necesitaban. Con una pista aparte y la barra en absoluto, el alto
+   es el dato. */
+.days{display:grid;gap:10px;flex:1;min-height:156px;margin-top:2px}
+.day{display:flex;flex-direction:column;gap:7px;min-width:0}
+.day-t{position:relative;flex:1;min-height:0;border-bottom:1px solid var(--border)}
+.day-t i{position:absolute;left:0;right:0;bottom:0;border-radius:6px 6px 0 0;
+  background:var(--m3);min-height:2px}
+.day.hl .day-t i{background:var(--m6)}
+.day em{font-size:10.5px;color:var(--faint);text-align:center;font-style:normal;font-weight:600}
+.day.hl em{color:var(--m6)}
 .day small{font-size:10.5px;color:var(--faint);text-align:center;font-weight:600}
-.day em{font-size:10px;color:var(--faint);text-align:center;font-style:normal}
 
 /* ---------- ranking ---------- */
-.lb{display:flex;flex-direction:column}
-.lbrow{display:grid;grid-template-columns:20px auto 1fr auto;align-items:center;gap:11px;
-  padding:11px 0;border-bottom:1px solid var(--line)}
-.lbrow:last-child{border-bottom:0}
-.rk{font-family:var(--display);font-weight:800;font-size:12px;color:var(--faint);text-align:center}
+/* La barra no va debajo del numero (ahi parece un subrayado): PINTA el renglon.
+   El largo del relleno es la parte que se llevo esa persona. */
+.lb{display:flex;flex-direction:column;gap:6px}
+.lbrow{display:grid;grid-template-columns:16px 30px minmax(0,1fr) auto;align-items:center;gap:11px;
+  padding:9px 4px 13px;
+  background-image:linear-gradient(var(--m4),var(--m4)),linear-gradient(var(--line),var(--line));
+  background-size:var(--w,0%) 3px,100% 3px;background-position:left bottom,left bottom;
+  background-repeat:no-repeat}
+.lbrow:first-child{background-image:linear-gradient(var(--m6),var(--m6)),linear-gradient(var(--line),var(--line))}
+.rk{font-family:var(--display);font-weight:800;font-size:11.5px;color:var(--faint);text-align:center}
 .rk.g1{color:var(--m6)}
-.av2{display:grid;width:32px;height:32px;border-radius:50%;background:var(--m1);color:var(--m7);display:grid;
-  place-items:center;font-family:var(--display);font-weight:800;font-size:11.5px}
+.av2{width:30px;height:30px;border-radius:50%;background:var(--card);border:1px solid var(--border);
+  color:var(--m7);display:grid;place-items:center;font-family:var(--display);font-weight:800;
+  font-size:10.5px}
 .lbn{min-width:0}
 .lbn strong{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;
   text-overflow:ellipsis}
-.lbn small{display:block;font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.lbv{text-align:right;min-width:96px}
+.lbn small{display:block;font-size:11px;color:var(--faint);white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis}
+.lbv{text-align:right}
 .lbv b{font-family:var(--display);font-weight:800;font-size:15.5px;letter-spacing:-.4px}
-.lbv .bar{width:88px;margin-left:auto}
 
-/* ---------- formularios ---------- */
+/* ---------- pantallas de trabajo ---------- */
 /* 🔴 El eje que faltaba.
-   Las tres pantallas de trabajo (los dos reportes y Equipo) tienen DOS partes
-   con roles distintos: donde se teclea, y lo que eso produce. Metidas en una
-   sola columna angosta, la segunda queda abajo del pliegue — se carga a ciegas
-   y hay que bajar para ver si el número dio. Al lado, se ve mientras se teclea.
-   El ancho no se "aprovecha": se usa para poner la consecuencia a la vista. */
-.trabajo{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
-.trabajo > .lado{position:sticky;top:74px}
-.formcard{max-width:none}
-.section-title{font-family:var(--display);font-weight:800;font-size:12px;
-  text-transform:uppercase;color:var(--faint);margin:18px 0 10px;letter-spacing:.8px}
+   Las cuatro pantallas de trabajo tienen DOS partes con roles distintos: donde
+   se teclea, y lo que eso produce. Metidas en una sola columna angosta, la
+   segunda queda abajo del pliegue — se carga a ciegas y hay que bajar para ver
+   si el numero dio. Al lado, se ve mientras se teclea. */
+.trabajo{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:16px;align-items:start}
+.trabajo > .lado{position:sticky;top:78px;display:flex;flex-direction:column;gap:12px}
+.section-title{font-family:var(--display);font-weight:800;font-size:11px;
+  text-transform:uppercase;color:var(--faint);margin:18px 0 10px;letter-spacing:.9px}
 .section-title:first-child{margin-top:0}
 /* 🔴 12 columnas, no 3.
-   Los campos de este formulario no miden lo mismo: un contador de dos dígitos
-   y un monto de cinco cifras no pueden ocupar el mismo ancho sin que uno de los
-   dos se vea mal. Con 12 cada campo pide lo que su dato necesita, y los cuatro
-   contadores entran en UNA fila en vez de tres. */
-.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+   Los campos de este formulario no miden lo mismo: un contador de dos digitos
+   y un monto de cinco cifras no pueden ocupar el mismo ancho sin que uno de
+   los dos se vea mal. Con 12, cada campo pide lo que su dato necesita. Y el
+   CONTROL tiene su propio tope: la celda puede medir 340 px, el contador mide
+   150 y ahi se queda. */
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
 .form-grid > .field{grid-column:span 12}
 .form-grid > .c3{grid-column:span 3}
 .form-grid > .c4{grid-column:span 4}
 .form-grid > .c6{grid-column:span 6}
 .form-grid > .c8{grid-column:span 8}
-.field{display:flex;flex-direction:column;gap:5px}
+.field{display:flex;flex-direction:column;gap:6px}
 .field.full{grid-column:1/-1}
 .field label{font-size:11.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;
   gap:6px;flex-wrap:wrap}
-.field label .req{color:var(--m6);font-weight:800}
+.field label .req{color:var(--m5);font-weight:800}
 .field .hint{font-size:11px;color:var(--faint);font-weight:400;line-height:1.45}
-.field input,.field select{background:var(--bg);border:1px solid var(--border);
+.field input,.field select{background:var(--hueco);border:1px solid var(--border);
   border-radius:var(--r-ctl);padding:9px 11px;font-size:13.5px;font-family:var(--body);width:100%}
-.field input:focus,.field select:focus{border-color:var(--m5);outline:none}
-.step{display:grid;grid-template-columns:38px 1fr 38px;background:var(--bg);border:1px solid var(--border);
-  border-radius:var(--r-ctl);overflow:hidden}
-.step button{border:0;background:none;color:var(--muted);font-size:17px;cursor:pointer;height:37px;
+.field input::placeholder{color:var(--faint)}
+.field input:focus,.field select:focus{border-color:var(--m5);outline:none;box-shadow:var(--anillo)}
+.field select{appearance:none;-webkit-appearance:none;background-image:var(--chevron);
+  background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
+.field input[type="date"]{max-width:190px}
+.form-grid select{max-width:330px}
+.step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
+  border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
+.step button{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;height:38px;
   font-family:var(--body)}
 .step button:hover{background:var(--m1);color:var(--m6)}
 .step input{border:0!important;background:none!important;text-align:center;
   font-family:var(--display);font-weight:800;font-size:16px;padding:0!important}
-.money-inp{display:flex;align-items:center;background:var(--bg);border:1px solid var(--border);
-  border-radius:var(--r-ctl);overflow:hidden}
-.money-inp .cur{padding:0 2px 0 11px;font-family:var(--display);font-weight:800;font-size:14px;color:var(--faint)}
+.step:focus-within{border-color:var(--m5);box-shadow:var(--anillo)}
+.money-inp{display:flex;align-items:center;background:var(--hueco);border:1px solid var(--border);
+  border-radius:var(--r-ctl);overflow:hidden;max-width:224px}
+.money-inp .cur{padding:0 2px 0 11px;font-family:var(--display);font-weight:800;font-size:14px;
+  color:var(--faint)}
 .money-inp input{border:0!important;background:none!important;font-family:var(--display);
   font-weight:800;font-size:16px;padding:9px 11px 9px 4px!important}
-.money-inp:focus-within{border-color:var(--m5)}
+.money-inp:focus-within{border-color:var(--m5);box-shadow:var(--anillo)}
 .money-inp.hero{border-color:var(--m4);background:var(--m1)}
 .money-inp.hero input,.money-inp.hero .cur{color:var(--m7)}
+.form-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;padding-top:16px;
+  border-top:1px solid var(--line);flex-wrap:wrap;align-items:center}
+.form-actions .helper{margin-right:auto;font-size:11.5px;color:var(--faint)}
+
+/* lo que el formulario produce, en la columna de al lado */
+.dv span{display:block;font-size:10.5px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:var(--faint)}
+.dv b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px;
+  display:block;margin-top:2px}
 .calc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;padding-top:16px;
   border-top:1px solid var(--line)}
 .calc.c2{grid-template-columns:repeat(2,1fr)}
-/* en la columna lateral el resultado se apila y el número manda sobre la etiqueta */
+.calc .dv{background:var(--card);border:1px solid var(--border);border-radius:var(--r-inner);
+  padding:11px 13px}
+/* en la columna lateral el resultado se apila y el numero manda sobre la etiqueta */
 .calc.apilado{grid-template-columns:1fr;gap:0;margin-top:0;padding-top:0;border-top:0}
-.calc.apilado .dv{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:11px 2px}
+.calc.apilado .dv{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:12px 2px;
+  background:none}
 .calc.apilado .dv:last-child{border-bottom:0}
-.calc.apilado .dv b{font-size:26px;letter-spacing:-.8px}
-.calc.apilado .dv.principal b{font-size:34px;color:var(--m6)}
-.form-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;align-items:center}
-.form-actions .helper{margin-right:auto;font-size:11.5px;color:var(--faint)}
+.calc.apilado .dv b{font-size:24px;letter-spacing:-.7px}
+.calc.apilado .dv.principal{background:var(--m1);border-radius:var(--r-inner);padding:14px 15px;
+  margin-bottom:8px;border-bottom:0}
+.calc.apilado .dv.principal span{color:var(--m7);opacity:.65}
+.calc.apilado .dv.principal b{font-size:34px;letter-spacing:-1.2px;color:var(--m7)}
 
 /* ---------- equipo ---------- */
-.entry{border:1px solid var(--border);border-radius:var(--r-inner);background:var(--bg);
-  padding:11px 13px;margin-bottom:9px;display:grid;
-  grid-template-columns:auto minmax(0,1.4fr) auto auto minmax(0,1fr) auto;gap:14px;align-items:center}
-/* lo que hizo esta semana es una COLUMNA, no un renglón chico debajo del nombre:
-   es el dato por el que se entra a esta pantalla */
-.entry .hizo{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap;
-  overflow:hidden;text-overflow:ellipsis}
-.entry .hizo b{font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink)}
-.entry.off .hizo{color:var(--faint)}
-.entry.off{opacity:.6}
-.entry .en{min-width:0}
+/* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es
+   flex, no grid: la pastilla de estado aparece y desaparece, y con columnas
+   fijas cada aparicion corria todo lo demas de lugar. */
+.entry{display:flex;align-items:center;gap:13px;padding:11px 10px;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:0}
+.entry:hover{background:var(--hueco)}
+.entry .en{flex:1;min-width:0}
 .entry .en strong{display:block;font-size:13.5px;font-weight:600}
-.entry .en small{display:block;font-size:11px;color:var(--faint)}
-.entry .del{border:1px solid var(--border);background:var(--card);color:var(--faint);
-  border-radius:var(--r-ctl);width:33px;height:33px;cursor:pointer;display:grid;place-items:center}
+.entry .en small{display:block;font-size:11px;color:var(--faint);margin-top:1px}
+/* lo que hizo esta semana es una COLUMNA, no un renglon chico debajo del
+   nombre: es el dato por el que se entra a esta pantalla */
+.entry .hizo{width:152px;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;flex-shrink:0}
+.entry .hizo b{font-family:var(--display);font-weight:800;font-size:14.5px;color:var(--ink)}
+.entry.off{opacity:.55}
+.entry.off .hizo{color:var(--faint)}
+.entry .del{border:1px solid transparent;background:none;color:var(--faint);
+  border-radius:var(--r-ctl);width:32px;height:32px;cursor:pointer;display:grid;place-items:center;
+  flex-shrink:0}
+.entry:hover .del{border-color:var(--border);background:var(--card)}
 .entry .del:hover{border-color:var(--rojo);color:var(--rojo)}
-.pill{border-radius:var(--r-pill);padding:3px 9px;font-size:10px;font-weight:700;
-  text-transform:uppercase;letter-spacing:.4px;white-space:nowrap}
+.entry.off .del:hover{border-color:var(--m4);color:var(--m6)}
+.pill{border-radius:var(--r-pill);padding:3px 10px;font-size:10px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;flex-shrink:0;text-align:center}
+.pill.rol{min-width:106px}
 .pill.set{background:var(--azul-bg);color:var(--azul)}
 .pill.clo{background:var(--m1);color:var(--m7)}
 .pill.amb{background:var(--ambar-bg);color:var(--ambar-ink)}
-.pill.no{background:var(--bg);color:var(--faint);border:1px solid var(--border)}
-.addrow{display:grid;grid-template-columns:1fr;gap:11px;align-items:end}
+.pill.no{background:var(--hueco);color:var(--faint);border:1px solid var(--border)}
+.addrow{display:flex;flex-direction:column;gap:12px}
 .addrow .btn-primary{width:100%}
 
 /* ---------- ajustes ---------- */
-.cfgrow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(160px,.85fr);gap:14px;
+.cfgrow{display:grid;grid-template-columns:minmax(0,1fr) 246px;gap:16px;
   align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
 .cfgrow:last-child{border-bottom:0}
-.cfg-n{font-weight:600;font-size:13.5px}
+.cfg-n{font-weight:600;font-size:13px}
 .cfg-src{font-size:11px;color:var(--faint);margin-top:2px;line-height:1.45}
-.sw{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--muted)}
+.color-inp{display:flex;align-items:center;gap:9px;background:var(--hueco);
+  border:1px solid var(--border);border-radius:var(--r-ctl);padding-left:10px}
+.color-inp .muestra{width:20px;height:20px;border-radius:6px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.color-inp input{border:0!important;background:none!important;padding:9px 11px 9px 2px!important}
+.color-inp:focus-within{border-color:var(--m5);box-shadow:var(--anillo)}
+.sw{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-size:12.5px;color:var(--muted)}
 .sw input[type=checkbox]{appearance:none;width:36px!important;height:20px;flex:0 0 36px;
   border-radius:var(--r-pill);background:var(--border);position:relative;cursor:pointer;
   flex-shrink:0;transition:background .15s;padding:0!important;border:0!important}
@@ -341,117 +445,176 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .sw input[type=checkbox]::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;
   border-radius:50%;background:var(--card);transition:transform .15s}
 .sw input[type=checkbox]:checked::after{transform:translateX(16px)}
+/* la accion vive abajo de las DOS columnas: el boton guarda toda la pagina,
+   no la tarjeta en la que quedo */
+.barra-guardar{display:flex;align-items:center;gap:12px;justify-content:flex-end;margin-top:16px;
+  padding:12px 16px;background:var(--card);border:1px solid var(--border);border-radius:var(--r-card)}
+.barra-guardar .helper{margin-right:auto;font-size:12px;color:var(--faint)}
+
+/* ---------- botones ---------- */
+.btn-primary{border:0;background:var(--m6);color:var(--sobre-marca);padding:9px 16px;
+  border-radius:var(--r-ctl);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;
+  line-height:1.35;font-family:var(--body)}
+.btn-primary:hover{background:var(--m7);color:var(--sobre-marca)}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed}
+.btn-ghost{border:1px solid var(--border);background:var(--card);color:var(--muted);
+  padding:9px 15px;border-radius:var(--r-ctl);font-size:13px;font-weight:600;cursor:pointer;
+  font-family:var(--body)}
+.btn-ghost:hover{border-color:var(--m4);color:var(--m6)}
+.btn-ghost:disabled{opacity:.45;cursor:not-allowed}
+.btn-sm{padding:6px 11px;font-size:12px}
 
 /* ---------- vacio ---------- */
-.empty{text-align:center;padding:34px 20px}
-.empty .tile{margin:0 auto 12px}
-.empty h3{font-family:var(--display);font-weight:800;font-size:16px;letter-spacing:-.3px}
-.empty p{font-size:12.5px;color:var(--faint);margin-top:5px;max-width:44ch;margin-left:auto;margin-right:auto}
-.empty .btn-primary{margin-top:14px}
-.vacio .kpi-val,.vacio .m-val,.vacio .dv b{color:var(--faint)}
+.empty{text-align:center;padding:40px 20px}
+.empty .tile{margin:0 auto 14px}
+.empty h3{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.3px}
+.empty p{font-size:12.5px;color:var(--faint);margin-top:6px;max-width:46ch;margin-left:auto;
+  margin-right:auto;line-height:1.55}
+.empty .btn-primary{margin-top:16px;display:inline-block;text-decoration:none}
+/* 🔴 El guion de "no se puede calcular" NO se pinta como un numero.
+   En display 800 a 26 px un — es una barra negra: parece un dato tachado.
+   Apagado y sin peso, se lee como lo que es: todavia no hay con que. */
+.tasa-v.sin,.dv b.sin,.plata-pie b.sin{color:var(--faint);font-weight:600;letter-spacing:0}
+.vacio .plata-v{opacity:.45}
 
-/* ============ RESPONSIVE — cada regla, dos veces ============ */
-@media (max-width:1140px){
+/* ============ RESPONSIVE ============ */
+/* 🔴 Todas las consultas son max-width, a proposito: la simulacion de celular
+   de la demo (un marco de 412 px dentro de una ventana ancha) solo puede
+   copiar reglas que dependan de que la pantalla sea CHICA. Una min-width no
+   tiene gemela posible y dejaria la demo mintiendo. */
+
+/* la columna del formulario se queda sin aire antes que la pagina */
+@media (max-width:1040px){
   .trabajo{grid-template-columns:1fr}
   .trabajo > .lado{position:static}
   .calc.apilado{grid-template-columns:repeat(4,1fr);gap:10px}
-  .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
-  .calc.apilado .dv b,.calc.apilado .dv.principal b{font-size:19px;letter-spacing:-.5px}
-  .form-grid > .c3{grid-column:span 6}
-  .form-grid > .c4,.form-grid > .c8{grid-column:span 12}
-  .entry{grid-template-columns:auto minmax(0,1fr) auto auto auto}
-  .entry .hizo{display:none}
+  .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:12px 13px}
+  .calc.apilado .dv b,.calc.apilado .dv.principal b{font-size:20px;letter-spacing:-.5px}
+  .calc.apilado .dv.principal{margin-bottom:0;padding:12px 13px;border:1px solid var(--m4)}
 }
-@media (max-width:1000px){
-  .money{grid-template-columns:1fr}
-  .kpis{grid-template-columns:1fr}
-  .grid2{grid-template-columns:1fr}
-}
-body[data-view="mobile"] .trabajo{grid-template-columns:1fr}
-body[data-view="mobile"] .trabajo > .lado{position:static}
-body[data-view="mobile"] .calc.apilado{grid-template-columns:1fr 1fr;gap:10px}
-body[data-view="mobile"] .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
-body[data-view="mobile"] .calc.apilado .dv b,body[data-view="mobile"] .calc.apilado .dv.principal b{font-size:19px;letter-spacing:-.5px}
-body[data-view="mobile"] .entry .hizo{display:none}
-body[data-view="mobile"] .money{grid-template-columns:1fr}
-body[data-view="mobile"] .kpis{grid-template-columns:1fr}
-body[data-view="mobile"] .grid2{grid-template-columns:1fr}
 
+/* dos columnas de tarjetas dejan de entrar */
+@media (max-width:900px){
+  .resumen{grid-template-columns:1fr}
+  .grid2{grid-template-columns:1fr}
+  .nav{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
+  .plata-v{font-size:38px}
+}
+
+/* el formulario ya no parte en cuatro */
+@media (max-width:760px){
+  .form-grid > .c3{grid-column:span 6}
+}
+
+/* celular */
 @media (max-width:600px){
-  .topbar{padding:9px 12px;gap:9px;row-gap:9px}
+  .topbar-in{padding:9px 14px;gap:10px;row-gap:10px}
   .brand-txt span{display:none}
-  .nav{order:3;width:100%;flex:0 0 100%;border-top:1px solid var(--line);padding-top:8px}
+  .nav{order:3;width:100%;flex:0 0 100%;border-left:0;padding-left:0;
+    border-top:1px solid var(--line);padding-top:8px}
   .quien .qn{display:none}
-  .wrap{padding:14px 12px 30px}
+  .wrap{padding:14px 14px 32px}
   .page-head h1{font-size:19px}
-  .derived{grid-template-columns:1fr 1fr;gap:9px}
-  .kpi{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:13px}
-  .kpi .tile{margin-bottom:0}
-  .kpi-val{font-size:24px;text-align:right}
-  .kpi .kdx{text-align:right}
-  .mc .m-val{font-size:28px}
-  .mc.hero .m-val{font-size:33px}
-  .fnr{grid-template-columns:78px 1fr}
-  .fnr .fn-cv{display:none}
+  .page-head{margin-bottom:14px}
+  .what{margin-bottom:14px;flex-wrap:wrap}
+  .what .badge-w{margin-left:0;order:3}
+  .card{padding:14px 15px}
+  .grid2{gap:12px;margin-bottom:12px}
+  .resumen{gap:12px;margin-bottom:12px}
+  .plata{padding:16px}
+  .plata-v{font-size:32px;letter-spacing:-1.3px}
+  .plata-pie{gap:10px;padding-top:12px}
+  .plata-pie > div{padding-top:11px}
+  .plata-pie b{font-size:15px}
+  .tasas{padding:2px 15px}
+  .tasa-v{font-size:22px}
+  .fnr{grid-template-columns:100px minmax(0,1fr) 60px;gap:10px}
+  .fn-v{font-size:13.5px}
+  .days{gap:5px;min-height:128px}
+  .day em{display:none}
+  .lbrow{grid-template-columns:14px 28px minmax(0,1fr) auto;gap:9px;padding:8px 2px 12px}
+  .lbv b{font-size:14px}
   .form-grid > .c3,.form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
   .calc,.calc.c2{grid-template-columns:1fr 1fr}
-  .calc.apilado{grid-template-columns:1fr 1fr;gap:10px}
-  .days{gap:5px;height:112px}
-  .day em{display:none}
-  .lbv{min-width:78px}
-  .lbv .bar{display:none}
-  .entry{grid-template-columns:auto 1fr auto;row-gap:8px}
-  .entry .pill.est{grid-column:2/3;justify-self:start}
-  .entry .del{grid-row:1;grid-column:3}
-  .addrow{grid-template-columns:1fr}
-  .cfgrow{grid-template-columns:1fr;gap:7px}
+  .calc.apilado{grid-template-columns:1fr 1fr}
+  .form-actions{justify-content:stretch}
   .form-actions .helper{margin-right:0;width:100%;order:3}
-  .what{flex-wrap:wrap}
-  .what .badge-w{margin-left:0;order:3}
   .form-actions .btn-primary{width:100%}
+  .entry{flex-wrap:wrap;row-gap:6px;gap:11px;padding:12px 8px}
+  .entry .pill.rol{display:none}
+  .entry .hizo{order:5;flex:1 1 100%;width:auto;text-align:left;padding-left:44px;font-size:11.5px}
+  .entry .del{order:4}
+  .cfgrow{grid-template-columns:1fr;gap:8px}
+  .barra-guardar{flex-wrap:wrap}
+  .barra-guardar .helper{width:100%;order:3;margin-right:0}
+  .barra-guardar .btn-primary{width:100%}
 }
-body[data-view="mobile"] .topbar{padding:9px 12px;gap:9px;row-gap:9px}
+
+/* --- gemelas de la demo: lo GENERA scripts/gemelas.py, no se escribe a mano --- */
+body[data-view="mobile"] .trabajo{grid-template-columns:1fr}
+body[data-view="mobile"] .trabajo > .lado{position:static}
+body[data-view="mobile"] .calc.apilado{grid-template-columns:repeat(4,1fr);gap:10px}
+body[data-view="mobile"] .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:12px 13px}
+body[data-view="mobile"] .calc.apilado .dv b,body[data-view="mobile"] .calc.apilado .dv.principal b{font-size:20px;letter-spacing:-.5px}
+body[data-view="mobile"] .calc.apilado .dv.principal{margin-bottom:0;padding:12px 13px;border:1px solid var(--m4)}
+body[data-view="mobile"] .resumen{grid-template-columns:1fr}
+body[data-view="mobile"] .grid2{grid-template-columns:1fr}
+body[data-view="mobile"] .nav{-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
+body[data-view="mobile"] .plata-v{font-size:38px}
+body[data-view="mobile"] .form-grid > .c3{grid-column:span 6}
+body[data-view="mobile"] .topbar-in{padding:9px 14px;gap:10px;row-gap:10px}
 body[data-view="mobile"] .brand-txt span{display:none}
-body[data-view="mobile"] .nav{order:3;width:100%;flex:0 0 100%;border-top:1px solid var(--line);padding-top:8px}
+body[data-view="mobile"] .nav{order:3;width:100%;flex:0 0 100%;border-left:0;padding-left:0;
+    border-top:1px solid var(--line);padding-top:8px}
 body[data-view="mobile"] .quien .qn{display:none}
-body[data-view="mobile"] .wrap{padding:14px 12px 30px}
+body[data-view="mobile"] .wrap{padding:14px 14px 32px}
 body[data-view="mobile"] .page-head h1{font-size:19px}
-body[data-view="mobile"] .derived{grid-template-columns:1fr 1fr;gap:9px}
-body[data-view="mobile"] .kpi{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:13px}
-body[data-view="mobile"] .kpi .tile{margin-bottom:0}
-body[data-view="mobile"] .kpi-val{font-size:24px;text-align:right}
-body[data-view="mobile"] .kpi .kdx{text-align:right}
-body[data-view="mobile"] .mc .m-val{font-size:28px}
-body[data-view="mobile"] .mc.hero .m-val{font-size:33px}
-body[data-view="mobile"] .fnr{grid-template-columns:78px 1fr}
-body[data-view="mobile"] .fnr .fn-cv{display:none}
-body[data-view="mobile"] .form-grid > .c3,body[data-view="mobile"] .form-grid > .c4,
-body[data-view="mobile"] .form-grid > .c6,body[data-view="mobile"] .form-grid > .c8{grid-column:span 12}
-body[data-view="mobile"] .calc,body[data-view="mobile"] .calc.c2{grid-template-columns:1fr 1fr}
-body[data-view="mobile"] .days{gap:5px;height:112px}
-body[data-view="mobile"] .day em{display:none}
-body[data-view="mobile"] .lbv{min-width:78px}
-body[data-view="mobile"] .lbv .bar{display:none}
-body[data-view="mobile"] .entry{grid-template-columns:auto 1fr auto;row-gap:8px}
-body[data-view="mobile"] .entry .pill.est{grid-column:2/3;justify-self:start}
-body[data-view="mobile"] .entry .del{grid-row:1;grid-column:3}
-body[data-view="mobile"] .addrow{grid-template-columns:1fr}
-body[data-view="mobile"] .cfgrow{grid-template-columns:1fr;gap:7px}
-body[data-view="mobile"] .form-actions .helper{margin-right:0;width:100%;order:3}
-body[data-view="mobile"] .what{flex-wrap:wrap}
+body[data-view="mobile"] .page-head{margin-bottom:14px}
+body[data-view="mobile"] .what{margin-bottom:14px;flex-wrap:wrap}
 body[data-view="mobile"] .what .badge-w{margin-left:0;order:3}
+body[data-view="mobile"] .card{padding:14px 15px}
+body[data-view="mobile"] .grid2{gap:12px;margin-bottom:12px}
+body[data-view="mobile"] .resumen{gap:12px;margin-bottom:12px}
+body[data-view="mobile"] .plata{padding:16px}
+body[data-view="mobile"] .plata-v{font-size:32px;letter-spacing:-1.3px}
+body[data-view="mobile"] .plata-pie{gap:10px;padding-top:12px}
+body[data-view="mobile"] .plata-pie > div{padding-top:11px}
+body[data-view="mobile"] .plata-pie b{font-size:15px}
+body[data-view="mobile"] .tasas{padding:2px 15px}
+body[data-view="mobile"] .tasa-v{font-size:22px}
+body[data-view="mobile"] .fnr{grid-template-columns:100px minmax(0,1fr) 60px;gap:10px}
+body[data-view="mobile"] .fn-v{font-size:13.5px}
+body[data-view="mobile"] .days{gap:5px;min-height:128px}
+body[data-view="mobile"] .day em{display:none}
+body[data-view="mobile"] .lbrow{grid-template-columns:14px 28px minmax(0,1fr) auto;gap:9px;padding:8px 2px 12px}
+body[data-view="mobile"] .lbv b{font-size:14px}
+body[data-view="mobile"] .form-grid > .c3,body[data-view="mobile"] .form-grid > .c4,body[data-view="mobile"] .form-grid > .c6,body[data-view="mobile"] .form-grid > .c8{grid-column:span 12}
+body[data-view="mobile"] .calc,body[data-view="mobile"] .calc.c2{grid-template-columns:1fr 1fr}
+body[data-view="mobile"] .calc.apilado{grid-template-columns:1fr 1fr}
+body[data-view="mobile"] .form-actions{justify-content:stretch}
+body[data-view="mobile"] .form-actions .helper{margin-right:0;width:100%;order:3}
 body[data-view="mobile"] .form-actions .btn-primary{width:100%}
+body[data-view="mobile"] .entry{flex-wrap:wrap;row-gap:6px;gap:11px;padding:12px 8px}
+body[data-view="mobile"] .entry .pill.rol{display:none}
+body[data-view="mobile"] .entry .hizo{order:5;flex:1 1 100%;width:auto;text-align:left;padding-left:44px;font-size:11.5px}
+body[data-view="mobile"] .entry .del{order:4}
+body[data-view="mobile"] .cfgrow{grid-template-columns:1fr;gap:8px}
+body[data-view="mobile"] .barra-guardar{flex-wrap:wrap}
+body[data-view="mobile"] .barra-guardar .helper{width:100%;order:3;margin-right:0}
+body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
 </style>
 
 <div class="demo-bar">
-  <b>Panel de Ventas · LP The CEO</b> <span class="sep">·</span> <span>PAPEL v1 — mockup con datos de ejemplo</span>
+  <b>Panel de Ventas · LP The CEO</b> <span class="sep">·</span> <span>PAPEL v2 — mockup con datos de ejemplo</span>
   <div class="seg" role="group" aria-label="Vista">
-    <button data-v="pc" aria-pressed="true">💻 Escritorio</button>
-    <button data-v="mobile" aria-pressed="false">📱 Celular</button>
+    <button data-v="pc" aria-pressed="true">Escritorio</button>
+    <button data-v="mobile" aria-pressed="false">Celular</button>
   </div>
   <div class="seg" role="group" aria-label="Tema">
-    <button data-t="light" aria-pressed="true">☀️ Claro</button>
-    <button data-t="dark" aria-pressed="false">🌙 Oscuro</button>
+    <button data-t="light" aria-pressed="true">Claro</button>
+    <button data-t="dark" aria-pressed="false">Oscuro</button>
   </div>
   <div class="seg" role="group" aria-label="Estado">
     <button data-e="datos" aria-pressed="true">Con datos</button>
@@ -463,22 +626,25 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
 <div class="ghl"><div class="ghl-frame">
 
   <header class="topbar">
-    <div class="brand">
-      <span class="brand-tile">LP</span>
-      <span class="brand-txt"><strong>LP Ventas</strong><span>Panel de métricas</span></span>
-    </div>
-    <nav class="nav">
-      <button data-nav="panel" aria-current="page">Panel</button>
-      <button data-nav="setter">Reporte Setter</button>
-      <button data-nav="closer">Reporte Closer</button>
-      <button data-nav="equipo">Equipo</button>
-      <button data-nav="ajustes">Ajustes</button>
-    </nav>
-    <div class="topbar-right">
-      <button class="icon-btn" title="Cambiar tema" data-tema aria-label="Cambiar tema"></button>
-      <div class="quien">
-        <span class="av">LP</span>
-        <span class="qn">Leandro P.<small>Dueño</small></span>
+    <div class="topbar-in">
+      <div class="brand">
+        <span class="brand-tile">LP</span>
+        <span class="brand-txt"><strong>LP Ventas</strong><span>Panel de métricas</span></span>
+      </div>
+      <nav class="nav">
+        <button data-nav="panel" aria-current="page">Panel</button>
+        <button data-nav="setter">Reporte Setter</button>
+        <button data-nav="closer">Reporte Closer</button>
+        <button data-nav="equipo">Equipo</button>
+        <button data-nav="ajustes">Ajustes</button>
+      </nav>
+      <div class="topbar-right">
+        <button class="icon-btn" title="Cambiar tema" data-tema aria-label="Cambiar tema"></button>
+        <div class="quien">
+          <span class="av">LP</span>
+          <span class="qn">Leandro P.<small>Dueño</small></span>
+        </div>
+        <button class="icon-btn" title="Salir" aria-label="Salir"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></button>
       </div>
     </div>
   </header>
@@ -490,6 +656,13 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
     <div class="page-head">
       <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
       <div class="head-actions">
+        <div class="fnav">
+          <a href="#" aria-label="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+          <span class="div"></span>
+          <a href="#">Hoy</a>
+          <span class="div"></span>
+          <a href="#" aria-label="Semana siguiente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div>
         <div class="modo" role="group" aria-label="Período">
           <button aria-pressed="false">Día</button>
           <button aria-pressed="true">Semana</button>
@@ -504,61 +677,51 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       <span class="badge-w">Solo lectura</span>
     </div>
 
-    <div class="money">
-      <div class="mc hero">
-        <div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg> Cash collected</div>
-        <div class="m-val num">$41,400</div>
-        <div class="m-ctx num">Cobrado de <b>$69,000</b> vendidos · <b>60%</b> de cobro</div>
-        <div class="bar"><i style="width:60%"></i></div>
+    <div class="resumen">
+      <div class="plata">
+        <div class="plata-h">
+          <span class="m-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg> Cash collected</span>
+          <span class="chip num">60% cobrado</span>
+        </div>
+        <div class="plata-v num">$41,400</div>
+        <div class="plata-ctx num">de <b>$69,000</b> contratados</div>
+        <span class="medidor"><i style="width:60%"></i></span>
+        <div class="plata-pie">
+          <div><span>Contratado</span><b class="num">$69,000</b></div>
+          <div><span>Ticket promedio</span><b class="num">$3,000</b></div>
+          <div><span>Cierres</span><b class="num">23</b></div>
+        </div>
       </div>
-      <div class="mc">
-        <div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> Revenue contratado</div>
-        <div class="m-val num">$69,000</div>
-        <div class="m-ctx num">Ticket promedio <b>$3,000</b> · <b>23</b> cierres</div>
-      </div>
-    </div>
 
-    <div class="kpis">
-      <div class="kpi">
-        <div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
-        <div><div class="kpi-label">Tasa de agenda</div>
-        <div class="kpi-val num">30.4%</div>
-        <div class="kpi-ctx num"><b>104</b> agendas de <b>342</b> leads</div></div>
-        <div class="kdx"><span class="delta up">▲ +2.1 pts</span></div>
+      <div class="card tasas">
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de agenda</span><span class="delta up">▲ +2.1 pts</span></div>
+          <div class="tasa-b"><span class="tasa-v num">30.4%</span><span class="tasa-c num"><b>104</b> agendas de <b>342</b> leads</span></div>
+          <span class="medidor fino"><i style="width:30.4%"></i></span>
+        </div>
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de asistencia</span><span class="delta up">▲ +4.0 pts</span></div>
+          <div class="tasa-b"><span class="tasa-v num">65.6%</span><span class="tasa-c num"><b>63</b> asistieron de <b>96</b> llamadas</span></div>
+          <span class="medidor fino"><i style="width:65.6%"></i></span>
+        </div>
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de cierre</span><span class="delta down">▼ −1.5 pts</span></div>
+          <div class="tasa-b"><span class="tasa-v num">36.5%</span><span class="tasa-c num"><b>23</b> cierres de <b>63</b> asistencias</span></div>
+          <span class="medidor fino"><i style="width:36.5%"></i></span>
+        </div>
       </div>
-      <div class="kpi">
-        <div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92V21a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 5.2 2 2 0 0 1 4 3h4.1a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 11a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg></div>
-        <div><div class="kpi-label">Tasa de asistencia</div>
-        <div class="kpi-val num">65.6%</div>
-        <div class="kpi-ctx num"><b>63</b> asistieron de <b>96</b> llamadas</div></div>
-        <div class="kdx"><span class="delta up">▲ +4.0 pts</span></div>
-      </div>
-      <div class="kpi">
-        <div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg></div>
-        <div><div class="kpi-label">Tasa de cierre</div>
-        <div class="kpi-val num">36.5%</div>
-        <div class="kpi-ctx num"><b>23</b> cierres de <b>63</b> asistencias</div></div>
-        <div class="kdx"><span class="delta down">▼ −1.5 pts</span></div>
-      </div>
-    </div>
-
-    <div class="derived">
-      <div class="dv"><span>Leads</span><b class="num">342</b></div>
-      <div class="dv"><span>Agendas</span><b class="num">104</b></div>
-      <div class="dv"><span>Llamadas</span><b class="num">96</b></div>
-      <div class="dv"><span>Cierres</span><b class="num">23</b></div>
     </div>
 
     <div class="grid2">
       <div class="card">
         <div class="card-head"><div><h3>Embudo de la semana</h3><p>de leads a cash collected</p></div></div>
         <div class="fn">
-          <div class="fnr"><span class="fn-n">Leads</span><span class="fn-track"><i class="num" style="width:100%">342</i></span><span class="fn-cv">100%</span></div>
-          <div class="fnr"><span class="fn-n">Agendas</span><span class="fn-track"><i class="num" style="width:70%">104</i></span><span class="fn-cv">agenda <b>30%</b></span></div>
-          <div class="fnr"><span class="fn-n">Llamadas</span><span class="fn-track"><i class="num" style="width:66%">96</i></span><span class="fn-cv">de agenda <b>92%</b></span></div>
-          <div class="fnr"><span class="fn-n">Asistieron</span><span class="fn-track"><i class="num" style="width:48%">63</i></span><span class="fn-cv">asist. <b>66%</b></span></div>
-          <div class="fnr"><span class="fn-n">Cierres</span><span class="fn-track"><i class="num" style="width:26%">23</i></span><span class="fn-cv">cierre <b>37%</b></span></div>
-          <div class="fnr"><span class="fn-n">Cash</span><span class="fn-track"><i class="num" style="width:16%">$41.4k</i></span><span class="fn-cv">cobro <b>60%</b></span></div>
+          <div class="fnr"><span class="fn-n"><strong>Leads</strong><small>conversaciones iniciadas</small></span><span class="fn-track"><i style="width:100%"></i></span><span class="fn-v num">342</span></div>
+          <div class="fnr"><span class="fn-n"><strong>Agendas</strong><small>agenda <b>30%</b></small></span><span class="fn-track"><i style="width:30.4%"></i></span><span class="fn-v num">104</span></div>
+          <div class="fnr"><span class="fn-n"><strong>Llamadas</strong><small>de agenda <b>92%</b></small></span><span class="fn-track"><i style="width:28.1%"></i></span><span class="fn-v num">96</span></div>
+          <div class="fnr"><span class="fn-n"><strong>Asistieron</strong><small>asist. <b>66%</b></small></span><span class="fn-track"><i style="width:18.4%"></i></span><span class="fn-v num">63</span></div>
+          <div class="fnr"><span class="fn-n"><strong>Cierres</strong><small>cierre <b>37%</b></small></span><span class="fn-track"><i style="width:6.7%"></i></span><span class="fn-v num">23</span></div>
+          <div class="fnr"><span class="fn-n"><strong>Cash</strong><small>cobro <b>60%</b></small></span><span class="fn-track"><i style="width:4%"></i></span><span class="fn-v num">$41.4k</span></div>
         </div>
         <div class="note">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
@@ -566,49 +729,49 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         </div>
       </div>
 
-      <div class="card">
+      <div class="card crece">
         <div class="card-head"><div><h3>Cash collected por día</h3><p>lunes a domingo</p></div><span class="chip num">$41,400</span></div>
-        <div class="days">
-          <div class="day"><i style="height:60%"></i><em class="num">5.2k</em><small>L</small></div>
-          <div class="day"><i style="height:83%"></i><em class="num">7.2k</em><small>M</small></div>
-          <div class="day"><i style="height:72%"></i><em class="num">6.3k</em><small>M</small></div>
-          <div class="day hl"><i style="height:100%"></i><em class="num">8.7k</em><small>J</small></div>
-          <div class="day"><i style="height:76%"></i><em class="num">6.6k</em><small>V</small></div>
-          <div class="day"><i style="height:52%"></i><em class="num">4.5k</em><small>S</small></div>
-          <div class="day"><i style="height:33%"></i><em class="num">2.9k</em><small>D</small></div>
+        <div class="days" style="grid-template-columns:repeat(7,1fr)">
+          <div class="day"><span class="day-t"><i style="height:60%"></i></span><em class="num">$5.2k</em><small>L</small></div>
+          <div class="day"><span class="day-t"><i style="height:83%"></i></span><em class="num">$7.2k</em><small>M</small></div>
+          <div class="day"><span class="day-t"><i style="height:72%"></i></span><em class="num">$6.3k</em><small>M</small></div>
+          <div class="day hl"><span class="day-t"><i style="height:100%"></i></span><em class="num">$8.7k</em><small>J</small></div>
+          <div class="day"><span class="day-t"><i style="height:76%"></i></span><em class="num">$6.6k</em><small>V</small></div>
+          <div class="day"><span class="day-t"><i style="height:52%"></i></span><em class="num">$4.5k</em><small>S</small></div>
+          <div class="day"><span class="day-t"><i style="height:33%"></i></span><em class="num">$2.9k</em><small>D</small></div>
         </div>
         <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 17 6-6 4 4 8-8"/></svg>
-          <span>El jueves entró el <b>21%</b> de todo el cash de la semana.</span></div>
+          <span>El día más fuerte se llevó el <b>21%</b> de todo el cash del período.</span></div>
       </div>
     </div>
 
     <div class="grid2">
       <div class="card">
-        <div class="card-head"><div><h3 class="h3i"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H4a2 2 0 0 0 0 4h2M18 5h2a2 2 0 0 1 0 4h-2M9 21h6M12 14v7"/></svg> Ranking · Closers</h3><p>por cash collected</p></div></div>
+        <div class="card-head"><div><h3 class="h3i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v5a6 6 0 0 1-12 0Z"/><path d="M6 5H4a2 2 0 0 0 0 4h2M18 5h2a2 2 0 0 1 0 4h-2M9 21h6M12 14v7"/></svg> Ranking · Closers</h3><p>por cash collected</p></div></div>
         <div class="lb">
-          <div class="lbrow"><span class="rk g1">1</span><span class="av2">AR</span>
+          <div class="lbrow" style="--w:100%"><span class="rk g1">1</span><span class="av2">AR</span>
             <span class="lbn"><strong>Andrea Ríos</strong><small class="num">11 cierres · 42% de cierre</small></span>
-            <span class="lbv"><b class="num">$19,800</b><span class="bar"><i style="width:100%"></i></span></span></div>
-          <div class="lbrow"><span class="rk">2</span><span class="av2">DT</span>
+            <span class="lbv"><b class="num">$19,800</b></span></div>
+          <div class="lbrow" style="--w:73%"><span class="rk">2</span><span class="av2">DT</span>
             <span class="lbn"><strong>Diego Torres</strong><small class="num">8 cierres · 35% de cierre</small></span>
-            <span class="lbv"><b class="num">$14,400</b><span class="bar"><i style="width:73%"></i></span></span></div>
-          <div class="lbrow"><span class="rk">3</span><span class="av2">CM</span>
+            <span class="lbv"><b class="num">$14,400</b></span></div>
+          <div class="lbrow" style="--w:36%"><span class="rk">3</span><span class="av2">CM</span>
             <span class="lbn"><strong>Carlos Méndez</strong><small class="num">4 cierres · 29% de cierre</small></span>
-            <span class="lbv"><b class="num">$7,200</b><span class="bar"><i style="width:36%"></i></span></span></div>
+            <span class="lbv"><b class="num">$7,200</b></span></div>
         </div>
       </div>
       <div class="card">
-        <div class="card-head"><div><h3 class="h3i"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="m9 9-3-7M15 9l3-7M12 13v4M10.5 15h3"/></svg> Ranking · Setters</h3><p>por agendas</p></div></div>
+        <div class="card-head"><div><h3 class="h3i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="m9 9-3-7M15 9l3-7M12 13v4M10.5 15h3"/></svg> Ranking · Setters</h3><p>por agendas</p></div></div>
         <div class="lb">
-          <div class="lbrow"><span class="rk g1">1</span><span class="av2">SL</span>
+          <div class="lbrow" style="--w:100%"><span class="rk g1">1</span><span class="av2">SL</span>
             <span class="lbn"><strong>Sofía Lara</strong><small class="num">32% de agenda · 119 leads</small></span>
-            <span class="lbv"><b class="num">38</b><span class="bar"><i style="width:100%"></i></span></span></div>
-          <div class="lbrow"><span class="rk">2</span><span class="av2">MG</span>
+            <span class="lbv"><b class="num">38</b></span></div>
+          <div class="lbrow" style="--w:95%"><span class="rk">2</span><span class="av2">MG</span>
             <span class="lbn"><strong>Mateo Gil</strong><small class="num">30% de agenda · 120 leads</small></span>
-            <span class="lbv"><b class="num">36</b><span class="bar"><i style="width:95%"></i></span></span></div>
-          <div class="lbrow"><span class="rk">3</span><span class="av2">VP</span>
+            <span class="lbv"><b class="num">36</b></span></div>
+          <div class="lbrow" style="--w:79%"><span class="rk">3</span><span class="av2">VP</span>
             <span class="lbn"><strong>Valentina Paz</strong><small class="num">29% de agenda · 103 leads</small></span>
-            <span class="lbv"><b class="num">30</b><span class="bar"><i style="width:79%"></i></span></span></div>
+            <span class="lbv"><b class="num">30</b></span></div>
         </div>
       </div>
     </div>
@@ -619,41 +782,51 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
     <div class="page-head">
       <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
       <div class="head-actions">
+        <div class="fnav">
+          <a href="#" aria-label="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
+          <span class="div"></span><a href="#" aria-disabled="true">Hoy</a><span class="div"></span>
+          <a href="#" aria-label="Semana siguiente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
+        </div>
         <div class="modo" role="group" aria-label="Período">
           <button aria-pressed="false">Día</button><button aria-pressed="true">Semana</button><button aria-pressed="false">Mes</button>
         </div>
       </div>
     </div>
 
-    <div class="note warn" style="margin-top:0;margin-bottom:14px">
+    <div class="note warn" style="margin-top:0;margin-bottom:16px">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
       <span><b>Todavía no hay nadie en el equipo.</b> Cargá a tus setters y closers en <b>Equipo</b> y después van a poder mandar su reporte de fin de día. Hasta entonces el panel no tiene de dónde calcular.</span>
     </div>
 
-    <div class="money">
-      <div class="mc hero"><div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg> Cash collected</div><div class="m-val num">$0</div>
-        <div class="m-ctx">Sin reportes en este período</div></div>
-      <div class="mc"><div class="m-lbl"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg> Revenue contratado</div><div class="m-val num">$0</div>
-        <div class="m-ctx">Ticket promedio <b>—</b></div></div>
-    </div>
-
-    <div class="kpis">
-      <div class="kpi"><div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div><div><div class="kpi-label">Tasa de agenda</div>
-        <div class="kpi-val">—</div><div class="kpi-ctx">0 agendas de 0 leads</div></div>
-        <div class="kdx"><span class="delta nil">—</span></div></div>
-      <div class="kpi"><div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92V21a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2 5.2 2 2 0 0 1 4 3h4.1a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L9 11a16 16 0 0 0 6 6l1.4-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2Z"/></svg></div><div><div class="kpi-label">Tasa de asistencia</div>
-        <div class="kpi-val">—</div><div class="kpi-ctx">0 asistieron de 0 llamadas</div></div>
-        <div class="kdx"><span class="delta nil">—</span></div></div>
-      <div class="kpi"><div class="tile"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div><div><div class="kpi-label">Tasa de cierre</div>
-        <div class="kpi-val">—</div><div class="kpi-ctx">0 cierres de 0 asistencias</div></div>
-        <div class="kdx"><span class="delta nil">—</span></div></div>
-    </div>
-
-    <div class="derived">
-      <div class="dv"><span>Leads</span><b class="num">0</b></div>
-      <div class="dv"><span>Agendas</span><b class="num">0</b></div>
-      <div class="dv"><span>Llamadas</span><b class="num">0</b></div>
-      <div class="dv"><span>Cierres</span><b class="num">0</b></div>
+    <div class="resumen">
+      <div class="plata">
+        <div class="plata-h"><span class="m-lbl"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path d="M6 12h.01M18 12h.01"/></svg> Cash collected</span></div>
+        <div class="plata-v num">$0</div>
+        <div class="plata-ctx">Sin reportes en este período</div>
+        <span class="medidor"><i style="width:0%"></i></span>
+        <div class="plata-pie">
+          <div><span>Contratado</span><b class="num">$0</b></div>
+          <div><span>Ticket promedio</span><b class="sin">—</b></div>
+          <div><span>Cierres</span><b class="num">0</b></div>
+        </div>
+      </div>
+      <div class="card tasas">
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de agenda</span><span class="delta nil">—</span></div>
+          <div class="tasa-b"><span class="tasa-v sin">—</span><span class="tasa-c">0 agendas de 0 leads</span></div>
+          <span class="medidor fino"><i style="width:0%"></i></span>
+        </div>
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de asistencia</span><span class="delta nil">—</span></div>
+          <div class="tasa-b"><span class="tasa-v sin">—</span><span class="tasa-c">0 asistieron de 0 llamadas</span></div>
+          <span class="medidor fino"><i style="width:0%"></i></span>
+        </div>
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de cierre</span><span class="delta nil">—</span></div>
+          <div class="tasa-b"><span class="tasa-v sin">—</span><span class="tasa-c">0 cierres de 0 asistencias</span></div>
+          <span class="medidor fino"><i style="width:0%"></i></span>
+        </div>
+      </div>
     </div>
 
     <div class="card">
@@ -668,6 +841,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
 
   <!-- ==================== REPORTE SETTER ==================== -->
   <section class="sc" data-s="setter">
+   <div class="hoja">
     <div class="page-head">
       <div><h1>Reporte del Setter</h1><div class="sub">fin de día · uno por persona y por día</div></div>
     </div>
@@ -679,10 +853,14 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
 
     <div class="trabajo">
       <div class="card formcard">
+        <div class="section-title">Quién y cuándo</div>
         <div class="form-grid">
           <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
           <div class="field c8"><label>Setter <span class="req">*</span></label>
             <select><option>Sofía Lara</option><option>Mateo Gil</option><option>Valentina Paz</option></select></div>
+        </div>
+        <div class="section-title">Tu día</div>
+        <div class="form-grid">
           <div class="field c6"><label>Conversaciones iniciadas <span class="req">*</span></label>
             <div class="step"><button type="button">−</button><input class="num" value="24" inputmode="numeric"><button type="button">＋</button></div>
             <span class="hint">Con cuántas personas empezaste una conversación hoy.</span></div>
@@ -692,33 +870,34 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         </div>
         <div class="form-actions">
           <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
-          <button class="btn-ghost">Cancelar</button>
           <button class="btn-primary">Enviar reporte</button>
         </div>
       </div>
 
       <div class="lado">
         <div class="card">
-          <div class="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div class="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
           <div class="calc apilado">
             <div class="dv principal"><span>Tasa de agenda</span><b class="num">33.3%</b></div>
             <div class="dv"><span>Agendas</span><b class="num">8</b></div>
             <div class="dv"><span>Conversaciones</span><b class="num">24</b></div>
           </div>
         </div>
-        <div class="card" style="margin-top:12px">
+        <div class="card">
           <div class="note warn" style="margin-top:0">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
             <span><b>Sofía Lara ya cargó el 26 de julio</b> — 24 conversaciones y 8 agendas. Si enviás de nuevo se <b>reemplaza</b>. No se suma.</span>
           </div>
-          <div class="form-actions"><button class="btn-ghost btn-sm">Traer lo que había</button></div>
+          <div class="form-actions"><span class="helper">Así el día no se cuenta dos veces.</span><button class="btn-ghost btn-sm">Traer lo que había</button></div>
         </div>
       </div>
     </div>
+   </div>
   </section>
 
   <!-- ==================== REPORTE CLOSER ==================== -->
   <section class="sc" data-s="closer">
+   <div class="hoja">
     <div class="page-head">
       <div><h1>Reporte del Closer</h1><div class="sub">fin de día · uno por persona y por día</div></div>
     </div>
@@ -730,12 +909,16 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
 
     <div class="trabajo">
       <div class="card formcard">
+        <div class="section-title">Quién y cuándo</div>
         <div class="form-grid">
           <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
           <div class="field c8"><label>Closer <span class="req">*</span></label>
             <select><option>Andrea Ríos</option><option>Diego Torres</option><option>Carlos Méndez</option></select></div>
+        </div>
 
-          <div class="field c3"><label>Llamadas en agenda <span class="req">*</span></label>
+        <div class="section-title">Las llamadas del día</div>
+        <div class="form-grid">
+          <div class="field c3"><label>En agenda <span class="req">*</span></label>
             <div class="step"><button type="button">−</button><input class="num" value="6" inputmode="numeric"><button type="button">＋</button></div></div>
           <div class="field c3"><label>Asistieron <span class="req">*</span></label>
             <div class="step"><button type="button">−</button><input class="num" value="4" inputmode="numeric"><button type="button">＋</button></div></div>
@@ -743,7 +926,10 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
             <div class="step"><button type="button">−</button><input class="num" value="1" inputmode="numeric"><button type="button">＋</button></div></div>
           <div class="field c3"><label>Cierres <span class="req">*</span></label>
             <div class="step"><button type="button">−</button><input class="num" value="2" inputmode="numeric"><button type="button">＋</button></div></div>
+        </div>
 
+        <div class="section-title">El dinero del día</div>
+        <div class="form-grid">
           <div class="field c6"><label>Revenue contratado <span class="req">*</span></label>
             <div class="money-inp"><span class="cur">$</span><input class="num" value="6,000" inputmode="decimal"></div>
             <span class="hint">El total que firmaron hoy, aunque lo paguen en cuotas.</span></div>
@@ -753,14 +939,13 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         </div>
         <div class="form-actions">
           <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
-          <button class="btn-ghost">Cancelar</button>
           <button class="btn-primary">Enviar reporte</button>
         </div>
       </div>
 
       <div class="lado">
         <div class="card">
-          <div class="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div class="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
           <div class="calc apilado">
             <div class="dv principal"><span>Cobrado</span><b class="num">$3,500</b></div>
             <div class="dv"><span>Asistencia</span><b class="num">67%</b></div>
@@ -770,10 +955,12 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         </div>
       </div>
     </div>
+   </div>
   </section>
 
   <!-- ==================== EQUIPO ==================== -->
   <section class="sc" data-s="equipo">
+   <div class="hoja">
     <div class="page-head">
       <div><h1>Equipo</h1><div class="sub">quiénes pueden mandar reporte</div></div>
     </div>
@@ -785,35 +972,35 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
 
     <div class="trabajo">
       <div class="card">
-        <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 dado de baja</p></div><span class="chip n">esta semana</span></div>
+        <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 de baja</p></div><span class="chip n">esta semana</span></div>
 
         <div class="entry"><span class="av2">SL</span>
-          <span class="en"><strong>Sofía Lara</strong><small>desde julio</small></span>
-          <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
+          <span class="en"><strong>Sofía Lara</strong></span>
+          <span class="pill rol set">Setter</span>
           <span class="hizo num"><b>38</b> agendas</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">MG</span>
-          <span class="en"><strong>Mateo Gil</strong><small>desde julio</small></span>
-          <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
+          <span class="en"><strong>Mateo Gil</strong></span>
+          <span class="pill rol set">Setter</span>
           <span class="hizo num"><b>36</b> agendas</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">AR</span>
-          <span class="en"><strong>Andrea Ríos</strong><small>desde junio</small></span>
-          <span class="pill clo">Closer</span><span class="pill clo est" hidden></span>
+          <span class="en"><strong>Andrea Ríos</strong></span>
+          <span class="pill rol clo">Closer</span>
           <span class="hizo num"><b>$19,800</b> · 11 cierres</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">DT</span>
-          <span class="en"><strong>Diego Torres</strong><small>desde junio</small></span>
-          <span class="pill amb">Setter y closer</span><span class="pill clo est" hidden></span>
+          <span class="en"><strong>Diego Torres</strong></span>
+          <span class="pill rol amb">Setter y closer</span>
           <span class="hizo num"><b>$14,400</b> · 8 cierres</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry off"><span class="av2">CM</span>
           <span class="en"><strong>Carlos Méndez</strong><small>ya no está en el equipo</small></span>
-          <span class="pill clo">Closer</span><span class="pill no est">De baja</span>
+          <span class="pill rol clo">Closer</span><span class="pill no">De baja</span>
           <span class="hizo">—</span>
           <button class="del" title="Reactivar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button></div>
       </div>
@@ -833,10 +1020,12 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         </div>
       </div>
     </div>
+   </div>
   </section>
 
   <!-- ==================== AJUSTES ==================== -->
   <section class="sc" data-s="ajustes">
+   <div class="hoja">
     <div class="page-head">
       <div><h1>Ajustes</h1><div class="sub">cómo se llama y cómo cuenta</div></div>
     </div>
@@ -846,7 +1035,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       <span class="badge-w">Se carga a mano</span>
     </div>
 
-    <div class="grid2" style="align-items:start">
+    <div class="grid2" style="align-items:start;margin-bottom:0">
     <div class="card formcard">
       <div class="card-head"><div><h3>Tu negocio</h3><p>lo que se ve arriba a la izquierda</p></div></div>
       <div class="cfgrow">
@@ -854,7 +1043,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         <div class="field"><input value="LP Ventas"></div>
       </div>
       <div class="cfgrow">
-        <div><div class="cfg-n">Iniciales</div><div class="cfg-src">Las dos letras del cuadradito verde.</div></div>
+        <div><div class="cfg-n">Iniciales</div><div class="cfg-src">Las dos letras del cuadradito de color.</div></div>
         <div class="field"><input value="LP" maxlength="2"></div>
       </div>
       <div class="cfgrow">
@@ -863,7 +1052,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       </div>
       <div class="cfgrow">
         <div><div class="cfg-n">Color de tu marca</div><div class="cfg-src">Todo el verde del panel sale de acá. Cambiálo y cambia todo.</div></div>
-        <div class="field"><input value="#00D97E"></div>
+        <div class="field"><span class="color-inp"><span class="muestra" style="background:#00D97E"></span><input value="#00D97E" maxlength="7"></span></div>
       </div>
     </div>
 
@@ -878,19 +1067,21 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         <div class="field"><select><option>America/New_York</option><option>America/Chicago</option><option>America/Mexico_City</option><option>America/Bogota</option><option>Europe/Madrid</option></select></div>
       </div>
       <div class="cfgrow">
-        <div><div class="cfg-n">La semana empieza el</div><div class="cfg-src">Cambia el corte de "Semana" en el panel y en el gráfico por día.</div></div>
+        <div><div class="cfg-n">La semana empieza el</div><div class="cfg-src">Cambia el corte de «Semana» en el panel y en el gráfico por día.</div></div>
         <div class="field"><select><option>Lunes</option><option>Domingo</option></select></div>
       </div>
       <div class="cfgrow">
-        <div><div class="cfg-n">Mostrar el ranking al equipo</div><div class="cfg-src">Si lo apagás, el ranking solo lo ves vos.</div></div>
-        <div><label class="sw"><input type="checkbox" checked> Visible para todos</label></div>
-      </div>
-      <div class="form-actions">
-        <span class="helper">Los cambios se aplican al guardar.</span>
-        <button class="btn-primary">Guardar ajustes</button>
+        <div><div class="cfg-n">Mostrar el ranking</div><div class="cfg-src">Si lo apagás, el panel no muestra los rankings de closers ni de setters.</div></div>
+        <div><label class="sw"><input type="checkbox" checked> Visible</label></div>
       </div>
     </div>
     </div>
+
+    <div class="barra-guardar">
+      <span class="helper">Los cambios se aplican al guardar.</span>
+      <button class="btn-primary">Guardar ajustes</button>
+    </div>
+   </div>
   </section>
 
   </main>

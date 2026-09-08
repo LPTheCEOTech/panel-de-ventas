@@ -1,13 +1,13 @@
 import {
   barrasPorDia, barrasPorSemana, delta, embudo, metricas, rankingClosers, rankingSetters,
 } from '@/shared/calculo/metricas'
-import { hoyEn, sumarDias, ventana, ventanaAnterior } from '@/shared/calculo/periodo'
+import { dentro, hoyEn, sumarDias, ventana, ventanaAnterior } from '@/shared/calculo/periodo'
 import { IconoInfo } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
 import { tituloDeVentana } from '@/shared/formato'
 import type { Periodo } from '@/shared/tipos'
 import {
-  CashPorDia, Dinero, Embudo, Kpis, LlamadaAEquipo, RankingClosers, RankingSetters, SinEquipo, Totales,
+  CashPorDia, Embudo, LlamadaAEquipo, Plata, RankingClosers, RankingSetters, SinEquipo, Tasas,
 } from '@/features/panel/piezas'
 import { SelectorPeriodo } from '@/features/panel/selector-periodo'
 
@@ -60,6 +60,7 @@ export default async function PanelDeVentas({
     delta(m.tasaCierre, mPrevia.tasaCierre),
   ]
 
+  const deQue = { dia: 'del día', semana: 'de la semana', mes: 'del mes' }[periodo]
   const hayEquipo = personas.some((p) => p.activo)
   const hayDatos = setters.length + closers.length > 0
 
@@ -71,7 +72,10 @@ export default async function PanelDeVentas({
           <div className="sub">{tituloDeVentana(periodo, v.desde, v.hasta)}</div>
         </div>
         <div className="head-actions">
-          <SelectorPeriodo actual={periodo} fecha={fechaExplicita} />
+          <SelectorPeriodo
+            actual={periodo} fecha={fechaExplicita} ventanaActual={v}
+            inicioSemana={config.inicioSemana} esHoy={dentro(hoyEn(config.zonaHoraria), v)}
+          />
         </div>
       </div>
 
@@ -88,9 +92,14 @@ export default async function PanelDeVentas({
         </div>
       )}
 
-      <Dinero m={m} simbolo={config.simbolo} />
-      <Kpis m={m} deltas={deltas} />
-      <Totales m={m} />
+      {/* 🔴 Una sola banda arriba, no tres. La plata manda y las tasas la
+          acompañan; los cuatro contadores que había sueltos (leads, agendas,
+          llamadas, cierres) viven ahora en el contexto de cada tasa y en el
+          embudo — estaban dos veces en la misma pantalla. */}
+      <div className="resumen">
+        <Plata m={m} simbolo={config.simbolo} />
+        <Tasas m={m} deltas={deltas} />
+      </div>
 
       {!hayDatos ? (
         <LlamadaAEquipo />
@@ -100,7 +109,7 @@ export default async function PanelDeVentas({
             <Embudo
               pasos={embudo(m)} simbolo={config.simbolo}
               avisoAgendas={m.agendas !== m.llamadas}
-              deQue={{ dia: 'del día', semana: 'de la semana', mes: 'del mes' }[periodo]}
+              deQue={deQue}
             />
             <CashPorDia
               barras={

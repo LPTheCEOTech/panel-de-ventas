@@ -20,7 +20,13 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function LayoutRaiz({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es">
+    /* 🔴 `suppressHydrationWarning` va acá y no es opcional.
+       El script del tema le estampa `data-theme` al <html> ANTES de que React
+       hidrate. El servidor no puede saber qué tema eligió la persona, así que
+       el atributo que ve React al hidratar no es el que renderizó: sin esto,
+       cualquiera con el tema guardado abre la app y le salta el error rojo de
+       hidratación en desarrollo. Suprime SOLO este nodo, no el árbol. */
+    <html lang="es" suppressHydrationWarning>
       <head>
         {/* corre antes del primer pintado: sin esto parpadea en blanco */}
         <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />

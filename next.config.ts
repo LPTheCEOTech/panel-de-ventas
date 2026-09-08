@@ -15,6 +15,10 @@ import type { NextConfig } from 'next'
  * un `frame-ancestors` de más es una puerta abierta sin motivo.
  */
 const nextConfig: NextConfig = {
+  // 🔴 `next dev` reescribe CLAUDE.md solo: le pega un bloque de reglas al final
+  // en cada arranque. CLAUDE.md acá está curado a mano y ese bloque ensuciaba
+  // el árbol antes de cada commit. Apagado, el archivo es solo nuestro.
+  agentRules: false,
   headers: async () => [
     {
       source: '/:path*',
