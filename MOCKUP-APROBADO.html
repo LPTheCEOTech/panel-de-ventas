@@ -242,11 +242,29 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .lbv .bar{width:88px;margin-left:auto}
 
 /* ---------- formularios ---------- */
-.formcard{max-width:760px}
+/* 🔴 El eje que faltaba.
+   Las tres pantallas de trabajo (los dos reportes y Equipo) tienen DOS partes
+   con roles distintos: donde se teclea, y lo que eso produce. Metidas en una
+   sola columna angosta, la segunda queda abajo del pliegue — se carga a ciegas
+   y hay que bajar para ver si el número dio. Al lado, se ve mientras se teclea.
+   El ancho no se "aprovecha": se usa para poner la consecuencia a la vista. */
+.trabajo{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+.trabajo > .lado{position:sticky;top:74px}
+.formcard{max-width:none}
 .section-title{font-family:var(--display);font-weight:800;font-size:12px;
   text-transform:uppercase;color:var(--faint);margin:18px 0 10px;letter-spacing:.8px}
 .section-title:first-child{margin-top:0}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* 🔴 12 columnas, no 3.
+   Los campos de este formulario no miden lo mismo: un contador de dos dígitos
+   y un monto de cinco cifras no pueden ocupar el mismo ancho sin que uno de los
+   dos se vea mal. Con 12 cada campo pide lo que su dato necesita, y los cuatro
+   contadores entran en UNA fila en vez de tres. */
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+.form-grid > .field{grid-column:span 12}
+.form-grid > .c3{grid-column:span 3}
+.form-grid > .c4{grid-column:span 4}
+.form-grid > .c6{grid-column:span 6}
+.form-grid > .c8{grid-column:span 8}
 .field{display:flex;flex-direction:column;gap:5px}
 .field.full{grid-column:1/-1}
 .field label{font-size:11.5px;font-weight:600;color:var(--muted);display:flex;align-items:center;
@@ -274,13 +292,25 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .calc{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;padding-top:16px;
   border-top:1px solid var(--line)}
 .calc.c2{grid-template-columns:repeat(2,1fr)}
+/* en la columna lateral el resultado se apila y el número manda sobre la etiqueta */
+.calc.apilado{grid-template-columns:1fr;gap:0;margin-top:0;padding-top:0;border-top:0}
+.calc.apilado .dv{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:11px 2px}
+.calc.apilado .dv:last-child{border-bottom:0}
+.calc.apilado .dv b{font-size:26px;letter-spacing:-.8px}
+.calc.apilado .dv.principal b{font-size:34px;color:var(--m6)}
 .form-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;align-items:center}
 .form-actions .helper{margin-right:auto;font-size:11.5px;color:var(--faint)}
 
 /* ---------- equipo ---------- */
 .entry{border:1px solid var(--border);border-radius:var(--r-inner);background:var(--bg);
   padding:11px 13px;margin-bottom:9px;display:grid;
-  grid-template-columns:auto 1fr auto auto auto;gap:11px;align-items:center}
+  grid-template-columns:auto minmax(0,1.4fr) auto auto minmax(0,1fr) auto;gap:14px;align-items:center}
+/* lo que hizo esta semana es una COLUMNA, no un renglón chico debajo del nombre:
+   es el dato por el que se entra a esta pantalla */
+.entry .hizo{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+.entry .hizo b{font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink)}
+.entry.off .hizo{color:var(--faint)}
 .entry.off{opacity:.6}
 .entry .en{min-width:0}
 .entry .en strong{display:block;font-size:13.5px;font-weight:600}
@@ -294,12 +324,12 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .pill.clo{background:var(--m1);color:var(--m7)}
 .pill.amb{background:var(--ambar-bg);color:var(--ambar-ink)}
 .pill.no{background:var(--bg);color:var(--faint);border:1px solid var(--border)}
-.addrow{display:grid;grid-template-columns:1.6fr .9fr auto;gap:9px;align-items:end;margin-top:14px;
-  padding-top:14px;border-top:1px solid var(--border)}
+.addrow{display:grid;grid-template-columns:1fr;gap:11px;align-items:end}
+.addrow .btn-primary{width:100%}
 
 /* ---------- ajustes ---------- */
-.cfgrow{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;align-items:center;
-  padding:13px 0;border-bottom:1px solid var(--line)}
+.cfgrow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(160px,.85fr);gap:14px;
+  align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
 .cfgrow:last-child{border-bottom:0}
 .cfg-n{font-weight:600;font-size:13.5px}
 .cfg-src{font-size:11px;color:var(--faint);margin-top:2px;line-height:1.45}
@@ -321,11 +351,28 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .vacio .kpi-val,.vacio .m-val,.vacio .dv b{color:var(--faint)}
 
 /* ============ RESPONSIVE — cada regla, dos veces ============ */
+@media (max-width:1140px){
+  .trabajo{grid-template-columns:1fr}
+  .trabajo > .lado{position:static}
+  .calc.apilado{grid-template-columns:repeat(4,1fr);gap:10px}
+  .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
+  .calc.apilado .dv b,.calc.apilado .dv.principal b{font-size:19px;letter-spacing:-.5px}
+  .form-grid > .c3{grid-column:span 6}
+  .form-grid > .c4,.form-grid > .c8{grid-column:span 12}
+  .entry{grid-template-columns:auto minmax(0,1fr) auto auto auto}
+  .entry .hizo{display:none}
+}
 @media (max-width:1000px){
   .money{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr}
   .grid2{grid-template-columns:1fr}
 }
+body[data-view="mobile"] .trabajo{grid-template-columns:1fr}
+body[data-view="mobile"] .trabajo > .lado{position:static}
+body[data-view="mobile"] .calc.apilado{grid-template-columns:1fr 1fr;gap:10px}
+body[data-view="mobile"] .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
+body[data-view="mobile"] .calc.apilado .dv b,body[data-view="mobile"] .calc.apilado .dv.principal b{font-size:19px;letter-spacing:-.5px}
+body[data-view="mobile"] .entry .hizo{display:none}
 body[data-view="mobile"] .money{grid-template-columns:1fr}
 body[data-view="mobile"] .kpis{grid-template-columns:1fr}
 body[data-view="mobile"] .grid2{grid-template-columns:1fr}
@@ -346,8 +393,9 @@ body[data-view="mobile"] .grid2{grid-template-columns:1fr}
   .mc.hero .m-val{font-size:33px}
   .fnr{grid-template-columns:78px 1fr}
   .fnr .fn-cv{display:none}
-  .form-grid{grid-template-columns:1fr}
+  .form-grid > .c3,.form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
   .calc,.calc.c2{grid-template-columns:1fr 1fr}
+  .calc.apilado{grid-template-columns:1fr 1fr;gap:10px}
   .days{gap:5px;height:112px}
   .day em{display:none}
   .lbv{min-width:78px}
@@ -377,7 +425,8 @@ body[data-view="mobile"] .mc .m-val{font-size:28px}
 body[data-view="mobile"] .mc.hero .m-val{font-size:33px}
 body[data-view="mobile"] .fnr{grid-template-columns:78px 1fr}
 body[data-view="mobile"] .fnr .fn-cv{display:none}
-body[data-view="mobile"] .form-grid{grid-template-columns:1fr}
+body[data-view="mobile"] .form-grid > .c3,body[data-view="mobile"] .form-grid > .c4,
+body[data-view="mobile"] .form-grid > .c6,body[data-view="mobile"] .form-grid > .c8{grid-column:span 12}
 body[data-view="mobile"] .calc,body[data-view="mobile"] .calc.c2{grid-template-columns:1fr 1fr}
 body[data-view="mobile"] .days{gap:5px;height:112px}
 body[data-view="mobile"] .day em{display:none}
@@ -628,41 +677,42 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       <span class="badge-w">Se carga a mano</span>
     </div>
 
-    <div class="card formcard">
-      <div class="form-grid">
-        <div class="field"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
-        <div class="field"><label>Setter <span class="req">*</span></label>
-          <select><option>Sofía Lara</option><option>Mateo Gil</option><option>Valentina Paz</option></select></div>
-        <div class="field"><label>Conversaciones iniciadas <span class="req">*</span></label>
-          <div class="step"><button type="button">−</button><input class="num" value="24" inputmode="numeric"><button type="button">＋</button></div>
-          <span class="hint">Con cuántas personas empezaste una conversación hoy.</span></div>
-        <div class="field"><label>Agendas <span class="req">*</span></label>
-          <div class="step"><button type="button">−</button><input class="num" value="8" inputmode="numeric"><button type="button">＋</button></div>
-          <span class="hint">Cuántas llamadas quedaron agendadas.</span></div>
+    <div class="trabajo">
+      <div class="card formcard">
+        <div class="form-grid">
+          <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
+          <div class="field c8"><label>Setter <span class="req">*</span></label>
+            <select><option>Sofía Lara</option><option>Mateo Gil</option><option>Valentina Paz</option></select></div>
+          <div class="field c6"><label>Conversaciones iniciadas <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="24" inputmode="numeric"><button type="button">＋</button></div>
+            <span class="hint">Con cuántas personas empezaste una conversación hoy.</span></div>
+          <div class="field c6"><label>Agendas <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="8" inputmode="numeric"><button type="button">＋</button></div>
+            <span class="hint">Cuántas llamadas quedaron agendadas.</span></div>
+        </div>
+        <div class="form-actions">
+          <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
+          <button class="btn-ghost">Cancelar</button>
+          <button class="btn-primary">Enviar reporte</button>
+        </div>
       </div>
 
-      <div class="calc c2">
-        <div class="dv"><span>Tu tasa de agenda hoy</span><b class="num">33.3%</b></div>
-        <div class="dv"><span>Agendas de conversaciones</span><b class="num">8 de 24</b></div>
-      </div>
-
-      <div class="form-actions">
-        <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
-        <button class="btn-ghost">Cancelar</button>
-        <button class="btn-primary">Enviar reporte</button>
-      </div>
-    </div>
-
-    <div class="card formcard" style="margin-top:12px">
-      <div class="note warn" style="margin-top:0">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-        <span><b>Sofía Lara ya cargó el 26 de julio</b> — 24 conversaciones y 8 agendas.
-          Si enviás de nuevo, se <b>reemplaza</b> lo anterior. No se suma.</span>
-      </div>
-      <div class="form-actions">
-        <span class="helper">Así el día no se cuenta dos veces.</span>
-        <button class="btn-ghost">Dejar como estaba</button>
-        <button class="btn-primary">Reemplazar</button>
+      <div class="lado">
+        <div class="card">
+          <div class="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div class="calc apilado">
+            <div class="dv principal"><span>Tasa de agenda</span><b class="num">33.3%</b></div>
+            <div class="dv"><span>Agendas</span><b class="num">8</b></div>
+            <div class="dv"><span>Conversaciones</span><b class="num">24</b></div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:12px">
+          <div class="note warn" style="margin-top:0">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+            <span><b>Sofía Lara ya cargó el 26 de julio</b> — 24 conversaciones y 8 agendas. Si enviás de nuevo se <b>reemplaza</b>. No se suma.</span>
+          </div>
+          <div class="form-actions"><button class="btn-ghost btn-sm">Traer lo que había</button></div>
+        </div>
       </div>
     </div>
   </section>
@@ -678,39 +728,46 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       <span class="badge-w">Se carga a mano</span>
     </div>
 
-    <div class="card formcard">
-      <div class="form-grid">
-        <div class="field"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
-        <div class="field"><label>Closer <span class="req">*</span></label>
-          <select><option>Andrea Ríos</option><option>Diego Torres</option><option>Carlos Méndez</option></select></div>
-        <div class="field"><label>Llamadas en agenda <span class="req">*</span></label>
-          <div class="step"><button type="button">−</button><input class="num" value="6" inputmode="numeric"><button type="button">＋</button></div></div>
-        <div class="field"><label>Asistieron (show-ups) <span class="req">*</span></label>
-          <div class="step"><button type="button">−</button><input class="num" value="4" inputmode="numeric"><button type="button">＋</button></div></div>
-        <div class="field"><label>Reagendadas <span class="req">*</span></label>
-          <div class="step"><button type="button">−</button><input class="num" value="1" inputmode="numeric"><button type="button">＋</button></div></div>
-        <div class="field"><label>Cierres <span class="req">*</span></label>
-          <div class="step"><button type="button">−</button><input class="num" value="2" inputmode="numeric"><button type="button">＋</button></div></div>
+    <div class="trabajo">
+      <div class="card formcard">
+        <div class="form-grid">
+          <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
+          <div class="field c8"><label>Closer <span class="req">*</span></label>
+            <select><option>Andrea Ríos</option><option>Diego Torres</option><option>Carlos Méndez</option></select></div>
 
-        <div class="field"><label>Revenue contratado <span class="req">*</span></label>
-          <div class="money-inp"><span class="cur">$</span><input class="num" value="6,000" inputmode="decimal"></div>
-          <span class="hint">El total que firmaron hoy, aunque lo paguen en cuotas.</span></div>
-        <div class="field"><label>Cash collected <span class="req">*</span></label>
-          <div class="money-inp hero"><span class="cur">$</span><input class="num" value="3,500" inputmode="decimal"></div>
-          <span class="hint">Solo lo que <b>entró hoy</b>. Si pagó el 50%, va el 50%.</span></div>
+          <div class="field c3"><label>Llamadas en agenda <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="6" inputmode="numeric"><button type="button">＋</button></div></div>
+          <div class="field c3"><label>Asistieron <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="4" inputmode="numeric"><button type="button">＋</button></div></div>
+          <div class="field c3"><label>Reagendadas <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="1" inputmode="numeric"><button type="button">＋</button></div></div>
+          <div class="field c3"><label>Cierres <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="2" inputmode="numeric"><button type="button">＋</button></div></div>
+
+          <div class="field c6"><label>Revenue contratado <span class="req">*</span></label>
+            <div class="money-inp"><span class="cur">$</span><input class="num" value="6,000" inputmode="decimal"></div>
+            <span class="hint">El total que firmaron hoy, aunque lo paguen en cuotas.</span></div>
+          <div class="field c6"><label>Cash collected <span class="req">*</span></label>
+            <div class="money-inp hero"><span class="cur">$</span><input class="num" value="3,500" inputmode="decimal"></div>
+            <span class="hint">Solo lo que <b>entró hoy</b>. Si pagó el 50%, va el 50%.</span></div>
+        </div>
+        <div class="form-actions">
+          <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
+          <button class="btn-ghost">Cancelar</button>
+          <button class="btn-primary">Enviar reporte</button>
+        </div>
       </div>
 
-      <div class="calc">
-        <div class="dv"><span>Asistencia</span><b class="num">67%</b></div>
-        <div class="dv"><span>Cierre</span><b class="num">50%</b></div>
-        <div class="dv"><span>Cobrado</span><b class="num">$3,500</b></div>
-        <div class="dv"><span>% de cobro</span><b class="num">58%</b></div>
-      </div>
-
-      <div class="form-actions">
-        <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
-        <button class="btn-ghost">Cancelar</button>
-        <button class="btn-primary">Enviar reporte</button>
+      <div class="lado">
+        <div class="card">
+          <div class="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div class="calc apilado">
+            <div class="dv principal"><span>Cobrado</span><b class="num">$3,500</b></div>
+            <div class="dv"><span>Asistencia</span><b class="num">67%</b></div>
+            <div class="dv"><span>Cierre</span><b class="num">50%</b></div>
+            <div class="dv"><span>% de cobro</span><b class="num">58%</b></div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -726,43 +783,54 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       <span class="badge-w">Se carga a mano</span>
     </div>
 
-    <div class="card formcard">
-      <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 dado de baja</p></div></div>
+    <div class="trabajo">
+      <div class="card">
+        <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 dado de baja</p></div><span class="chip n">esta semana</span></div>
 
-      <div class="entry"><span class="av2">SL</span>
-        <span class="en"><strong>Sofía Lara</strong><small class="num">38 agendas esta semana</small></span>
-        <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
-        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="entry"><span class="av2">SL</span>
+          <span class="en"><strong>Sofía Lara</strong><small>desde julio</small></span>
+          <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
+          <span class="hizo num"><b>38</b> agendas</span>
+          <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
-      <div class="entry"><span class="av2">MG</span>
-        <span class="en"><strong>Mateo Gil</strong><small class="num">36 agendas esta semana</small></span>
-        <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
-        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="entry"><span class="av2">MG</span>
+          <span class="en"><strong>Mateo Gil</strong><small>desde julio</small></span>
+          <span class="pill set">Setter</span><span class="pill clo est" hidden></span>
+          <span class="hizo num"><b>36</b> agendas</span>
+          <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
-      <div class="entry"><span class="av2">AR</span>
-        <span class="en"><strong>Andrea Ríos</strong><small class="num">11 cierres · $19,800</small></span>
-        <span class="pill clo">Closer</span><span class="pill clo est" hidden></span>
-        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="entry"><span class="av2">AR</span>
+          <span class="en"><strong>Andrea Ríos</strong><small>desde junio</small></span>
+          <span class="pill clo">Closer</span><span class="pill clo est" hidden></span>
+          <span class="hizo num"><b>$19,800</b> · 11 cierres</span>
+          <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
-      <div class="entry"><span class="av2">DT</span>
-        <span class="en"><strong>Diego Torres</strong><small class="num">8 cierres · $14,400</small></span>
-        <span class="pill amb">Setter y closer</span><span class="pill clo est" hidden></span>
-        <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+        <div class="entry"><span class="av2">DT</span>
+          <span class="en"><strong>Diego Torres</strong><small>desde junio</small></span>
+          <span class="pill amb">Setter y closer</span><span class="pill clo est" hidden></span>
+          <span class="hizo num"><b>$14,400</b> · 8 cierres</span>
+          <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
-      <div class="entry off"><span class="av2">CM</span>
-        <span class="en"><strong>Carlos Méndez</strong><small>ya no está en el equipo</small></span>
-        <span class="pill clo">Closer</span><span class="pill no est">De baja</span>
-        <button class="del" title="Reactivar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button></div>
-
-      <div class="note">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
-        <span>Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los formularios, pero sus números siguen contando en las semanas que ya trabajó.</span>
+        <div class="entry off"><span class="av2">CM</span>
+          <span class="en"><strong>Carlos Méndez</strong><small>ya no está en el equipo</small></span>
+          <span class="pill clo">Closer</span><span class="pill no est">De baja</span>
+          <span class="hizo">—</span>
+          <button class="del" title="Reactivar"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button></div>
       </div>
 
-      <div class="addrow">
-        <div class="field"><label>Nombre</label><input placeholder="Nombre y apellido"></div>
-        <div class="field"><label>Rol</label><select><option>Setter</option><option>Closer</option><option>Setter y closer</option></select></div>
-        <button class="btn-primary">Agregar</button>
+      <div class="lado">
+        <div class="card">
+          <div class="card-head"><div><h3>Agregar a alguien</h3><p>aparece en los formularios al instante</p></div></div>
+          <div class="addrow">
+            <div class="field"><label>Nombre</label><input placeholder="Nombre y apellido"></div>
+            <div class="field"><label>Rol</label><select><option>Setter</option><option>Closer</option><option>Setter y closer</option></select></div>
+            <button class="btn-primary">Agregar</button>
+          </div>
+          <div class="note">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+            <span>Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los formularios, pero sus números siguen contando en las semanas que ya trabajó.</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -778,6 +846,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       <span class="badge-w">Se carga a mano</span>
     </div>
 
+    <div class="grid2" style="align-items:start">
     <div class="card formcard">
       <div class="card-head"><div><h3>Tu negocio</h3><p>lo que se ve arriba a la izquierda</p></div></div>
       <div class="cfgrow">
@@ -798,7 +867,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
       </div>
     </div>
 
-    <div class="card formcard" style="margin-top:12px">
+    <div class="card formcard">
       <div class="card-head"><div><h3>Cómo cuenta</h3><p>moneda, fechas y semanas</p></div></div>
       <div class="cfgrow">
         <div><div class="cfg-n">Moneda</div><div class="cfg-src">El símbolo que va delante de todos los montos.</div></div>
@@ -820,6 +889,7 @@ body[data-view="mobile"] .form-actions .btn-primary{width:100%}
         <span class="helper">Los cambios se aplican al guardar.</span>
         <button class="btn-primary">Guardar ajustes</button>
       </div>
+    </div>
     </div>
   </section>
 

@@ -49,12 +49,14 @@ export function ListaEquipo({
   }
 
   return (
-    <div className="card formcard">
+    <div className="trabajo">
+    <div className="card">
       <div className="card-head">
         <div>
           <h3>Tu equipo</h3>
           <p>{activos} {activos === 1 ? 'activo' : 'activos'}{bajas > 0 && ` · ${bajas} de baja`}</p>
         </div>
+        <span className="chip n">esta semana</span>
       </div>
 
       {personas.length === 0 ? (
@@ -69,10 +71,13 @@ export function ListaEquipo({
             <span className="av2">{iniciales(p.nombre)}</span>
             <span className="en">
               <strong>{p.nombre}</strong>
-              <small className="num">{p.activo ? (resumen[p.id] ?? 'sin reportes este período') : 'ya no está en el equipo'}</small>
+              <small>{p.activo ? ETIQUETA[p.rol] : 'ya no está en el equipo'}</small>
             </span>
             <span className={`pill ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
             {p.activo ? <span className="pill clo est" hidden /> : <span className="pill no est">De baja</span>}
+            {/* 🔴 Lo que hizo es una COLUMNA, no un renglón chico debajo del nombre:
+                es el dato por el que se entra a esta pantalla. */}
+            <span className="hizo num">{p.activo ? (resumen[p.id] ?? 'sin reportes') : '—'}</span>
             <button
               className="del" disabled={ocupado}
               title={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
@@ -85,37 +90,47 @@ export function ListaEquipo({
         ))
       )}
 
-      <div className="note">
-        <IconoInfo />
-        <span>
-          Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los
-          formularios, pero sus números siguen contando en las semanas que ya trabajó.
-        </span>
-      </div>
+    </div>
 
-      {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
+    <div className="lado">
+      <div className="card">
+        <div className="card-head">
+          <div><h3>Agregar a alguien</h3><p>aparece en los formularios al instante</p></div>
+        </div>
 
-      <div className="addrow">
-        <div className="field">
-          <label htmlFor="e-nombre">Nombre</label>
-          <input
-            id="e-nombre" value={nombre} placeholder="Nombre y apellido" maxLength={80}
-            onChange={(e) => setNombre(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter' && nombre.trim().length >= 2) agregar() }}
-          />
+        <div className="addrow">
+          <div className="field">
+            <label htmlFor="e-nombre">Nombre</label>
+            <input
+              id="e-nombre" value={nombre} placeholder="Nombre y apellido" maxLength={80}
+              onChange={(e) => setNombre(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter' && nombre.trim().length >= 2) agregar() }}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="e-rol">Rol</label>
+            <select id="e-rol" value={rol} onChange={(e) => setRol(e.target.value as Rol)}>
+              <option value="setter">Setter</option>
+              <option value="closer">Closer</option>
+              <option value="ambos">Setter y closer</option>
+            </select>
+          </div>
+          <button className="btn-primary" onClick={agregar} disabled={ocupado || nombre.trim().length < 2} type="button">
+            Agregar
+          </button>
         </div>
-        <div className="field">
-          <label htmlFor="e-rol">Rol</label>
-          <select id="e-rol" value={rol} onChange={(e) => setRol(e.target.value as Rol)}>
-            <option value="setter">Setter</option>
-            <option value="closer">Closer</option>
-            <option value="ambos">Setter y closer</option>
-          </select>
+
+        {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
+
+        <div className="note">
+          <IconoInfo />
+          <span>
+            Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los
+            formularios, pero sus números siguen contando en las semanas que ya trabajó.
+          </span>
         </div>
-        <button className="btn-primary" onClick={agregar} disabled={ocupado || nombre.trim().length < 2} type="button">
-          Agregar
-        </button>
       </div>
+    </div>
     </div>
   )
 }

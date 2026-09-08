@@ -335,14 +335,39 @@ button,input,select,textarea{font:inherit;color:inherit}
 .lbv .bar{width:88px;margin-left:auto}
 
 /* ---------- formularios ---------- */
-.formcard{max-width:760px}
+/* 🔴 El eje que faltaba.
+   Las tres pantallas de trabajo (los dos reportes y Equipo) tienen DOS partes
+   con roles distintos: donde se teclea, y lo que eso produce. Metidas en una
+   sola columna angosta, la segunda queda abajo del pliegue — se carga a ciegas
+   y hay que bajar para ver si el número dio. Al lado, se ve mientras se teclea.
+   El ancho no se "aprovecha": se usa para poner la consecuencia a la vista. */
+.trabajo{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+
+.trabajo > .lado{position:sticky;top:74px}
+
+.formcard{max-width:none}
 
 .section-title{font-family:var(--display);font-weight:800;font-size:12px;
   text-transform:uppercase;color:var(--faint);margin:18px 0 10px;letter-spacing:.8px}
 
 .section-title:first-child{margin-top:0}
 
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+/* 🔴 12 columnas, no 3.
+   Los campos de este formulario no miden lo mismo: un contador de dos dígitos
+   y un monto de cinco cifras no pueden ocupar el mismo ancho sin que uno de los
+   dos se vea mal. Con 12 cada campo pide lo que su dato necesita, y los cuatro
+   contadores entran en UNA fila en vez de tres. */
+.form-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+
+.form-grid > .field{grid-column:span 12}
+
+.form-grid > .c3{grid-column:span 3}
+
+.form-grid > .c4{grid-column:span 4}
+
+.form-grid > .c6{grid-column:span 6}
+
+.form-grid > .c8{grid-column:span 8}
 
 .field{display:flex;flex-direction:column;gap:5px}
 
@@ -390,6 +415,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .calc.c2{grid-template-columns:repeat(2,1fr)}
 
+/* en la columna lateral el resultado se apila y el número manda sobre la etiqueta */
+.calc.apilado{grid-template-columns:1fr;gap:0;margin-top:0;padding-top:0;border-top:0}
+
+.calc.apilado .dv{border:0;border-bottom:1px solid var(--line);border-radius:0;padding:11px 2px}
+
+.calc.apilado .dv:last-child{border-bottom:0}
+
+.calc.apilado .dv b{font-size:26px;letter-spacing:-.8px}
+
+.calc.apilado .dv.principal b{font-size:34px;color:var(--m6)}
+
 .form-actions{display:flex;gap:9px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap;align-items:center}
 
 .form-actions .helper{margin-right:auto;font-size:11.5px;color:var(--faint)}
@@ -397,7 +433,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* ---------- equipo ---------- */
 .entry{border:1px solid var(--border);border-radius:var(--r-inner);background:var(--bg);
   padding:11px 13px;margin-bottom:9px;display:grid;
-  grid-template-columns:auto 1fr auto auto auto;gap:11px;align-items:center}
+  grid-template-columns:auto minmax(0,1.4fr) auto auto minmax(0,1fr) auto;gap:14px;align-items:center}
+
+/* lo que hizo esta semana es una COLUMNA, no un renglón chico debajo del nombre:
+   es el dato por el que se entra a esta pantalla */
+.entry .hizo{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis}
+
+.entry .hizo b{font-family:var(--display);font-weight:800;font-size:15px;color:var(--ink)}
+
+.entry.off .hizo{color:var(--faint)}
 
 .entry.off{opacity:.6}
 
@@ -423,12 +468,13 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .pill.no{background:var(--bg);color:var(--faint);border:1px solid var(--border)}
 
-.addrow{display:grid;grid-template-columns:1.6fr .9fr auto;gap:9px;align-items:end;margin-top:14px;
-  padding-top:14px;border-top:1px solid var(--border)}
+.addrow{display:grid;grid-template-columns:1fr;gap:11px;align-items:end}
+
+.addrow .btn-primary{width:100%}
 
 /* ---------- ajustes ---------- */
-.cfgrow{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;align-items:center;
-  padding:13px 0;border-bottom:1px solid var(--line)}
+.cfgrow{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(160px,.85fr);gap:14px;
+  align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
 
 .cfgrow:last-child{border-bottom:0}
 
@@ -463,6 +509,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 .vacio .kpi-val,.vacio .m-val,.vacio .dv b{color:var(--faint)}
 
 /* ============ RESPONSIVE — cada regla, dos veces ============ */
+@media (max-width:1140px){
+  .trabajo{grid-template-columns:1fr}
+  .trabajo > .lado{position:static}
+  .calc.apilado{grid-template-columns:repeat(4,1fr);gap:10px}
+  .calc.apilado .dv{border:1px solid var(--border);border-radius:var(--r-inner);padding:11px 13px}
+  .calc.apilado .dv b,.calc.apilado .dv.principal b{font-size:19px;letter-spacing:-.5px}
+  .form-grid > .c3{grid-column:span 6}
+  .form-grid > .c4,.form-grid > .c8{grid-column:span 12}
+  .entry{grid-template-columns:auto minmax(0,1fr) auto auto auto}
+  .entry .hizo{display:none}
+}
+
 @media (max-width:1000px){
   .money{grid-template-columns:1fr}
   .kpis{grid-template-columns:1fr}
@@ -485,8 +543,9 @@ button,input,select,textarea{font:inherit;color:inherit}
   .mc.hero .m-val{font-size:33px}
   .fnr{grid-template-columns:78px 1fr}
   .fnr .fn-cv{display:none}
-  .form-grid{grid-template-columns:1fr}
+  .form-grid > .c3,.form-grid > .c4,.form-grid > .c6,.form-grid > .c8{grid-column:span 12}
   .calc,.calc.c2{grid-template-columns:1fr 1fr}
+  .calc.apilado{grid-template-columns:1fr 1fr;gap:10px}
   .days{gap:5px;height:112px}
   .day em{display:none}
   .lbv{min-width:78px}

@@ -87,35 +87,29 @@ export function FormCloser({
         <span className="badge-w">Se carga a mano</span>
       </div>
 
+      <div className="trabajo">
       <div className="card formcard">
         <div className="form-grid">
-          <div className="field">
+          <div className="field c4">
             <label htmlFor="c-fecha">Fecha <span className="req">*</span></label>
             <input id="c-fecha" type="date" value={fecha} max={hoy} onChange={(e) => setFecha(e.target.value)} />
           </div>
-          <div className="field">
+          <div className="field c8">
             <label htmlFor="c-closer">Closer <span className="req">*</span></label>
             <select id="c-closer" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
               {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
-          <Stepper nombre="llamadas" etiqueta="Llamadas en agenda" valor={llamadas} onCambio={setLlamadas} />
-          <Stepper nombre="asistieron" etiqueta="Asistieron (show-ups)" valor={asistieron} onCambio={setAsistieron} />
-          <Stepper nombre="reagendadas" etiqueta="Reagendadas" valor={reagendadas} onCambio={setReagendadas} />
-          <Stepper nombre="cierres" etiqueta="Cierres" valor={cierres} onCambio={setCierres} />
-          <CampoDinero nombre="revenue" etiqueta="Revenue contratado" valorCents={revenueCents}
+          <Stepper ancho="c3" nombre="llamadas" etiqueta="Llamadas en agenda" valor={llamadas} onCambio={setLlamadas} />
+          <Stepper ancho="c3" nombre="asistieron" etiqueta="Asistieron" valor={asistieron} onCambio={setAsistieron} />
+          <Stepper ancho="c3" nombre="reagendadas" etiqueta="Reagendadas" valor={reagendadas} onCambio={setReagendadas} />
+          <Stepper ancho="c3" nombre="cierres" etiqueta="Cierres" valor={cierres} onCambio={setCierres} />
+          <CampoDinero ancho="c6" nombre="revenue" etiqueta="Revenue contratado" valorCents={revenueCents}
             onCambio={setRevenue} simbolo={simbolo}
             pista="El total que firmaron hoy, aunque lo paguen en cuotas." />
-          <CampoDinero nombre="cash" etiqueta="Cash collected" valorCents={cashCents} hero
+          <CampoDinero ancho="c6" nombre="cash" etiqueta="Cash collected" valorCents={cashCents} hero
             onCambio={setCash} simbolo={simbolo}
             pista={<>Solo lo que <b>entró hoy</b>. Si pagó el 50%, va el 50%.</>} />
-        </div>
-
-        <div className="calc">
-          <Derivado etiqueta="Asistencia" valor={porcentajeEntero(tasa(asistieron, llamadas))} />
-          <Derivado etiqueta="Cierre" valor={porcentajeEntero(tasa(cierres, asistieron))} />
-          <Derivado etiqueta="Cobrado" valor={dinero(cashCents, simbolo)} />
-          <Derivado etiqueta="% de cobro" valor={porcentajeEntero(tasa(cashCents, revenueCents))} />
         </div>
 
         {avisos.map((a) => (
@@ -131,8 +125,19 @@ export function FormCloser({
         </div>
       </div>
 
+      <div className="lado">
+        <div className="card">
+          <div className="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div className="calc apilado">
+            <Derivado principal etiqueta="Cobrado" valor={dinero(cashCents, simbolo)} />
+            <Derivado etiqueta="Asistencia" valor={porcentajeEntero(tasa(asistieron, llamadas))} />
+            <Derivado etiqueta="Cierre" valor={porcentajeEntero(tasa(cierres, asistieron))} />
+            <Derivado etiqueta="% de cobro" valor={porcentajeEntero(tasa(cashCents, revenueCents))} />
+          </div>
+        </div>
+
       {existente && (
-        <div className="card formcard" style={{ marginTop: 12 }}>
+        <div className="card" style={{ marginTop: 12 }}>
           <div className="note warn" style={{ marginTop: 0 }}>
             <IconoAviso />
             <span>
@@ -156,6 +161,8 @@ export function FormCloser({
           </div>
         </div>
       )}
+      </div>
+      </div>
     </>
   )
 }

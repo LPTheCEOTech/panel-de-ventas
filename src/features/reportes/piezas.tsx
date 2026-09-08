@@ -5,14 +5,17 @@ import { useId } from 'react'
 /** El `− n ＋` del mockup. El input queda editable: escribir 24 es más rápido
  *  que apretar 24 veces, y en el celular abre el teclado numérico. */
 export function Stepper({
-  nombre, valor, onCambio, etiqueta, pista,
+  nombre, valor, onCambio, etiqueta, pista, ancho = 'c3',
 }: {
   nombre: string; valor: number; onCambio: (n: number) => void
   etiqueta: string; pista?: string
+  /** Cuántas de las 12 columnas ocupa. Un contador de dos dígitos no necesita
+   *  el mismo ancho que un monto de cinco cifras. */
+  ancho?: 'c3' | 'c4' | 'c6' | 'c8'
 }) {
   const id = useId()
   return (
-    <div className="field">
+    <div className={`field ${ancho}`}>
       <label htmlFor={id}>{etiqueta} <span className="req">*</span></label>
       <div className="step">
         {/* 🔴 no baja de 0: un día con −1 llamadas rompe cualquier tasa */}
@@ -33,15 +36,16 @@ export function Stepper({
 
 /** El input de dinero. Se escribe con separadores y se guarda en centavos. */
 export function CampoDinero({
-  nombre, valorCents, onCambio, etiqueta, pista, simbolo, hero,
+  nombre, valorCents, onCambio, etiqueta, pista, simbolo, hero, ancho = 'c6',
 }: {
   nombre: string; valorCents: number; onCambio: (cents: number) => void
   etiqueta: string; pista?: React.ReactNode; simbolo: string; hero?: boolean
+  ancho?: 'c3' | 'c4' | 'c6' | 'c8'
 }) {
   const id = useId()
   const texto = valorCents === 0 ? '' : Math.round(valorCents / 100).toLocaleString('en-US')
   return (
-    <div className="field">
+    <div className={`field ${ancho}`}>
       <label htmlFor={id}>{etiqueta} <span className="req">*</span></label>
       <div className={`money-inp${hero ? ' hero' : ''}`}>
         <span className="cur">{simbolo}</span>
@@ -59,9 +63,9 @@ export function CampoDinero({
   )
 }
 
-export function Derivado({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+export function Derivado({ etiqueta, valor, principal }: { etiqueta: string; valor: string; principal?: boolean }) {
   return (
-    <div className="dv">
+    <div className={`dv${principal ? ' principal' : ''}`}>
       <span>{etiqueta}</span>
       <b className="num">{valor}</b>
     </div>

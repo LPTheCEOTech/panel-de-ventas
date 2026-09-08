@@ -68,7 +68,7 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
   }
 
   return (
-    <>
+    <div className="grid2" style={{ alignItems: 'start' }}>
       <div className="card formcard">
         <div className="card-head"><div><h3>Tu negocio</h3><p>lo que se ve arriba a la izquierda</p></div></div>
 
@@ -86,7 +86,7 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
         </Fila>
       </div>
 
-      <div className="card formcard" style={{ marginTop: 12 }}>
+      <div className="card formcard">
         <div className="card-head"><div><h3>Cómo cuenta</h3><p>moneda, fechas y semanas</p></div></div>
 
         <Fila titulo="Moneda" explicacion="El símbolo que va delante de todos los montos.">
@@ -127,6 +127,6 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
           </button>
         </div>
       </div>
-    </>
+    </div>
   )
 }

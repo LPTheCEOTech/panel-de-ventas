@@ -69,27 +69,23 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
         <span className="badge-w">Se carga a mano</span>
       </div>
 
+      <div className="trabajo">
       <div className="card formcard">
         <div className="form-grid">
-          <div className="field">
+          <div className="field c4">
             <label htmlFor="f-fecha">Fecha <span className="req">*</span></label>
             <input id="f-fecha" type="date" value={fecha} max={hoy} onChange={(e) => setFecha(e.target.value)} />
           </div>
-          <div className="field">
+          <div className="field c8">
             <label htmlFor="f-setter">Setter <span className="req">*</span></label>
             <select id="f-setter" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
               {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
             </select>
           </div>
-          <Stepper nombre="conversaciones" etiqueta="Conversaciones iniciadas" valor={conversaciones}
+          <Stepper ancho="c6" nombre="conversaciones" etiqueta="Conversaciones iniciadas" valor={conversaciones}
             onCambio={setConversaciones} pista="Con cuántas personas empezaste una conversación hoy." />
-          <Stepper nombre="agendas" etiqueta="Agendas" valor={agendas}
+          <Stepper ancho="c6" nombre="agendas" etiqueta="Agendas" valor={agendas}
             onCambio={setAgendas} pista="Cuántas llamadas quedaron agendadas." />
-        </div>
-
-        <div className="calc c2">
-          <Derivado etiqueta="Tu tasa de agenda hoy" valor={porcentaje(t)} />
-          <Derivado etiqueta="Agendas de conversaciones" valor={`${numero(agendas)} de ${numero(conversaciones)}`} />
         </div>
 
         {error && (
@@ -104,8 +100,18 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
         </div>
       </div>
 
+      <div className="lado">
+        <div className="card">
+          <div className="card-head"><div><h3>Tu día</h3><p>se actualiza mientras escribís</p></div></div>
+          <div className="calc apilado">
+            <Derivado principal etiqueta="Tasa de agenda" valor={porcentaje(t)} />
+            <Derivado etiqueta="Agendas" valor={numero(agendas)} />
+            <Derivado etiqueta="Conversaciones" valor={numero(conversaciones)} />
+          </div>
+        </div>
+
       {existente && (
-        <div className="card formcard" style={{ marginTop: 12 }}>
+        <div className="card" style={{ marginTop: 12 }}>
           <div className="note warn" style={{ marginTop: 0 }}>
             <IconoAviso />
             <span>
@@ -125,6 +131,8 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
           </div>
         </div>
       )}
+      </div>
+      </div>
     </>
   )
 }
