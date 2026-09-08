@@ -16,19 +16,27 @@ export default async function Equipo() {
     capa.leerReportesCloser(v),
   ])
 
-  // el renglón chico de cada persona: lo que hizo esta semana
-  const resumen: Record<string, string> = {}
+  // Lo que hizo cada uno esta semana, partido en dos: el número que manda y
+  // lo que lo acompaña. La columna es angosta y el número tiene que poder
+  // pintarse más grande que su unidad.
+  //
+  // 🔴 A quien hace las dos cosas se le muestra su número de CLOSER. No es que
+  // se pierda lo de setter: el dinero es el titular del negocio y el detalle
+  // completo está en los dos rankings del panel. Meter los dos números en una
+  // columna de 150 px los deja ilegibles a los dos.
+  const resumen: Record<string, { valor: string; unidad: string }> = {}
   for (const f of rankingSetters(personas, setters)) {
-    resumen[f.persona.id] = `${numero(f.valor)} agendas esta semana`
+    resumen[f.persona.id] = { valor: numero(f.valor), unidad: 'agendas' }
   }
   for (const f of rankingClosers(personas, closers)) {
-    const previo = resumen[f.persona.id]
-    const propio = `${f.detalle.cierres} cierres · ${dinero(f.valor, config.simbolo)}`
-    resumen[f.persona.id] = previo ? `${previo} · ${propio}` : propio
+    resumen[f.persona.id] = {
+      valor: dinero(f.valor, config.simbolo),
+      unidad: `· ${f.detalle.cierres} ${f.detalle.cierres === 1 ? 'cierre' : 'cierres'}`,
+    }
   }
 
   return (
-    <>
+    <div className="hoja">
       <div className="page-head">
         <div>
           <h1>Equipo</h1>
@@ -43,6 +51,6 @@ export default async function Equipo() {
       </div>
 
       <ListaEquipo personas={personas} resumen={resumen} />
-    </>
+    </div>
   )
 }

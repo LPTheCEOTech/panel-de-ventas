@@ -5,7 +5,7 @@ import { PanelAjustes } from '@/features/ajustes/panel'
 export default async function Ajustes() {
   const config = await datos().leerConfiguracion()
   return (
-    <>
+    <div className="hoja">
       <div className="page-head">
         <div>
           <h1>Ajustes</h1>
@@ -23,6 +23,6 @@ export default async function Ajustes() {
       </div>
 
       <PanelAjustes inicial={config} />
-    </>
+    </div>
   )
 }

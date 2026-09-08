@@ -67,8 +67,14 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
     }
   }
 
+  /* 🔴 Un hex a medio escribir (`#00D9`) no puede pintar la muestra: el
+     navegador lo ignora y queda el color anterior, que miente. Se pinta solo
+     cuando está completo. */
+  const colorValido = /^#[0-9a-fA-F]{6}$/.test(c.marca)
+
   return (
-    <div className="grid2" style={{ alignItems: 'start' }}>
+    <>
+    <div className="grid2" style={{ alignItems: 'start', marginBottom: 0 }}>
       <div className="card formcard">
         <div className="card-head"><div><h3>Tu negocio</h3><p>lo que se ve arriba a la izquierda</p></div></div>
 
@@ -82,7 +88,14 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
           <input value={c.usuarioNombre} maxLength={60} onChange={(e) => set('usuarioNombre', e.target.value)} />
         </Fila>
         <Fila titulo="Color de tu marca" explicacion="Todo el color del panel sale de acá. Cambiálo y cambia todo.">
-          <input value={c.marca} maxLength={7} placeholder="#00D97E" onChange={(e) => set('marca', e.target.value)} />
+          <span className="color-inp">
+            <span className="muestra" style={colorValido ? { background: c.marca } : undefined} />
+            <input
+              value={c.marca} maxLength={7} placeholder="#00D97E" spellCheck={false}
+              aria-label="Color de tu marca en hexadecimal"
+              onChange={(e) => set('marca', e.target.value)}
+            />
+          </span>
         </Fila>
       </div>
 
@@ -117,16 +130,21 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
             {c.rankingVisible ? 'Visible' : 'Oculto'}
           </label>
         </Fila>
-
-        {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
-
-        <div className="form-actions">
-          <span className="helper">{listo ? 'Guardado.' : 'Los cambios se aplican al guardar.'}</span>
-          <button className="btn-primary" onClick={guardar} disabled={guardando} type="button">
-            {guardando ? 'Guardando…' : 'Guardar ajustes'}
-          </button>
-        </div>
       </div>
     </div>
+
+    {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
+
+    {/* 🔴 El botón guarda LAS DOS tarjetas, así que no puede vivir adentro de
+        una. Estaba en la de la derecha: se editaba el nombre del negocio en la
+        izquierda y la única forma de guardarlo era un botón que, mirándolo,
+        parecía ser de la moneda y la zona horaria. */}
+    <div className="barra-guardar">
+      <span className="helper">{listo ? 'Guardado.' : 'Los cambios se aplican al guardar.'}</span>
+      <button className="btn-primary" onClick={guardar} disabled={guardando} type="button">
+        {guardando ? 'Guardando…' : 'Guardar ajustes'}
+      </button>
+    </div>
+    </>
   )
 }

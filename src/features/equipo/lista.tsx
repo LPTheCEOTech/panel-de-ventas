@@ -12,7 +12,7 @@ const CLASE: Record<Rol, string> = { setter: 'set', closer: 'clo', ambos: 'amb' 
 
 export function ListaEquipo({
   personas, resumen,
-}: { personas: Persona[]; resumen: Record<string, string> }) {
+}: { personas: Persona[]; resumen: Record<string, { valor: string; unidad: string }> }) {
   const router = useRouter()
   const [nombre, setNombre] = useState('')
   const [rol, setRol] = useState<Rol>('setter')
@@ -66,18 +66,29 @@ export function ListaEquipo({
           <p>Agregá a tus setters y closers acá abajo. Son los nombres que van a aparecer en los dos formularios y en el ranking.</p>
         </div>
       ) : (
-        personas.map((p) => (
+        personas.map((p) => {
+          const hizo = resumen[p.id]
+          return (
+          /* 🔴 El renglón es FLEX, no grid.
+             Con columnas fijas, la pastilla de "De baja" —que aparece y
+             desaparece— corría de lugar todo lo que venía después: la
+             actividad y el botón caían en la pista equivocada y sobraba una
+             columna vacía al final del renglón. */
           <div className={`entry${p.activo ? '' : ' off'}`} key={p.id}>
             <span className="av2">{iniciales(p.nombre)}</span>
             <span className="en">
               <strong>{p.nombre}</strong>
-              <small>{p.activo ? ETIQUETA[p.rol] : 'ya no está en el equipo'}</small>
+              {!p.activo && <small>ya no está en el equipo</small>}
             </span>
-            <span className={`pill ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
-            {p.activo ? <span className="pill clo est" hidden /> : <span className="pill no est">De baja</span>}
+            <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
+            {!p.activo && <span className="pill no">De baja</span>}
             {/* 🔴 Lo que hizo es una COLUMNA, no un renglón chico debajo del nombre:
                 es el dato por el que se entra a esta pantalla. */}
-            <span className="hizo num">{p.activo ? (resumen[p.id] ?? 'sin reportes') : '—'}</span>
+            <span className="hizo num">
+              {!p.activo ? '—'
+                : hizo ? <><b>{hizo.valor}</b> {hizo.unidad}</>
+                : <span className="flojo">sin reportes</span>}
+            </span>
             <button
               className="del" disabled={ocupado}
               title={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
@@ -87,7 +98,8 @@ export function ListaEquipo({
               {p.activo ? <IconoEquis /> : <IconoDeshacer />}
             </button>
           </div>
-        ))
+          )
+        })
       )}
 
     </div>

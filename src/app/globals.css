@@ -555,6 +555,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .entry .hizo b{font-family:var(--display);font-weight:800;font-size:14.5px;color:var(--ink)}
 
+.entry .hizo .flojo{color:var(--faint)}
+
 .entry.off{opacity:.55}
 
 .entry.off .hizo{color:var(--faint)}
