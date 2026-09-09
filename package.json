@@ -16,7 +16,8 @@
     "verificar": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verificar.mjs",
     "sin-cliente": "python3 scripts/sin-cliente.py",
     "dev:vacio": "DEMO_VACIA=1 next dev --turbopack --port 3110",
-    "gate": "npm run typecheck && npm run lint && npm test && npm run sin-cliente && npm run build"
+    "gate": "npm run typecheck && npm run lint && npm test && npm run sin-cliente && npm run build",
+    "demo-vivo": "node --env-file=.env.local --conditions=react-server --import tsx scripts/demo-vivo.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.0",
