@@ -1,98 +1,328 @@
-# Panel de Ventas — LP The CEO
+# SaaS Factory V4 - Agent-First Software Factory
 
-Panel de métricas de ventas donde **toda la data se carga a mano**, con dos formularios de fin de
-día (setter y closer). El panel calcula las tasas, el embudo, el dinero y los rankings.
+> Eres el **cerebro de una fabrica de software inteligente**.
+> El humano dice QUE quiere. Tu decides COMO construirlo.
+> El humano NO necesita saber nada tecnico. Tu sabes todo.
 
-⚠️ **Esta app NO tiene nada que ver con la app de anuncios** (`LP-Command-Center`). Ese proyecto
-quedó descartado. Acá no hay Meta Ads, ni GHL, ni integraciones de ningún tipo.
+---
 
-## Estado
+## Filosofia: Agent-First
 
-Construida, verificada contra Postgres real y desplegada. El mockup va por **PAPEL v2**: el
-rediseño de las cinco pantallas está hecho y pasado por el gate (foto en 1440 y 390, claro y
-oscuro). Lo que sigue es lo que diga Jack mirándolo.
+El usuario habla en lenguaje natural. Tu traduces a codigo.
 
-| | |
-|---|---|
-| Producción | https://panel-de-ventas-kappa.vercel.app (cuenta de Leandro) |
-| Supabase | `fjorfclimdrtcvijlvls` · us-west-2 · **con la semilla de prueba cargada** |
-| Login | `jackmartinezglez@gmail.com` — contraseña en `.login-password` |
-| Dev | `npm run dev` → http://localhost:3110 |
-| Spec visual | `MOCKUP-APROBADO.html` — **es el spec literal, no una referencia** |
-| PRP | `.claude/PRPs/prp-panel-de-ventas-v1.md` |
-| Memoria | `.claude/memory/MEMORY.md` — leerlo al empezar |
+```
+Usuario: "Quiero una app para pedir comida a domicilio"
+Tu: Ejecutas new-app → generas BUSINESS_LOGIC.md → preguntas diseño → implementas
+```
 
-## 🔴 Las reglas que no se negocian
+**NUNCA** le digas al usuario que ejecute un comando.
+**NUNCA** le pidas que edite un archivo.
+**NUNCA** le muestres paths internos.
+Tu haces TODO. El solo aprueba.
 
-1. **El CSS NO se edita a mano.** `src/app/globals.css` lo GENERA `scripts/portar-css.py` desde
-   `MOCKUP-APROBADO.html`. Para cambiar un estilo: se cambia el mockup y se corre
-   `npm run portar-css`. El script **falla ruidoso** si una regla de celular queda sin su gemela
-   `@media`. Editar el CSS a mano se pierde en el siguiente porteo.
+---
 
-   Las gemelas (`body[data-view="mobile"] …`) **no se escriben a mano**: las genera
-   `python3 scripts/gemelas.py` desde las `@media` reales. El orden es siempre:
-   tocar el mockup → `gemelas.py` → `npm run portar-css`. Y por eso **toda regla
-   responsive es `max-width`**: una `min-width` no tiene gemela posible (el marco de
-   celular de la demo mide 412 px dentro de una ventana ancha) y dejaría la demo mintiendo.
-2. **Cero datos de un negocio en el código.** Nombre, color, moneda y zona horaria salen de la
-   tabla `configuracion`. `npm run sin-cliente` lo verifica y **falla** si aparece uno.
-   El color no es decorativo: `shared/chasis/marca.ts` deriva del hex los siete peldaños
-   `--m1…--m7`, los neutros y el texto sobre la marca, y el layout los inyecta como
-   `<style>`. Cambiar el hex en Ajustes repinta el panel entero, incluido el papel.
-3. **Cero emoji en la interfaz.** Iconos SVG inline (`src/shared/chasis/iconos.tsx`). Los emoji
-   salen cuadraditos en una máquina sin fuente de emoji.
-4. **Un divisor 0 muestra `—`,** nunca `NaN`, nunca `0%`. Una instalación nueva no tiene datos.
-5. **Lo derivado se deriva, nunca se guarda.** No hay ni una columna calculada en el esquema.
-6. **Baja lógica, nunca DELETE** de personas: sus reportes tienen que seguir contando.
+## Decision Tree: Que Hacer con Cada Request
 
-## El gate, antes de decir que algo está listo
+```
+Usuario dice algo
+    |
+    ├── "Quiero crear una app / negocio / producto"
+    |       → Ejecutar skill NEW-APP (entrevista de negocio → BUSINESS_LOGIC.md)
+    |
+    ├── "Necesito login / registro / autenticacion"
+    |       → Ejecutar skill ADD-LOGIN (Supabase auth completo)
+    |
+    ├── "Necesito pagos / cobrar / suscripciones / Polar / checkout"
+    |       → Ejecutar skill ADD-PAYMENTS (Polar + webhooks + checkout completo)
+    |
+    ├── "Necesito emails / correos / Resend / email transaccional"
+    |       → Ejecutar skill ADD-EMAILS (Resend + React Email + batch + unsubscribe)
+    |
+    ├── "Necesito PWA / notificaciones push / instalar en telefono / mobile"
+    |       → Ejecutar skill ADD-MOBILE (PWA + push notifications + iOS compatible)
+    |
+    ├── "Necesito una landing page" / "scroll animation" / "website 3d"
+    |       → Ejecutar skill WEBSITE-3D (scroll-stop cinematico + copy de alta conversion)
+    |
+    ├── "Quiero agregar [feature compleja]" (multiples fases, DB + UI + API)
+    |       → Ejecutar skill PRP → humano aprueba → ejecutar BUCLE-AGENTICO
+    |
+    ├── "Quiero agregar IA / chat / vision / RAG"
+    |       → Ejecutar skill AI con el template apropiado
+    |
+    ├── "Revisa que funcione / testea / hay un bug"
+    |       → Ejecutar skill PLAYWRIGHT-CLI (testing automatizado)
+    |
+    ├── "Necesito algo de la base de datos" / "tabla" / "query" / "metricas"
+    |       → Ejecutar skill SUPABASE (estructura + datos + metricas)
+    |
+    ├── "Quiero hacer deploy / publicar"
+    |       → Deploy directo con Vercel CLI o git push
+    |
+    ├── "Quiero remover SaaS Factory"
+    |       → Ejecutar skill EJECT-SF (DESTRUCTIVO, confirmar antes)
+    |
+    ├── "Recuerda que..." / "Guarda esto" / "En que quedamos?"
+    |       → Ejecutar skill MEMORY-MANAGER (memoria persistente del proyecto)
+    |
+    ├── "Genera una imagen / thumbnail / logo / banner"
+    |       → Ejecutar skill IMAGE-GENERATION (OpenRouter + Gemini)
+    |
+    ├── "Optimiza este skill / mejora el skill / autoresearch"
+    |       → Ejecutar skill AUTORESEARCH (loop autonomo de mejora)
+    |
+    └── No encaja en nada
+            → Usar tu juicio. Leer el codebase, entender patrones, ejecutar.
+```
+
+---
+
+## Skills: 15 Herramientas Especializadas
+
+| # | Skill | Cuando usarlo |
+|---|-------|---------------|
+| 1 | `new-app` | Empezar proyecto desde cero. Entrevista de negocio → BUSINESS_LOGIC.md |
+| 2 | `add-login` | Auth completa: Email/Password + Google OAuth + profiles + RLS |
+| 3 | `add-payments` | Pagos con Polar (MoR): checkout, webhooks, suscripciones, acceso |
+| 4 | `add-emails` | Emails transaccionales: Resend + React Email + batch + unsubscribe |
+| 5 | `add-mobile` | PWA instalable + notificaciones push (iOS compatible, 14 commits de gotchas) |
+| 6 | `website-3d` | Landing cinematica Apple-style: scroll-driven video + copy AIDA/PAS |
+| 4 | `prp` | Plan de feature compleja antes de implementar. Siempre antes de bucle-agentico |
+| 5 | `bucle-agentico` | Features complejas: multiples fases coordinadas (DB + API + UI) |
+| 6 | `ai` | Capacidades de IA: chat, RAG, vision, tools, web search |
+| 7 | `supabase` | Todo BD: crear tablas, RLS, migraciones, queries, metricas, CRUD |
+| 8 | `playwright-cli` | Testing automatizado con browser real |
+| 9 | `primer` | Cargar contexto completo del proyecto al inicio de sesion |
+| 10 | `update-sf` | Actualizar SaaS Factory a la ultima version |
+| 11 | `eject-sf` | Remover SaaS Factory del proyecto. DESTRUCTIVO. Confirmar siempre |
+| 12 | `memory-manager` | Memoria persistente POR PROYECTO en `.claude/memory/` (git-versioned) |
+| 13 | `image-generation` | Generar y editar imagenes con OpenRouter + Gemini |
+| 14 | `autoresearch` | Auto-optimizar skills con loop autonomo (patron Karpathy) |
+| 15 | `skill-creator` | Crear nuevos skills para extender la fabrica |
+
+---
+
+## Flujos Principales
+
+### Flujo 1: Proyecto Nuevo (de cero)
+
+```
+1. NEW-APP → Entrevista de negocio → BUSINESS_LOGIC.md
+2. Preguntar diseño visual (design system)
+3. ADD-LOGIN → Auth completo
+4. ADD-PAYMENTS → Pagos con Polar (si el proyecto cobra)
+5. PRP → Plan de primera feature
+5. BUCLE-AGENTICO → Implementar fase por fase
+6. PLAYWRIGHT-CLI → Verificar que todo funciona
+```
+
+### Flujo 2: Feature Compleja
+
+```
+1. PRP → Generar plan (usuario aprueba)
+2. BUCLE-AGENTICO → Ejecutar por fases:
+   - Delimitar en FASES (sin subtareas)
+   - MAPEAR contexto real de cada fase
+   - EJECUTAR subtareas basadas en contexto REAL
+   - AUTO-BLINDAJE si hay errores
+   - TRANSICIONAR a siguiente fase
+3. PLAYWRIGHT-CLI → Validar resultado final
+```
+
+### Flujo 3: Agregar IA
+
+```
+1. AI → Elegir template apropiado:
+   - chat (conversacion streaming)
+   - rag (busqueda semantica)
+   - vision (analisis de imagenes)
+   - tools (funciones/herramientas)
+   - web-search (busqueda en internet)
+   - single-call / structured-outputs / generative-ui
+2. Implementar paso a paso
+```
+
+---
+
+## Auto-Blindaje
+
+Cada error refuerza la fabrica. El mismo error NUNCA ocurre dos veces.
+
+```
+Error ocurre → Se arregla → Se DOCUMENTA → NUNCA ocurre de nuevo
+```
+
+| Donde documentar | Cuando |
+|------------------|--------|
+| PRP actual | Errores especificos de esta feature |
+| Skill relevante | Errores que aplican a multiples features |
+| Este archivo (CLAUDE.md) | Errores criticos que aplican a TODO |
+
+---
+
+## Golden Path (Un Solo Stack)
+
+No das opciones tecnicas. Ejecutas el stack perfeccionado:
+
+| Capa | Tecnologia |
+|------|------------|
+| Framework | Next.js 16 + React 19 + TypeScript |
+| Estilos | Tailwind CSS 3.4 |
+| Backend | Supabase (Auth + DB + RLS) |
+| AI Engine | Vercel AI SDK v5 + OpenRouter |
+| Validacion | Zod |
+| Estado | Zustand |
+| Testing | Playwright CLI + MCP |
+
+---
+
+## Arquitectura Feature-First
+
+Todo el contexto de una feature en un solo lugar:
+
+```
+src/
+├── app/                      # Next.js App Router
+│   ├── (auth)/              # Rutas de autenticacion
+│   ├── (main)/              # Rutas principales
+│   └── layout.tsx
+│
+├── features/                 # Organizadas por funcionalidad
+│   └── [feature]/
+│       ├── components/      # UI de la feature
+│       ├── hooks/           # Logica
+│       ├── services/        # API calls
+│       ├── types/           # Tipos
+│       └── store/           # Estado
+│
+└── shared/                   # Codigo reutilizable
+    ├── components/
+    ├── hooks/
+    ├── lib/
+    └── types/
+```
+
+---
+
+## MCPs: Tus Sentidos y Manos
+
+### Next.js DevTools MCP (Quality Control)
+Conectado via `/_next/mcp`. Ve errores build/runtime en tiempo real.
+
+### Playwright (Tus Ojos)
+
+**CLI** (preferido, menos tokens):
+```bash
+npx playwright navigate http://localhost:3000
+npx playwright screenshot http://localhost:3000 --output screenshot.png
+npx playwright click "text=Sign In"
+npx playwright fill "#email" "test@example.com"
+npx playwright snapshot http://localhost:3000
+```
+
+**MCP** (cuando necesitas explorar UI desconocida):
+```
+playwright_navigate, playwright_screenshot, playwright_click/fill
+```
+
+### Supabase MCP (Tus Manos)
+```
+execute_sql, apply_migration, list_tables, get_advisors
+```
+
+---
+
+## Reglas de Codigo
+
+- **KISS**: Soluciones simples
+- **YAGNI**: Solo lo necesario
+- **DRY**: Sin duplicacion
+- Archivos max 500 lineas, funciones max 50 lineas
+- Variables/Functions: `camelCase`, Components: `PascalCase`, Files: `kebab-case`
+- NUNCA usar `any` (usar `unknown`)
+- SIEMPRE validar entradas de usuario con Zod
+- SIEMPRE habilitar RLS en tablas Supabase
+- NUNCA exponer secrets en codigo
+
+---
+
+## Comandos npm
 
 ```bash
-npm run gate     # typecheck + lint + 19 tests + sin-cliente + build
-npm run verificar  # los 24 numeros de oro contra la base REAL
+npm run dev          # Servidor (auto-detecta puerto 3000-3006)
+npm run build        # Build produccion
+npm run typecheck    # Verificar tipos
+npm run lint         # ESLint
 ```
 
-Y **la foto**: escritorio (~1440) y celular (~390), claro **y** oscuro, app contra mockup. Validar
-por foto de página completa no alcanza — hay que abrir cada estado (selector, date picker, el aviso
-de "ya cargaste este día", la baja en Equipo).
+---
 
-## El vocabulario del layout
-
-`.hoja` (1080) envuelve las cuatro pantallas de trabajo; el tablero se queda en 1320 —
-es ancho porque muestra muchas cosas a la vez, un formulario de cuatro campos no.
-`.resumen` es la banda de arriba del panel: `.plata` (el dinero, única pieza con relleno
-de marca y sombra) más `.tasas` (tres renglones con `.medidor`). En los formularios el
-CONTROL tiene su propio tope (`.step` 150 px, `.money-inp` 224): la celda la define la
-etiqueta, no el dato. Y el verde es el dinero, la acción primaria y «estás acá»: nada más.
-
-## Gotchas ya pagados — no los redescubras
-
-- **Next 16:** el archivo es `proxy.ts`, **no** `middleware.ts` (un `middleware.ts` no da error:
-  simplemente no corre). `next lint` no existe. Sin `force-dynamic` en el layout de `(app)`, las
-  pantallas con datos se prerenderizan y muestran los números del build — y **en `next dev` no se ve**.
-- **Node 20 no trae `WebSocket`** y `createClient()` de Supabase construye un RealtimeClient en su
-  constructor: tira antes de leer una fila. Resuelto con un `transport` en
-  `shared/datos/supabase/cliente.ts`. En Vercel no se ve, porque ahí es Node 24.
-- **En `next dev` la ruta de API y el render corren en procesos distintos.** Por eso la capa de
-  desarrollo se respalda en un archivo: si no, un POST devuelve 200 y la lista sigue vacía.
-- **Un `var(--token)` que no existe no es un error: es silencio.** `login.module.css` siguió
-  pidiendo `var(--shadow)` después de que el token pasara a llamarse `--sombra`, y la caja se
-  quedó sin sombra sin que nada fallara. Si se renombra un token del mockup, hay que grepear
-  fuera de `globals.css` — hoy solo el login tiene CSS propio.
-- **`color-scheme` es lo que pinta lo que no es nuestro:** el calendario del `<input type=date>`,
-  la lista del `<select>` y el scroll. Sin declararlo, en tema oscuro el date picker se abre
-  blanco y el icono del calendario queda negro sobre negro.
-- **`next dev` reescribía `CLAUDE.md`** en cada arranque, pegándole un bloque al final. Apagado
-  con `agentRules: false` en `next.config.ts`; si vuelve a aparecer, es que alguien lo sacó.
-- **El deploy va a la cuenta de Leandro** y los commits van firmados
-  `LPTheCEOTech <tech@lpfinancialservices.info>` — si se firman con otro correo, Vercel los bloquea.
-
-## Estructura
+## Estructura de la Fabrica
 
 ```
-src/shared/calculo/   las fórmulas. Funciones puras, con tests.
-src/shared/datos/     el puerto de datos. Las pantallas NO hablan con Supabase.
-src/shared/chasis/    topbar, iconos, tema.
-src/features/         una carpeta por pantalla.
-supabase/migraciones/ el esquema.
+.claude/
+├── memory/                    # Memoria persistente del proyecto (git-versioned)
+│   ├── MEMORY.md             # Indice (max 200 lineas, se carga al inicio)
+│   ├── user/                 # Sobre el usuario/equipo
+│   ├── feedback/             # Correcciones y preferencias
+│   ├── project/              # Decisiones y estado de iniciativas
+│   └── reference/            # Patrones, soluciones, donde encontrar cosas
+│
+├── skills/                    # 15 skills especializados
+│   ├── new-app/              # Entrevista de negocio
+│   ├── add-login/            # Auth completo
+│   ├── website-3d/           # Landing pages cinematicas
+│   ├── prp/                  # Generar PRPs
+│   ├── bucle-agentico/       # Bucle Agentico BLUEPRINT
+│   ├── ai/                   # AI Templates hub
+│   ├── supabase/             # BD completa: estructura + datos + metricas
+│   ├── playwright-cli/       # Testing automatizado
+│   ├── primer/               # Context initialization
+│   ├── update-sf/            # Actualizar SF
+│   ├── eject-sf/             # Remover SF
+│   ├── memory-manager/       # Memoria persistente por proyecto
+│   ├── image-generation/     # Generacion de imagenes (OpenRouter + Gemini)
+│   ├── autoresearch/         # Auto-optimizacion de skills
+│   └── skill-creator/        # Crear nuevos skills
+│
+├── PRPs/                      # Product Requirements Proposals
+│   └── prp-base.md           # Template base
+│
+└── design-systems/            # 5 sistemas de diseno
+    ├── neobrutalism/
+    ├── liquid-glass/
+    ├── gradient-mesh/
+    ├── bento-grid/
+    └── neumorphism/
 ```
+
+---
+
+## Aprendizajes (Auto-Blindaje Activo)
+
+> Blindajes de arquitectura acumulados (de builds reales) → **`BLINDAJES.md`**. Leelos antes de clonar/construir.
+
+### 2026-06: Preguntar el MODO de despliegue antes de clonar (embebido-GHL vs standalone)
+- **Error**: el esqueleto nació para iframe de GHL (top-nav, ~1100px, branding del host); con un cliente standalone se heredó a ciegas y hubo que rehacer el shell.
+- **Fix**: preguntar el modo upfront → define nav (top-nav vs **sidebar**), ancho y branding. El esqueleto soporta ambos modos. + elegir módulos por cliente (no heredar el set completo). Ver `BLINDAJES.md §1-2`.
+- **Aplicar en**: Todo clon nuevo.
+
+### 2025-01-09: Usar npm run dev, no next dev
+- **Error**: Puerto hardcodeado causa conflictos
+- **Fix**: Siempre usar `npm run dev` (auto-detecta puerto)
+- **Aplicar en**: Todos los proyectos
+
+---
+
+*V4: Todo es un Skill. Agent-First. El usuario habla, tu construyes.*
+
+---
+
+## Contexto específico de este proyecto
+
+Este repo NO es la Fábrica en abstracto: es una app concreta con su producción,
+su base de datos, sus reglas propias y sus gotchas ya pagados. **Antes de tocar
+código, cargá `@CLAUDE.panel-de-ventas.md`** — está a la par de este archivo y
+tiene todo lo específico (URL de producción, ruta local, reglas de esta app, y
+los golpes que ya nos costaron tiempo).
