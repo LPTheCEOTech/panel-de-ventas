@@ -64,4 +64,8 @@ export interface Configuracion {
   /** 1 = lunes, 0 = domingo */
   inicioSemana: 0 | 1
   rankingVisible: boolean
+  /** 🔴 Fase B · URL pública del logo, o null si no hay. Puede fallar la carga
+   *  del `<img>` (bucket caído, URL rota): el topbar cae a `.brand-tile` con
+   *  las iniciales, sin console.error, sin pantalla rota. */
+  logoUrl: string | null
 }

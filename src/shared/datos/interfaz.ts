@@ -51,4 +51,5 @@ export const CONFIGURACION_POR_DEFECTO: Configuracion = {
   zonaHoraria: 'America/New_York',
   inicioSemana: 1,
   rankingVisible: true,
+  logoUrl: null,
 }

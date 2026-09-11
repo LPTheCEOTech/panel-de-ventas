@@ -320,4 +320,7 @@ Y **la foto** (5 estados, 4 combinaciones):
 
 ## 13. Bitácora
 
-*(vacía)*
+| Fecha | Nota |
+|---|---|
+| 2026-09-10 | **Código completo.** Migración 004 (una columna `logo_url text null`), tipo `Configuracion.logoUrl`, capa Supabase mapea `logo_url` en leer/guardar. Endpoint `POST/DELETE /api/logo` con validación de tamaño (256 KB), tipos (PNG/JPG/SVG/WebP), best-effort al borrar el anterior. Módulo `shared/datos/supabase/logo.ts` con subirLogo/borrarLogo. Topbar con `<img>` + fallback `hidden` al `.brand-tile` vía onError. CampoLogo en Ajustes con preview + input file + botón Quitar con confirmación inline. Mockup: `.brand-logo` (31×31, contain), `.campo-logo` + fila nueva en Ajustes. Instalador: `003` y `004` agregadas a `MIGRACIONES`, y crea el bucket `logos` público best-effort (falla → warning + instrucciones manuales). Gate local: typecheck, 32/32 tests, lint, sin-cliente (56 archivos), build (10/10 páginas). |
+| 2026-09-10 | **Falta contra base real:** aplicar migración 004, crear bucket `logos` (o dejar que `npm run instalar` lo intente), subir un logo desde `/ajustes`, verificar que aparece en el topbar y que la URL rota cae al `.brand-tile`. |

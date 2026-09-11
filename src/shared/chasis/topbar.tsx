@@ -19,7 +19,25 @@ export function Topbar({ config }: { config: Configuracion }) {
     <header className="topbar">
       <div className="topbar-in">
       <div className="brand">
-        <span className="brand-tile">{config.iniciales}</span>
+        {/* 🔴 Fase B · si hay logoUrl se muestra el <img>; el <span.brand-tile>
+            queda en el DOM con `hidden` para que el onError del img (bucket
+            caído, URL rota) lo pueda revelar sin re-render y sin console.error.
+            Sin logo, el `hidden` no aplica y sigue todo como estaba. */}
+        {config.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={config.logoUrl}
+            alt={config.nombreNegocio}
+            className="brand-logo"
+            onError={(e) => {
+              const img = e.currentTarget
+              img.hidden = true
+              const tile = img.nextElementSibling
+              if (tile instanceof HTMLElement) tile.hidden = false
+            }}
+          />
+        ) : null}
+        <span className="brand-tile" hidden={!!config.logoUrl}>{config.iniciales}</span>
         <span className="brand-txt">
           <strong>{config.nombreNegocio}</strong>
           <span>Panel de métricas</span>

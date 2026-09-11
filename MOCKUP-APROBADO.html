@@ -118,6 +118,22 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .brand-tile{width:31px;height:31px;border-radius:9px;background:var(--m6);
   color:var(--sobre-marca);display:grid;place-items:center;font-family:var(--display);
   font-weight:800;font-size:12.5px;letter-spacing:-.3px}
+/* 🔴 Fase B · el <img> que reemplaza al brand-tile cuando hay logoUrl. Mismo
+   ancho/alto exacto (31×31) para no cambiar la altura del topbar. object-fit
+   contain para que un logo rectangular no se recorte ni se deforme; el fondo
+   .card cubre el hueco cuando el SVG trae transparencia. Si el <img> falla,
+   el onError del componente hace visible al hermano .brand-tile. */
+.brand-logo{width:31px;height:31px;border-radius:9px;object-fit:contain;background:var(--card)}
+/* La fila del subidor de logo en Ajustes: preview + input file + boton Quitar */
+.campo-logo{display:flex;flex-direction:column;gap:2px}
+.campo-logo-fila{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.campo-logo-fila input[type="file"]{background:var(--hueco);border:1px solid var(--border);
+  border-radius:var(--r-ctl);padding:6px 10px;font-size:12px;font-family:var(--body);
+  color:var(--muted);flex:1;min-width:160px}
+.campo-logo-fila input[type="file"]::file-selector-button{background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-ctl);padding:5px 10px;
+  font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;margin-right:10px;
+  font-family:var(--body)}
 .brand-txt strong{display:block;font-family:var(--display);font-weight:800;font-size:13.5px;
   letter-spacing:-.25px;line-height:1.25}
 .brand-txt span{display:block;font-size:10.5px;color:var(--faint);line-height:1.3}
@@ -1160,8 +1176,22 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="field"><input value="LP Ventas"></div>
       </div>
       <div class="cfgrow">
-        <div><div class="cfg-n">Iniciales</div><div class="cfg-src">Las dos letras del cuadradito de color.</div></div>
+        <div><div class="cfg-n">Iniciales</div><div class="cfg-src">Las dos letras del cuadradito de color. Se muestran si no hay logo cargado.</div></div>
         <div class="field"><input value="LP" maxlength="2"></div>
+      </div>
+      <!-- 🔴 Fase B · logo del negocio. Reemplaza al cuadradito de iniciales
+           en el topbar. Se sube al instante (no espera al botón Guardar) y va
+           al bucket `logos` público de Supabase Storage. -->
+      <div class="cfgrow">
+        <div><div class="cfg-n">Logo</div><div class="cfg-src">Reemplaza al cuadradito de iniciales en la barra de arriba. Máx 256 KB, PNG · JPG · SVG · WebP.</div></div>
+        <div class="field">
+          <div class="campo-logo">
+            <div class="campo-logo-fila">
+              <span class="brand-tile">·</span>
+              <input type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+            </div>
+          </div>
+        </div>
       </div>
       <div class="cfgrow">
         <div><div class="cfg-n">Tu nombre</div><div class="cfg-src">Quién está usando el panel.</div></div>

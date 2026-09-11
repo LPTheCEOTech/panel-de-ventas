@@ -60,6 +60,9 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         marca: data.marca, moneda: data.moneda, simbolo: data.simbolo,
         zonaHoraria: data.zona_horaria, inicioSemana: data.inicio_semana as 0 | 1,
         rankingVisible: data.ranking_visible,
+        // Fase B · null si la migración 004 todavía no corrió (columna ausente
+        // en el SELECT *) o si nadie subió logo.
+        logoUrl: data.logo_url ?? null,
       }
     },
 
@@ -70,6 +73,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         usuarioNombre: 'usuario_nombre', usuarioRol: 'usuario_rol', marca: 'marca',
         moneda: 'moneda', simbolo: 'simbolo', zonaHoraria: 'zona_horaria',
         inicioSemana: 'inicio_semana', rankingVisible: 'ranking_visible',
+        logoUrl: 'logo_url',
       }
       for (const [k, v] of Object.entries(c)) {
         const col = mapa[k as keyof Configuracion]

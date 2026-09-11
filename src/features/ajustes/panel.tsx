@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { IconoAviso } from '@/shared/chasis/iconos'
@@ -81,8 +81,14 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
         <Fila titulo="Nombre del panel" explicacion="Aparece en la barra de arriba y en la pestaña del navegador.">
           <input value={c.nombreNegocio} maxLength={60} onChange={(e) => set('nombreNegocio', e.target.value)} />
         </Fila>
-        <Fila titulo="Iniciales" explicacion="Las dos letras del cuadradito de color.">
+        <Fila titulo="Iniciales" explicacion="Las dos letras del cuadradito de color. Se muestran si no hay logo cargado.">
           <input value={c.iniciales} maxLength={2} onChange={(e) => set('iniciales', e.target.value.toUpperCase())} />
+        </Fila>
+        <Fila titulo="Logo" explicacion="Reemplaza al cuadradito de iniciales en la barra de arriba. Máx 256 KB, PNG · JPG · SVG · WebP.">
+          <CampoLogo
+            actual={c.logoUrl}
+            onCambio={(url) => setC((x) => ({ ...x, logoUrl: url }))}
+          />
         </Fila>
         <Fila titulo="Tu nombre" explicacion="Quién está usando el panel.">
           <input value={c.usuarioNombre} maxLength={60} onChange={(e) => set('usuarioNombre', e.target.value)} />
@@ -146,5 +152,108 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
       </button>
     </div>
     </>
+  )
+}
+
+/**
+ * 🔴 Fase B · sube o quita el logo. Vive fuera de la tarjeta padre porque el
+ * archivo se sube al instante (endpoint aparte, `/api/logo`) y NO espera al
+ * botón "Guardar ajustes" — la URL se persiste en `configuracion.logo_url` en
+ * el mismo POST. El `onCambio` sincroniza el estado del padre para que el
+ * preview y el botón "Quitar" reflejen el estado real sin recargar.
+ */
+function CampoLogo({
+  actual, onCambio,
+}: {
+  actual: string | null
+  onCambio: (url: string | null) => void
+}) {
+  const [subiendo, setSubiendo] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [confirmar, setConfirmar] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
+
+  async function subir(file: File) {
+    setSubiendo(true); setError(null); setConfirmar(false)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      const r = await fetch('/api/logo', { method: 'POST', body: fd })
+      const d = await r.json().catch(() => null)
+      if (!r.ok) { setError(d?.error ?? 'No se pudo subir.'); return }
+      onCambio(d.logoUrl)
+      router.refresh()
+    } catch {
+      setError('No se pudo hablar con el servidor.')
+    } finally {
+      setSubiendo(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  async function quitar() {
+    setSubiendo(true); setError(null)
+    try {
+      const r = await fetch('/api/logo', { method: 'DELETE' })
+      if (!r.ok) {
+        const d = await r.json().catch(() => null)
+        setError(d?.error ?? 'No se pudo quitar.'); return
+      }
+      onCambio(null)
+      setConfirmar(false)
+      router.refresh()
+    } catch {
+      setError('No se pudo hablar con el servidor.')
+    } finally {
+      setSubiendo(false)
+    }
+  }
+
+  return (
+    <div className="campo-logo">
+      <div className="campo-logo-fila">
+        {actual ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={actual} alt="Logo actual" className="brand-logo" />
+        ) : (
+          <span className="brand-tile">·</span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/svg+xml,image/webp"
+          onChange={(e) => {
+            const f = e.target.files?.[0]
+            if (f) subir(f)
+          }}
+          disabled={subiendo}
+        />
+        {actual && !confirmar && (
+          <button type="button" className="btn-ghost btn-sm" onClick={() => setConfirmar(true)} disabled={subiendo}>
+            Quitar
+          </button>
+        )}
+      </div>
+      {confirmar && (
+        <div className="note warn" style={{ marginTop: 8 }}>
+          <IconoAviso />
+          <span>
+            ¿Quitar el logo? Vuelve al cuadradito con las iniciales.
+            <button type="button" className="btn-ghost btn-sm" style={{ marginLeft: 10 }} onClick={quitar} disabled={subiendo}>
+              Sí, quitar
+            </button>
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setConfirmar(false)} disabled={subiendo}>
+              Cancelar
+            </button>
+          </span>
+        </div>
+      )}
+      {error && (
+        <div className="note warn" style={{ marginTop: 8 }}>
+          <IconoAviso /><span>{error}</span>
+        </div>
+      )}
+    </div>
   )
 }

@@ -100,6 +100,27 @@ button,input,select,textarea{font:inherit;color:inherit}
   color:var(--sobre-marca);display:grid;place-items:center;font-family:var(--display);
   font-weight:800;font-size:12.5px;letter-spacing:-.3px}
 
+/* 🔴 Fase B · el <img> que reemplaza al brand-tile cuando hay logoUrl. Mismo
+   ancho/alto exacto (31×31) para no cambiar la altura del topbar. object-fit
+   contain para que un logo rectangular no se recorte ni se deforme; el fondo
+   .card cubre el hueco cuando el SVG trae transparencia. Si el <img> falla,
+   el onError del componente hace visible al hermano .brand-tile. */
+.brand-logo{width:31px;height:31px;border-radius:9px;object-fit:contain;background:var(--card)}
+
+/* La fila del subidor de logo en Ajustes: preview + input file + boton Quitar */
+.campo-logo{display:flex;flex-direction:column;gap:2px}
+
+.campo-logo-fila{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+
+.campo-logo-fila input[type="file"]{background:var(--hueco);border:1px solid var(--border);
+  border-radius:var(--r-ctl);padding:6px 10px;font-size:12px;font-family:var(--body);
+  color:var(--muted);flex:1;min-width:160px}
+
+.campo-logo-fila input[type="file"]::file-selector-button{background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-ctl);padding:5px 10px;
+  font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;margin-right:10px;
+  font-family:var(--body)}
+
 .brand-txt strong{display:block;font-family:var(--display);font-weight:800;font-size:13.5px;
   letter-spacing:-.25px;line-height:1.25}
 

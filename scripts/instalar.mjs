@@ -20,8 +20,9 @@ import pg from 'pg'
 import { abrirPreguntas, conectar, morir } from './comun.mjs'
 
 const RAIZ = dirname(dirname(fileURLToPath(import.meta.url)))
-const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql']
+const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql', '003_gastos.sql', '004_logo.sql']
 const MINIMO_CONTRASENA = 12
+const BUCKET_LOGO = 'logos'
 
 console.log('\n📦 Instalador del Panel de Ventas\n')
 
@@ -81,6 +82,28 @@ if (yaHay) {
   })
   if (error) morir(`No se pudo guardar la configuración: ${error.message}`)
   console.log('\n✅ Configuración guardada.')
+}
+
+// ---------- 3b. el bucket del logo (Fase B) ----------
+// 🔴 Best-effort. Si Storage está caído o si el token no tiene permiso, la
+// app arranca sin logo (el topbar cae a `.brand-tile`), y quien instala lo
+// crea a mano después. No abortamos la instalación por esto.
+try {
+  const { data: existentes, error: errList } = await sb.storage.listBuckets()
+  if (errList) throw errList
+  const yaExiste = existentes?.some((b) => b.name === BUCKET_LOGO)
+  if (yaExiste) {
+    console.log(`✅ bucket \`${BUCKET_LOGO}\` ya existe.`)
+  } else {
+    const { error } = await sb.storage.createBucket(BUCKET_LOGO, { public: true })
+    if (error) throw error
+    console.log(`✅ bucket \`${BUCKET_LOGO}\` creado (público).`)
+  }
+} catch (e) {
+  console.log(
+    `⚠️  No pude preparar el bucket \`${BUCKET_LOGO}\`: ${e?.message ?? e}\n` +
+    `   Creálo a mano: Supabase → Storage → New bucket → nombre \`${BUCKET_LOGO}\`, Public ON.`
+  )
 }
 
 // ---------- 4. el usuario ----------
