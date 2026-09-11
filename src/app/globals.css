@@ -518,6 +518,44 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .confirma-persona b{color:var(--ink);font-weight:700}
 
+/* 🔴 Fase D · switches horizontales para la fila «Cómo fue esta llamada».
+   Tres booleans que se leen y se aprietan de un saque, sin bajar la vista. */
+.switches-llamada{display:flex;flex-wrap:wrap;gap:14px;padding:2px 0 6px}
+
+.switches-llamada .sw{display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+  padding:6px 12px;border:1px solid var(--border);border-radius:var(--r-pill);
+  background:var(--hueco);user-select:none}
+
+.switches-llamada .sw:has(input:checked){background:var(--m1);border-color:var(--m2);color:var(--m7)}
+
+.switches-llamada .sw input{margin:0;accent-color:var(--m6)}
+
+/* 🔴 Fase D · lista de llamadas del día. Un renglón por llamada, con badges
+   (asistió/reagendada/cerró), cash a la derecha y botón borrar. El diseño
+   sigue el molde de .entry (Equipo) pero más apretado — se leen 4-6 filas
+   sin scroll. */
+.llamadas-lista{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+.llamada-row{display:grid;grid-template-columns:36px minmax(0,1fr) 90px 28px;
+  align-items:center;gap:10px;padding:10px 4px;
+  border-bottom:1px solid var(--line)}
+
+.llamada-row:last-child{border-bottom:0}
+
+.ll-n{font-family:var(--display);font-weight:800;font-size:12px;color:var(--faint);
+  text-align:center}
+
+.ll-badges{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+
+.ll-cash{text-align:right;font-family:var(--display);font-weight:800;font-size:14.5px;
+  letter-spacing:-.3px;color:var(--m7)}
+
+.llamada-row .del{background:none;border:0;color:var(--faint);cursor:pointer;
+  padding:6px;border-radius:6px}
+
+.llamada-row .del:hover{background:var(--hueco);color:var(--rojo)}
+
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 

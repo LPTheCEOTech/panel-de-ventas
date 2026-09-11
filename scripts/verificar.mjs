@@ -9,7 +9,7 @@
  * cambia, Y cuenta las filas (un corte silencioso de PostgREST a las 1.000
  * filas solo se ve contando).
  */
-import { metricas, metricasConCosto, rankingClosers, rankingSetters, barrasPorDia } from '../src/shared/calculo/metricas.ts'
+import { agregarLlamadas, metricas, metricasConCosto, rankingClosers, rankingSetters, barrasPorDia } from '../src/shared/calculo/metricas.ts'
 import { ORO, SEMANA_ORO } from '../src/shared/datos/semilla.ts'
 import { dinero, porcentaje, porcentajeEntero } from '../src/shared/formato/index.ts'
 import { conectar } from './comun.mjs'
@@ -27,9 +27,12 @@ function comprobar(que, obtenido, esperado) {
 const { data: personasCrudas, error: e1 } = await sb.from('personas').select('id, nombre, rol, activo, orden')
 const { data: sCrudos, error: e2 } = await sb.from('reportes_setter')
   .select('fecha, persona_id, conversaciones, agendas').gte('fecha', V.desde).lte('fecha', V.hasta)
-const { data: cCrudos, error: e3 } = await sb.from('reportes_closer')
-  .select('fecha, persona_id, llamadas, asistieron, reagendadas, cierres, revenue_cents, cash_cents')
-  .gte('fecha', V.desde).lte('fecha', V.hasta)
+// 🔴 Fase D · leemos `llamadas` (una fila por llamada) en vez de
+// `reportes_closer`. Solo activa=true. El puente `agregarLlamadas()` las
+// convierte al shape que espera el kernel.
+const { data: llCrudas, error: e3 } = await sb.from('llamadas')
+  .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, activa')
+  .eq('activa', true).gte('fecha', V.desde).lte('fecha', V.hasta)
 // Fase A · gastos de la misma ventana. Si la tabla todavia no existe (la
 // migracion 003 no se corrio contra la base), se ignora el error y se sigue:
 // las 4 comprobaciones nuevas fallaran diciendo que el gasto dio 0.
@@ -44,15 +47,21 @@ for (const e of [e1, e2, e3]) {
 
 const personas = personasCrudas.map((p) => ({ ...p }))
 const setters = sCrudos.map((r) => ({ fecha: r.fecha, personaId: r.persona_id, conversaciones: r.conversaciones, agendas: r.agendas }))
-const closers = cCrudos.map((r) => ({
-  fecha: r.fecha, personaId: r.persona_id, llamadas: r.llamadas, asistieron: r.asistieron,
-  reagendadas: r.reagendadas, cierres: r.cierres, revenueCents: r.revenue_cents, cashCents: r.cash_cents,
+// Fase D · llamadas crudas → shape del kernel → agregar por (fecha, persona)
+const llamadas = llCrudas.map((l) => ({
+  id: l.id, personaId: l.persona_id, fecha: l.fecha,
+  asistio: l.asistio, reagendada: l.reagendada, cerro: l.cerro,
+  revenueCents: Number(l.revenue_cents), cashCents: Number(l.cash_cents),
+  activa: l.activa, nota: null,
 }))
+const closers = agregarLlamadas(llamadas)
 
 console.log(`\n── Semana de oro ${V.desde} a ${V.hasta} ──\n`)
 
-// 🔴 contar filas: es lo único que delata un corte silencioso
-comprobar('filas leídas de la base', setters.length + closers.length, ORO.filas)
+// 🔴 contar filas: es lo único que delata un corte silencioso. Fase D separa
+// las dos tablas (setter y llamadas): son fuentes distintas.
+comprobar('filas leídas de setter', setters.length, ORO.filasSetter)
+comprobar('filas leídas de llamadas', llamadas.length, ORO.filasLlamadas)
 
 const m = metricas(setters, closers)
 comprobar('leads', m.leads, ORO.leads)

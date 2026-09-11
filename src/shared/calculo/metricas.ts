@@ -8,7 +8,7 @@
  * rota antes de que nadie cargue nada. `null` se pinta como `—`, que es lo que
  * el mockup dibuja en la pantalla "Recién instalado".
  */
-import type { Persona, ReporteCloser, ReporteSetter, Ventana } from '@/shared/tipos'
+import type { Llamada, Persona, ReporteCloser, ReporteSetter, Ventana } from '@/shared/tipos'
 import { dentro, diasDe, sumarDias } from './periodo'
 
 /** Una tasa entre 0 y 1, o `null` si no se puede calcular. */
@@ -309,6 +309,47 @@ export function embudo(m: Metricas, gastoCents?: number): PasoEmbudo[] {
 
 export function enVentana<T extends { fecha: string }>(filas: readonly T[], v: Ventana): T[] {
   return filas.filter((r) => dentro(r.fecha, v))
+}
+
+// ---------------------------------------------------------------- Fase D · llamadas
+
+/**
+ * 🔴 Fase D · el puente entre `Llamada[]` (una fila por llamada) y
+ * `ReporteCloser[]` (agregado por fecha × persona). El kernel entero espera
+ * el shape agregado; en vez de rehacer `totales/metricas/rankings/barras`,
+ * las convertimos acá y todo lo demás sigue igual.
+ *
+ * 🔴 Reglas:
+ *   - solo `activa === true` cuenta (baja lógica)
+ *   - UNA llamada = 1 en el conteo `llamadas`, asista o no (la agenda existe
+ *     aunque el otro no venga)
+ *   - `reagendadas` cuenta las que fueron reagendadas
+ *   - revenue y cash suman sin condición: en el modelo hay cash sin cierre
+ *     («cobré la cuota de una venta de la semana pasada»)
+ */
+export function agregarLlamadas(llamadas: readonly Llamada[]): ReporteCloser[] {
+  const key = (fecha: string, personaId: string) => `${fecha}|${personaId}`
+  const mapa = new Map<string, ReporteCloser>()
+  for (const l of llamadas) {
+    if (!l.activa) continue
+    const k = key(l.fecha, l.personaId)
+    let r = mapa.get(k)
+    if (!r) {
+      r = {
+        fecha: l.fecha, personaId: l.personaId,
+        llamadas: 0, asistieron: 0, reagendadas: 0, cierres: 0,
+        revenueCents: 0, cashCents: 0,
+      }
+      mapa.set(k, r)
+    }
+    r.llamadas += 1
+    if (l.asistio) r.asistieron += 1
+    if (l.reagendada) r.reagendadas += 1
+    if (l.cerro) r.cierres += 1
+    r.revenueCents += l.revenueCents
+    r.cashCents += l.cashCents
+  }
+  return [...mapa.values()]
 }
 
 // ---------------------------------------------------------------- costo

@@ -32,6 +32,35 @@ export interface ReporteCloser {
 }
 
 /**
+ * 🔴 Fase D · Una llamada del closer.
+ *
+ * Reemplaza a `ReporteCloser` como fuente de verdad: el reporte diario del
+ * closer pasa de un agregado por (fecha, persona) a UNA fila por llamada. Los
+ * totales del panel (`llamadas`, `asistieron`, `cierres`, `revenue`, `cash`)
+ * salen de sumar `llamadas` con `activa=true` — el kernel sigue esperando el
+ * shape agregado, así que un puente (`agregarLlamadas`) las convierte.
+ *
+ * 🔴 UNA llamada cuenta como 1 en el conteo `llamadas`, asista o no. El
+ * closer registra igual las que no asistieron: sin eso, la agenda del día
+ * dejaría de figurar cuando alguien no vino.
+ *
+ * 🔴 `activa` es BAJA LÓGICA. El closer se equivoca y borra; el histórico no
+ * se toca.
+ */
+export interface Llamada {
+  id: string
+  personaId: string
+  fecha: string
+  asistio: boolean
+  reagendada: boolean
+  cerro: boolean
+  revenueCents: number
+  cashCents: number
+  nota?: string | null
+  activa: boolean
+}
+
+/**
  * Un gasto diario de captación, en centavos. Uno por fecha (PK).
  *
  * 🔴 Es del NEGOCIO, no de una persona: no hay `personaId`. Si un día se gastó

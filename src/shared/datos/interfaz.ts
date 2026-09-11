@@ -4,7 +4,7 @@
  * base, y el día que cambie el motor no se toca ni una pantalla.
  */
 import type {
-  Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana,
+  Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana,
 } from '@/shared/tipos'
 
 export interface CapaDeDatos {
@@ -42,6 +42,13 @@ export interface CapaDeDatos {
   sumaGastos(v: Ventana): Promise<number>
   /** UPSERT por fecha (PK). La misma cara visible que reportes. */
   guardarGasto(g: Gasto): Promise<void>
+
+  /** 🔴 Fase D · una fila POR LLAMADA. Reemplaza al agregado diario del
+   *  closer. Solo `activa=true`; el kernel las agrega con `agregarLlamadas()`. */
+  leerLlamadas(v: Ventana, personaId?: string): Promise<Llamada[]>
+  crearLlamada(l: Omit<Llamada, 'id' | 'activa'>): Promise<Llamada>
+  actualizarLlamada(id: string, cambios: Partial<Omit<Llamada, 'id' | 'personaId' | 'fecha'>>): Promise<void>
+  bajaLogicaLlamada(id: string): Promise<void>
 
   /** Fase C · resuelve `auth.users → usuarios`. `null` si el auth user existe
    *  pero no está vinculado. La app manda a /pendiente en ese caso. */

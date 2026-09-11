@@ -1,5 +1,5 @@
 import {
-  barrasPorDia, barrasPorSemana, delta, embudo, metricas, metricasConCosto,
+  agregarLlamadas, barrasPorDia, barrasPorSemana, delta, embudo, metricas, metricasConCosto,
   rankingClosers, rankingSetters,
 } from '@/shared/calculo/metricas'
 import { dentro, hoyEn, sumarDias, ventana, ventanaAnterior } from '@/shared/calculo/periodo'
@@ -52,18 +52,26 @@ export default async function PanelDeVentas({
   // con qué*. Los KPIs siguen siendo del día solo.
   const vGrafico = periodo === 'dia' ? { desde: sumarDias(v.hasta, -6), hasta: v.hasta } : v
 
-  const [personas, setters, closers, settersPrevios, closersPrevios, closersGrafico, gastoCents] = await Promise.all([
+  // 🔴 Fase D · el closer pasa a granularidad por llamada. El panel lee
+  // `llamadas` (una fila por llamada) y las agrega con `agregarLlamadas()` al
+  // shape que espera el kernel (`ReporteCloser[]`). Los números siguen dando
+  // idéntico — la semilla nueva está calibrada para eso (ver ORO.filasLlamadas
+  // y los tests de kernel para Fase D).
+  const [personas, setters, llamadasV, settersPrevios, llamadasPrevias, llamadasGrafico, gastoCents] = await Promise.all([
     capa.leerPersonas(),
     capa.leerReportesSetter(v, filtro),
-    capa.leerReportesCloser(v, filtro),
+    capa.leerLlamadas(v, filtro),
     capa.leerReportesSetter(previa, filtro),
-    capa.leerReportesCloser(previa, filtro),
-    periodo === 'dia' ? capa.leerReportesCloser(vGrafico, filtro) : Promise.resolve([]),
+    capa.leerLlamadas(previa, filtro),
+    periodo === 'dia' ? capa.leerLlamadas(vGrafico, filtro) : Promise.resolve([]),
     // 🔴 Fase A + C · gasto es del NEGOCIO: solo el admin lo ve. Al miembro
     // le va 0 (no oculta la pieza porque .plata no se rompe con $0, pero CAC
     // y costo/asistida se ocultan más abajo).
     esMiembro ? Promise.resolve(0) : capa.sumaGastos(v),
   ])
+  const closers = agregarLlamadas(llamadasV)
+  const closersPrevios = agregarLlamadas(llamadasPrevias)
+  const closersGrafico = agregarLlamadas(llamadasGrafico)
 
   const m = metricasConCosto(setters, closers, gastoCents)
   const mPrevia = metricas(settersPrevios, closersPrevios)

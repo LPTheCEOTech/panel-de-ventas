@@ -394,6 +394,34 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   border-radius:var(--r-ctl);padding:9px 11px;font-size:13.5px;color:var(--muted);
   min-height:38px;display:flex;align-items:center}
 .confirma-persona b{color:var(--ink);font-weight:700}
+
+/* 🔴 Fase D · switches horizontales para la fila «Cómo fue esta llamada».
+   Tres booleans que se leen y se aprietan de un saque, sin bajar la vista. */
+.switches-llamada{display:flex;flex-wrap:wrap;gap:14px;padding:2px 0 6px}
+.switches-llamada .sw{display:inline-flex;align-items:center;gap:8px;
+  font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;
+  padding:6px 12px;border:1px solid var(--border);border-radius:var(--r-pill);
+  background:var(--hueco);user-select:none}
+.switches-llamada .sw:has(input:checked){background:var(--m1);border-color:var(--m2);color:var(--m7)}
+.switches-llamada .sw input{margin:0;accent-color:var(--m6)}
+
+/* 🔴 Fase D · lista de llamadas del día. Un renglón por llamada, con badges
+   (asistió/reagendada/cerró), cash a la derecha y botón borrar. El diseño
+   sigue el molde de .entry (Equipo) pero más apretado — se leen 4-6 filas
+   sin scroll. */
+.llamadas-lista{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.llamada-row{display:grid;grid-template-columns:36px minmax(0,1fr) 90px 28px;
+  align-items:center;gap:10px;padding:10px 4px;
+  border-bottom:1px solid var(--line)}
+.llamada-row:last-child{border-bottom:0}
+.ll-n{font-family:var(--display);font-weight:800;font-size:12px;color:var(--faint);
+  text-align:center}
+.ll-badges{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+.ll-cash{text-align:right;font-family:var(--display);font-weight:800;font-size:14.5px;
+  letter-spacing:-.3px;color:var(--m7)}
+.llamada-row .del{background:none;border:0;color:var(--faint);cursor:pointer;
+  padding:6px;border-radius:6px}
+.llamada-row .del:hover{background:var(--hueco);color:var(--rojo)}
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 .step button{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;height:38px;
@@ -698,7 +726,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <button data-nav="panel" aria-current="page">Panel</button>
         <button data-nav="gasto">Gasto</button>
         <button data-nav="setter">Reporte Setter</button>
-        <button data-nav="closer">Reporte Closer</button>
+        <button data-nav="llamada">Post Llamada</button>
         <button data-nav="equipo">Equipo</button>
         <button data-nav="ajustes">Ajustes</button>
       </nav>
@@ -1093,6 +1121,110 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
             <div class="dv"><span>Cierre</span><b class="num">50%</b></div>
             <div class="dv"><span>% de cobro</span><b class="num">58%</b></div>
           </div>
+        </div>
+      </div>
+    </div>
+   </div>
+  </section>
+
+  <!-- ==================== POST LLAMADA (Fase D) ==================== -->
+  <section class="sc" data-s="llamada">
+   <div class="hoja">
+    <div class="page-head">
+      <div><h1>Post Llamada</h1><div class="sub">una fila por llamada · se carga al terminar</div></div>
+    </div>
+    <div class="what write">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      <span>Al terminar CADA llamada, registrala acá. El panel calcula <b>asistencia</b>, <b>cierre</b> y el <b>dinero</b> del día sumando las que cargues.</span>
+      <span class="badge-w">Se carga a mano</span>
+    </div>
+
+    <div class="trabajo">
+      <div class="card formcard">
+        <div class="section-title">Quién y cuándo</div>
+        <div class="form-grid">
+          <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
+          <div class="field c8"><label>Closer <span class="req">*</span></label>
+            <div class="confirma-persona"><b>Andrea Ríos</b></div>
+          </div>
+        </div>
+        <div class="section-title">Cómo fue esta llamada</div>
+        <div class="switches-llamada">
+          <label class="sw"><input type="checkbox" checked> Asistió</label>
+          <label class="sw"><input type="checkbox"> Reagendada</label>
+          <label class="sw"><input type="checkbox" checked> Cerró</label>
+        </div>
+        <div class="section-title">Plata</div>
+        <div class="form-grid">
+          <div class="field c6"><label>Revenue contratado <span class="req">*</span></label>
+            <div class="money-inp"><span class="cur">$</span><input class="num" value="3,000" inputmode="decimal"></div>
+            <span class="hint">Lo que firmó en esta llamada. 0 si no cerró.</span></div>
+          <div class="field c6"><label>Cash collected <span class="req">*</span></label>
+            <div class="money-inp hero"><span class="cur">$</span><input class="num" value="1,500" inputmode="decimal"></div>
+            <span class="hint">Solo lo que <b>entró en esta llamada</b>.</span></div>
+        </div>
+        <div class="form-grid">
+          <div class="field full c12"><label>Nota (opcional)</label>
+            <input type="text" value="cierra el viernes, mandar contrato" maxlength="500"></div>
+        </div>
+        <div class="form-actions">
+          <span class="helper">Se guarda al enviar y aparece abajo al instante.</span>
+          <button class="btn-primary">Guardar llamada</button>
+        </div>
+      </div>
+
+      <div class="lado">
+        <div class="card">
+          <div class="card-head"><div><h3>Hoy</h3><p>26 de julio</p></div></div>
+          <div class="calc apilado">
+            <div class="dv principal"><span>Cash del día</span><b class="num">$1,500</b></div>
+            <div class="dv"><span>Llamadas</span><b class="num">4</b></div>
+            <div class="dv"><span>Asistieron</span><b class="num">3</b></div>
+            <div class="dv"><span>Cierres</span><b class="num">2</b></div>
+            <div class="dv"><span>Tasa de cierre</span><b class="num">67%</b></div>
+            <div class="dv"><span>Contratado</span><b class="num">$6,000</b></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><div><h3>Llamadas del día</h3><p>4 cargadas</p></div></div>
+      <div class="llamadas-lista">
+        <div class="llamada-row">
+          <span class="ll-n">#1</span>
+          <div class="ll-badges">
+            <span class="pill set">asistió</span>
+            <span class="pill amb">cerró</span>
+          </div>
+          <span class="ll-cash num">$1,500</span>
+          <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="llamada-row">
+          <span class="ll-n">#2</span>
+          <div class="ll-badges">
+            <span class="pill set">asistió</span>
+            <span class="pill clo">reagendada</span>
+          </div>
+          <span class="ll-cash num">—</span>
+          <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="llamada-row">
+          <span class="ll-n">#3</span>
+          <div class="ll-badges">
+            <span class="pill no">no asistió</span>
+          </div>
+          <span class="ll-cash num">—</span>
+          <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="llamada-row">
+          <span class="ll-n">#4</span>
+          <div class="ll-badges">
+            <span class="pill set">asistió</span>
+            <span class="pill amb">cerró</span>
+          </div>
+          <span class="ll-cash num">$2,000</span>
+          <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
       </div>
     </div>

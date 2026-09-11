@@ -13,7 +13,10 @@ export const PANTALLAS: readonly Pantalla[] = [
   { href: '/panel', texto: 'Panel' },
   { href: '/gasto', texto: 'Gasto', soloAdmin: true },
   { href: '/reporte-setter', texto: 'Reporte Setter' },
-  { href: '/reporte-closer', texto: 'Reporte Closer' },
+  // 🔴 Fase D · «Reporte Closer» pasa a «Post Llamada» y apunta a /llamada.
+  // La ruta /reporte-closer redirige, así que un usuario con el link viejo
+  // igual llega bien.
+  { href: '/llamada', texto: 'Post Llamada' },
   { href: '/equipo', texto: 'Equipo', soloAdmin: true },
   { href: '/ajustes', texto: 'Ajustes', soloAdmin: true },
 ]

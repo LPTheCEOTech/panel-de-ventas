@@ -1,6 +1,6 @@
 import 'server-only'
 
-import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
+import type { Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from '../interfaz'
 import { clienteServidor } from './cliente'
 
@@ -199,6 +199,62 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         { onConflict: 'fecha' }
       )
       reventar('guardarGasto', error)
+    },
+
+    async leerLlamadas(v: Ventana, personaId?: string): Promise<Llamada[]> {
+      let q = sb.from('llamadas')
+        .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa')
+        .eq('activa', true)
+        .gte('fecha', v.desde).lte('fecha', v.hasta)
+      if (personaId) q = q.eq('persona_id', personaId)
+      const { data, error } = await q.order('creado_en')
+      reventar('leerLlamadas', error)
+      return (data ?? []).map((f) => ({
+        id: f.id, personaId: f.persona_id, fecha: f.fecha,
+        asistio: f.asistio, reagendada: f.reagendada, cerro: f.cerro,
+        revenueCents: Number(f.revenue_cents), cashCents: Number(f.cash_cents),
+        nota: f.nota ?? null, activa: f.activa,
+      }))
+    },
+
+    async crearLlamada(l: Omit<Llamada, 'id' | 'activa'>): Promise<Llamada> {
+      const { data, error } = await sb.from('llamadas').insert({
+        persona_id: l.personaId, fecha: l.fecha,
+        asistio: l.asistio, reagendada: l.reagendada, cerro: l.cerro,
+        revenue_cents: l.revenueCents, cash_cents: l.cashCents,
+        nota: l.nota ?? null,
+      }).select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa').single()
+      reventar('crearLlamada', error)
+      return {
+        id: data!.id, personaId: data!.persona_id, fecha: data!.fecha,
+        asistio: data!.asistio, reagendada: data!.reagendada, cerro: data!.cerro,
+        revenueCents: Number(data!.revenue_cents), cashCents: Number(data!.cash_cents),
+        nota: data!.nota ?? null, activa: data!.activa,
+      }
+    },
+
+    async actualizarLlamada(id: string, cambios: Partial<Omit<Llamada, 'id' | 'personaId' | 'fecha'>>): Promise<void> {
+      const mapa: Record<string, string> = {
+        asistio: 'asistio', reagendada: 'reagendada', cerro: 'cerro',
+        revenueCents: 'revenue_cents', cashCents: 'cash_cents',
+        nota: 'nota', activa: 'activa',
+      }
+      const fila: Record<string, unknown> = { actualizado_en: new Date().toISOString() }
+      for (const [k, v] of Object.entries(cambios)) {
+        const col = mapa[k]
+        if (col && v !== undefined) fila[col] = v
+      }
+      const { error } = await sb.from('llamadas').update(fila).eq('id', id)
+      reventar('actualizarLlamada', error)
+    },
+
+    async bajaLogicaLlamada(id: string): Promise<void> {
+      // 🔴 Baja LÓGICA. No hay DELETE de llamadas: el histórico tiene que
+      // seguir estando disponible aunque el closer haya marcado la borradura.
+      const { error } = await sb.from('llamadas').update({
+        activa: false, actualizado_en: new Date().toISOString(),
+      }).eq('id', id)
+      reventar('bajaLogicaLlamada', error)
     },
 
     async buscarUsuario(authUserId: string): Promise<Usuario | null> {

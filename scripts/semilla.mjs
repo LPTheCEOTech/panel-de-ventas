@@ -10,17 +10,22 @@
  *
  * 🔴 El instalador NO corre esto.
  */
-import { GASTOS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, ORO } from '../src/shared/datos/semilla.ts'
+import { GASTOS_DEMO, LLAMADAS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, ORO } from '../src/shared/datos/semilla.ts'
 import { conectar, morir } from './comun.mjs'
 
 const comando = process.argv[2]
 const sb = await conectar()
 
 if (comando === 'limpiar') {
-  // orden: primero los reportes, que referencian a las personas
-  for (const t of ['reportes_setter', 'reportes_closer']) {
+  // orden: primero los reportes/llamadas, que referencian a las personas.
+  // Fase D · `llamadas` también se limpia (best-effort si la tabla todavía
+  // no existe).
+  for (const t of ['reportes_setter', 'reportes_closer', 'llamadas']) {
     const { error, count } = await sb.from(t).delete({ count: 'exact' }).eq('es_demo', true)
-    if (error) morir(`No se pudo limpiar ${t}: ${error.message}`)
+    if (error) {
+      if (/does not exist/i.test(error.message)) { console.log(`✅ ${t}: tabla no existe, saltado`); continue }
+      morir(`No se pudo limpiar ${t}: ${error.message}`)
+    }
     console.log(`✅ ${t}: ${count ?? 0} filas de demo borradas`)
   }
   // Fase A · los gastos no dependen de personas: se pueden borrar acá o al
@@ -85,6 +90,10 @@ const { error: errS } = await sb.from('reportes_setter').upsert(
 if (errS) morir(`reportes_setter: ${errS.message}`)
 console.log(`✅ reportes_setter: ${REPORTES_SETTER_DEMO.length}`)
 
+// 🔴 Fase D · `reportes_closer` queda como LEGACY (agregado diario). El
+// modelo activo es `llamadas` (una fila por llamada). Se cargan las dos por
+// ahora: el panel y `verificar.mjs` solo miran `llamadas`, pero mantener la
+// tabla vieja poblada nos deja rebobinar si Jack lo pide antes de la 007.
 const { error: errC } = await sb.from('reportes_closer').upsert(
   REPORTES_CLOSER_DEMO.map((r) => ({
     fecha: r.fecha, persona_id: idDe(r.personaId),
@@ -94,7 +103,30 @@ const { error: errC } = await sb.from('reportes_closer').upsert(
   { onConflict: 'fecha,persona_id' }
 )
 if (errC) morir(`reportes_closer: ${errC.message}`)
-console.log(`✅ reportes_closer: ${REPORTES_CLOSER_DEMO.length}`)
+console.log(`✅ reportes_closer: ${REPORTES_CLOSER_DEMO.length} (legacy)`)
+
+// 🔴 Fase D · las 96 llamadas granulares. El id es determinista
+// (`demo-<closer>-<fecha>-<n>`), así que un upsert por PK es idempotente:
+// re-correr semilla no duplica. Si la tabla no existe (migración 006 no
+// aplicada), se avisa pero no se muere.
+const lResp = await sb.from('llamadas').upsert(
+  LLAMADAS_DEMO.map((l) => ({
+    id: l.id, persona_id: idDe(l.personaId), fecha: l.fecha,
+    asistio: l.asistio, reagendada: l.reagendada, cerro: l.cerro,
+    revenue_cents: l.revenueCents, cash_cents: l.cashCents,
+    nota: l.nota ?? null, activa: l.activa, es_demo: true,
+  })),
+  { onConflict: 'id' }
+)
+if (lResp.error) {
+  if (/does not exist/i.test(lResp.error.message)) {
+    console.log(`⚠️  llamadas: tabla no encontrada. Correr migración 006_llamadas.sql. Saltado.`)
+  } else {
+    morir(`llamadas: ${lResp.error.message}`)
+  }
+} else {
+  console.log(`✅ llamadas: ${LLAMADAS_DEMO.length}`)
+}
 
 // Fase A · los siete gastos de la semana de oro. Suman $14.400 y ese es el
 // número que el verificador contrasta. Si la migración 003 todavía no corrió,

@@ -6,11 +6,11 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
-  GASTOS_DEMO, ORO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, SEMANA_ORO,
+  GASTOS_DEMO, LLAMADAS_DEMO, ORO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, SEMANA_ORO,
 } from '../datos/semilla'
 import { dineroCorto, dinero, porcentaje, porcentajeEntero, puntos, EL_GUION, iniciales, tituloDeVentana } from '../formato'
 import {
-  aov, barrasPorDia, barrasPorSemana, cac, costoPorLlamadaAsistida,
+  agregarLlamadas, aov, barrasPorDia, barrasPorSemana, cac, costoPorLlamadaAsistida,
   delta, embudo, metricas, metricasConCosto, rankingClosers, rankingSetters, tasa,
 } from './metricas'
 import { diasDe, ventana, ventanaAnterior } from './periodo'
@@ -204,6 +204,65 @@ test('🔴 Fase A · divisor 0 en CAC / AOV / c-asistida devuelve null', () => {
   assert.equal(cac(100_000_00, 0), null)
   assert.equal(costoPorLlamadaAsistida(100_000_00, 0), null)
   assert.equal(aov(100_000_00, 0), null)
+})
+
+// ---------------------------------------------------------------- Fase D · llamadas
+
+test('Fase D · LLAMADAS_DEMO tiene exactamente 96 filas y todas activas', () => {
+  assert.equal(LLAMADAS_DEMO.length, ORO.filasLlamadas)
+  assert.equal(LLAMADAS_DEMO.length, 96)
+  assert.ok(LLAMADAS_DEMO.every((l) => l.activa === true))
+})
+
+test('Fase D · agregarLlamadas suma EXACTAMENTE lo mismo que REPORTES_CLOSER_DEMO', () => {
+  // el puente convierte 96 llamadas en 21 filas agregadas por (fecha × persona)
+  const agregados = agregarLlamadas(LLAMADAS_DEMO)
+  assert.equal(agregados.length, REPORTES_CLOSER_DEMO.length)
+  // comparación entera contra el agregado que hoy vive en la semilla
+  const m1 = metricas(REPORTES_SETTER_DEMO, agregados)
+  const m2 = metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO)
+  assert.equal(m1.llamadas, m2.llamadas)
+  assert.equal(m1.asistieron, m2.asistieron)
+  assert.equal(m1.cierres, m2.cierres)
+  assert.equal(m1.revenueCents, m2.revenueCents)
+  assert.equal(m1.cashCents, m2.cashCents)
+})
+
+test('Fase D · los totales derivados de llamadas cuadran contra el ORO', () => {
+  const agregados = agregarLlamadas(LLAMADAS_DEMO)
+  const m = metricas(REPORTES_SETTER_DEMO, agregados)
+  assert.equal(m.llamadas, ORO.llamadas)
+  assert.equal(m.asistieron, ORO.asistieron)
+  assert.equal(m.cierres, ORO.cierres)
+  assert.equal(m.revenueCents, ORO.revenue)
+  assert.equal(m.cashCents, ORO.cash)
+})
+
+test('🔴 Fase D · una llamada con activa=false NO se cuenta', () => {
+  // marca la primera activa=false y verifica que las cuentas bajan
+  const primera = LLAMADAS_DEMO[0]
+  const mutadas = LLAMADAS_DEMO.map((l, i) => i === 0 ? { ...l, activa: false } : l)
+  const agregados = agregarLlamadas(mutadas)
+  const m = metricas(REPORTES_SETTER_DEMO, agregados)
+  assert.equal(m.llamadas, ORO.llamadas - 1)
+  if (primera.asistio) assert.equal(m.asistieron, ORO.asistieron - 1)
+  if (primera.cerro) {
+    assert.equal(m.cierres, ORO.cierres - 1)
+    assert.equal(m.revenueCents, ORO.revenue - primera.revenueCents)
+  }
+  assert.equal(m.cashCents, ORO.cash - primera.cashCents)
+})
+
+test('Fase D · una llamada agenda cuenta aunque no asista', () => {
+  const l = [{
+    id: 'x', personaId: 'p', fecha: '2026-07-20',
+    asistio: false, reagendada: true, cerro: false,
+    revenueCents: 0, cashCents: 0, activa: true, nota: null,
+  }]
+  const [a] = agregarLlamadas(l)
+  assert.equal(a.llamadas, 1)
+  assert.equal(a.asistieron, 0)
+  assert.equal(a.reagendadas, 1)
 })
 
 test('Fase A · gasto = 0 no rompe: CAC y c-asistida quedan en 0, AOV sigue vivo', () => {

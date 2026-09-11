@@ -14,9 +14,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
+import type { Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
 import { dentro } from '@/shared/calculo/periodo'
-import { GASTOS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO } from './semilla'
+import { GASTOS_DEMO, LLAMADAS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO } from './semilla'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from './interfaz'
 
 interface EstadoDemo {
@@ -26,6 +26,7 @@ interface EstadoDemo {
   closer: ReporteCloser[]
   gastos: Gasto[]
   usuarios: Usuario[]
+  llamadas: Llamada[]
 }
 
 /**
@@ -50,7 +51,7 @@ function inicial(vacia: boolean): EstadoDemo {
   if (vacia) {
     return {
       config: { ...CONFIGURACION_POR_DEFECTO, nombreNegocio: 'Mi Negocio', iniciales: 'MN', usuarioNombre: 'Yo' },
-      personas: [], setter: [], closer: [], gastos: [], usuarios: [],
+      personas: [], setter: [], closer: [], gastos: [], usuarios: [], llamadas: [],
     }
   }
   return {
@@ -60,6 +61,7 @@ function inicial(vacia: boolean): EstadoDemo {
     closer: REPORTES_CLOSER_DEMO.map((r) => ({ ...r })),
     gastos: GASTOS_DEMO.map((g) => ({ ...g })),
     usuarios: [],
+    llamadas: LLAMADAS_DEMO.map((l) => ({ ...l })),
   }
 }
 
@@ -169,6 +171,33 @@ export function capaDemo(vacia = false): CapaDeDatos {
       con((e) => {
         if (!e.usuarios) e.usuarios = []
         e.usuarios = e.usuarios.filter((u) => u.authUserId !== authUserId)
+      })
+    },
+
+    async leerLlamadas(v, personaId) {
+      return (leer(vacia).llamadas ?? [])
+        .filter((l) => l.activa && dentro(l.fecha, v) && (!personaId || l.personaId === personaId))
+    },
+    async crearLlamada(l) {
+      return con((e) => {
+        if (!e.llamadas) e.llamadas = []
+        const nueva: Llamada = { ...l, id: `demo-l-${Date.now()}-${Math.floor(Math.random() * 1000)}`, activa: true }
+        e.llamadas.push(nueva)
+        return nueva
+      })
+    },
+    async actualizarLlamada(id, cambios) {
+      con((e) => {
+        if (!e.llamadas) e.llamadas = []
+        const i = e.llamadas.findIndex((l) => l.id === id)
+        if (i >= 0) e.llamadas[i] = { ...e.llamadas[i], ...cambios }
+      })
+    },
+    async bajaLogicaLlamada(id) {
+      con((e) => {
+        if (!e.llamadas) e.llamadas = []
+        const i = e.llamadas.findIndex((l) => l.id === id)
+        if (i >= 0) e.llamadas[i] = { ...e.llamadas[i], activa: false }
       })
     },
   }

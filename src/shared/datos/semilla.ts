@@ -19,7 +19,7 @@
  * 🔴 El instalador NO corre esto. Una instalación nueva arranca vacía, y así
  * tiene que verse bien.
  */
-import type { Gasto, Persona, ReporteCloser, ReporteSetter } from '@/shared/tipos'
+import type { Gasto, Llamada, Persona, ReporteCloser, ReporteSetter } from '@/shared/tipos'
 
 /** Lunes 20 a domingo 26 de julio de 2026 — una semana real del calendario. */
 export const SEMANA_ORO = ['2026-07-20','2026-07-21','2026-07-22','2026-07-23','2026-07-24','2026-07-25','2026-07-26'] as const
@@ -98,6 +98,68 @@ export const REPORTES_CLOSER_DEMO: ReporteCloser[] = Object.entries(CLOSERS).fla
 )
 
 /**
+ * 🔴 Fase D · las 96 llamadas de la semana de oro. Suman EXACTAMENTE los
+ * mismos totales que `REPORTES_CLOSER_DEMO` (96 llamadas · 63 asistieron ·
+ * 23 cierres · $69.000 revenue · $41.400 cash), pero fila-por-llamada.
+ *
+ * Regla de derivación por (closer × día):
+ *   - N = llamadas[i] filas
+ *   - las primeras A=asistieron[i] tienen `asistio=true`
+ *   - de esas, las primeras C=cierres[i] tienen `cerro=true`
+ *   - cada cierre lleva revenue = TICKET_CENTS ($3.000) y una porción del
+ *     cash del día (split entero de C; el resto va a la primera cierre)
+ *   - si C=0 y el día tuvo cash (Carlos días 3, 6 y 7 de la semana de oro:
+ *     cobros de ventas anteriores), todo el cash cae en la PRIMERA llamada
+ *     asistida — es una llamada de cobro sin firma nueva
+ *   - `reagendada` no se distribuye por llamada: reagendadas[i] cuenta días
+ *     enteros a la vieja, no tiene equivalente por-llamada. La marcamos en
+ *     las primeras `reagendadas[i]` llamadas ASISTIDAS que no cerraron.
+ *
+ * 🔴 IDs deterministas (`demo-<closer>-<fecha>-<n>`): idempotencia total al
+ * cargar la semilla. Correr `npm run semilla -- cargar` dos veces no genera
+ * duplicados porque el upsert por PK.
+ */
+export const LLAMADAS_DEMO: Llamada[] = Object.entries(CLOSERS).flatMap(
+  ([personaId, [llamadas, asistieron, reagendadas, cierres, cashDia]]) =>
+    SEMANA_ORO.flatMap((fecha, i) => {
+      const N = llamadas[i], A = asistieron[i], C = cierres[i]
+      const R = reagendadas[i]
+      const cashCents = cashDia[i] * 100
+      // reparto de cash: si hay cierres, se divide entero; el resto (0..C-1
+      // centavos) se le suma a la PRIMERA cierre. Si no hay cierres, todo va
+      // a la primera asistida.
+      const cashPorCierre: number[] = new Array(C).fill(0)
+      if (C > 0) {
+        const base = Math.floor(cashCents / C)
+        const resto = cashCents - base * C
+        for (let k = 0; k < C; k++) cashPorCierre[k] = base + (k === 0 ? resto : 0)
+      }
+      const filas: Llamada[] = []
+      for (let n = 0; n < N; n++) {
+        const asistio = n < A
+        const cerro = n < C
+        const esCobroSinCierre = C === 0 && n === 0 && cashCents > 0
+        // reagendada la marcamos DESPUÉS de cierres: primero cierres, luego
+        // hasta R llamadas asistidas no-cerradas se marcan reagendadas
+        const reagendada = !cerro && asistio && (n - C) < R
+        filas.push({
+          id: `demo-${personaId.replace(/^demo-/, '')}-${fecha}-${n + 1}`,
+          personaId,
+          fecha,
+          asistio,
+          reagendada,
+          cerro,
+          revenueCents: cerro ? TICKET_CENTS : 0,
+          cashCents: cerro ? cashPorCierre[n] : (esCobroSinCierre ? cashCents : 0),
+          nota: null,
+          activa: true,
+        })
+      }
+      return filas
+    })
+)
+
+/**
  * Un gasto por día en la semana de oro. Suma $14.400 en la semana — el
  * verificador de la Fase A cuenta contra este total.
  *
@@ -142,4 +204,10 @@ export const ORO = {
   cacSemana:         626_09,   // Math.round(1_440_000 / 23) = 62_609
   costoAsistida:     228_57,   // Math.round(1_440_000 / 63) = 22_857
   aovSemana:       1_800_00,   // Math.round(4_140_000 / 23) = 180_000 (exacto)
+  // Fase D · granularidad por llamada. El total de filas ya no es 42 sino 21
+  // setter + 96 llamadas = 117. Se cuentan separadas porque son tablas
+  // distintas: `filasSetter` chequea `reportes_setter`, `filasLlamadas`
+  // chequea `llamadas`.
+  filasSetter:  21,
+  filasLlamadas: 96,
 } as const
