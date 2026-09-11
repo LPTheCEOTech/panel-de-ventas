@@ -1,6 +1,6 @@
 import 'server-only'
 
-import type { Configuracion, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
+import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from '../interfaz'
 import { clienteServidor } from './cliente'
 
@@ -160,6 +160,39 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         { onConflict: 'fecha,persona_id' }
       )
       reventar('guardarReporteCloser', error)
+    },
+
+    async buscarGasto(fecha: string): Promise<Gasto | null> {
+      const { data, error } = await sb
+        .from('gastos').select('fecha, monto_cents, nota')
+        .eq('fecha', fecha).maybeSingle()
+      reventar('buscarGasto', error)
+      return data ? { fecha: data.fecha, montoCents: data.monto_cents, nota: data.nota } : null
+    },
+
+    async sumaGastos(v: Ventana): Promise<number> {
+      // 🔴 Suma en JS. Un `.select('sum(...)')` de PostgREST requiere una vista
+      // o RPC; la ventana natural son ≤ 31 filas y traerlas y sumar es más
+      // simple, con la misma restricción de fila (unique fecha) que garantiza
+      // que no hay duplicados. Igual patrón que `leerReportes*`.
+      const { data, error } = await sb
+        .from('gastos').select('monto_cents')
+        .gte('fecha', v.desde).lte('fecha', v.hasta)
+      reventar('sumaGastos', error)
+      return (data ?? []).reduce((s, f) => s + Number(f.monto_cents), 0)
+    },
+
+    async guardarGasto(g: Gasto): Promise<void> {
+      const { error } = await sb.from('gastos').upsert(
+        {
+          fecha: g.fecha,
+          monto_cents: g.montoCents,
+          nota: g.nota ?? null,
+          actualizado_en: new Date().toISOString(),
+        },
+        { onConflict: 'fecha' }
+      )
+      reventar('guardarGasto', error)
     },
   }
 }

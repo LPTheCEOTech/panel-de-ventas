@@ -4,7 +4,7 @@
  * base, y el día que cambie el motor no se toca ni una pantalla.
  */
 import type {
-  Configuracion, Persona, ReporteCloser, ReporteSetter, Rol, Ventana,
+  Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, Ventana,
 } from '@/shared/tipos'
 
 export interface CapaDeDatos {
@@ -31,6 +31,13 @@ export interface CapaDeDatos {
    *  base es la que hace imposible el doble conteo; esto es su cara visible. */
   guardarReporteSetter(r: ReporteSetter): Promise<void>
   guardarReporteCloser(r: ReporteCloser): Promise<void>
+
+  /** El gasto de un día, o `null` si no se cargó. */
+  buscarGasto(fecha: string): Promise<Gasto | null>
+  /** La suma en centavos de los gastos de una ventana inclusive. `0` si no hay. */
+  sumaGastos(v: Ventana): Promise<number>
+  /** UPSERT por fecha (PK). La misma cara visible que reportes. */
+  guardarGasto(g: Gasto): Promise<void>
 }
 
 export const CONFIGURACION_POR_DEFECTO: Configuracion = {

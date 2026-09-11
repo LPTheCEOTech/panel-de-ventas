@@ -37,7 +37,7 @@ Decisiones que **ya tomó Jack** y no se re-preguntan:
 
 | # | PRP | Objetivo (1 línea) | Estado |
 |---|---|---|---|
-| **A** | [`prp-fase-a-gasto-y-derivados.md`](./prp-fase-a-gasto-y-derivados.md) | Cargar gasto diario y mostrar CAC, costo por asistida y AOV en el panel. | ⏳ PENDIENTE |
+| **A** | [`prp-fase-a-gasto-y-derivados.md`](./prp-fase-a-gasto-y-derivados.md) | Cargar gasto diario y mostrar CAC, costo por asistida y AOV en el panel. | 🟡 CÓDIGO LISTO · gate real pendiente |
 | **B** | [`prp-fase-b-logo.md`](./prp-fase-b-logo.md) | Subir un logo en Ajustes que reemplace al cuadradito de iniciales del topbar. | ⏳ PENDIENTE |
 | **C** | [`prp-fase-c-multiusuario-roles.md`](./prp-fase-c-multiusuario-roles.md) | Invitar por correo, ligar cada usuario a una persona, y que cada rol vea solo lo suyo. | ⏳ PENDIENTE |
 | **D** | [`prp-fase-d-reporte-post-llamada.md`](./prp-fase-d-reporte-post-llamada.md) | Rehacer el reporte del closer como una fila por llamada, sin tocar setters. | ⏳ PENDIENTE |
@@ -174,8 +174,6 @@ contra la base de Leandro.
 
 ## 9. Bitácora
 
-*(vacía — se llena a medida que cada fase cierra)*
-
 | Fecha | Fase | Nota |
 |---|---|---|
-| — | — | — |
+| 2026-09-10 | A | Código completo. Gate local en verde. Falta ejecutar contra la base real (migración 003, semilla, verificar, foto) — bloqueado por ausencia de `.env.local`. |

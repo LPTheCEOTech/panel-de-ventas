@@ -19,7 +19,7 @@
  * 🔴 El instalador NO corre esto. Una instalación nueva arranca vacía, y así
  * tiene que verse bien.
  */
-import type { Persona, ReporteCloser, ReporteSetter } from '@/shared/tipos'
+import type { Gasto, Persona, ReporteCloser, ReporteSetter } from '@/shared/tipos'
 
 /** Lunes 20 a domingo 26 de julio de 2026 — una semana real del calendario. */
 export const SEMANA_ORO = ['2026-07-20','2026-07-21','2026-07-22','2026-07-23','2026-07-24','2026-07-25','2026-07-26'] as const
@@ -98,6 +98,23 @@ export const REPORTES_CLOSER_DEMO: ReporteCloser[] = Object.entries(CLOSERS).fla
 )
 
 /**
+ * Un gasto por día en la semana de oro. Suma $14.400 en la semana — el
+ * verificador de la Fase A cuenta contra este total.
+ *
+ * 🔴 Los números NO están calzados a los del mockup (el mockup no dibuja gasto
+ * todavía). Son un banco de prueba interno cuya suma es un número redondo y
+ * simpático para que las tres derivadas caigan con centavos limpios:
+ *   AOV      = 41.400 / 23 = 1.800 exacto
+ *   CAC      = 14.400 / 23 = 626,08…
+ *   c/asist. = 14.400 / 63 = 228,57…
+ */
+export const GASTOS_DEMO: Gasto[] = SEMANA_ORO.map((fecha, i) => ({
+  fecha,
+  montoCents: [200_000, 220_000, 210_000, 230_000, 220_000, 190_000, 170_000][i],
+  nota: null,
+}))
+
+/**
  * Los números de oro, escritos a mano desde el mockup. NO se derivan de las
  * tablas de arriba: si se derivaran, el verificador estaría comparando la
  * semilla consigo misma y daría verde pase lo que pase.
@@ -120,4 +137,9 @@ export const ORO = {
     { nombre: 'Valentina Paz', agendas: 30, leads: 103, tasaAgenda: '29%' },
   ],
   cashPorDia: [5_200_00, 7_200_00, 6_300_00, 8_700_00, 6_600_00, 4_500_00, 2_900_00],
+  // Fase A · gasto y derivados. En centavos, como todo el resto de la plata.
+  gastoSemana:    14_400_00,   // 1.440.000 c = $14.400
+  cacSemana:         626_09,   // Math.round(1_440_000 / 23) = 62_609
+  costoAsistida:     228_57,   // Math.round(1_440_000 / 63) = 22_857
+  aovSemana:       1_800_00,   // Math.round(4_140_000 / 23) = 180_000 (exacto)
 } as const

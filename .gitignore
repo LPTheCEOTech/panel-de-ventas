@@ -15,3 +15,4 @@ next-env.d.ts
 .login-password
 .vercel-token
 .mcp.json
+supabase/.temp/

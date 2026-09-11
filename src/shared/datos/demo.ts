@@ -14,9 +14,9 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import type { Configuracion, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
+import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
 import { dentro } from '@/shared/calculo/periodo'
-import { PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO } from './semilla'
+import { GASTOS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO } from './semilla'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from './interfaz'
 
 interface EstadoDemo {
@@ -24,6 +24,7 @@ interface EstadoDemo {
   personas: Persona[]
   setter: ReporteSetter[]
   closer: ReporteCloser[]
+  gastos: Gasto[]
 }
 
 /**
@@ -48,7 +49,7 @@ function inicial(vacia: boolean): EstadoDemo {
   if (vacia) {
     return {
       config: { ...CONFIGURACION_POR_DEFECTO, nombreNegocio: 'Mi Negocio', iniciales: 'MN', usuarioNombre: 'Yo' },
-      personas: [], setter: [], closer: [],
+      personas: [], setter: [], closer: [], gastos: [],
     }
   }
   return {
@@ -56,6 +57,7 @@ function inicial(vacia: boolean): EstadoDemo {
     personas: PERSONAS_DEMO.map((p) => ({ ...p })),
     setter: REPORTES_SETTER_DEMO.map((r) => ({ ...r })),
     closer: REPORTES_CLOSER_DEMO.map((r) => ({ ...r })),
+    gastos: GASTOS_DEMO.map((g) => ({ ...g })),
   }
 }
 
@@ -126,5 +128,24 @@ export function capaDemo(vacia = false): CapaDeDatos {
     },
     async guardarReporteSetter(r) { con((e) => upsert(e.setter, r)) },
     async guardarReporteCloser(r) { con((e) => upsert(e.closer, r)) },
+
+    async buscarGasto(fecha) {
+      // el estado viejo (sin la clave `gastos`) puede quedar en disco de una
+      // corrida previa a la Fase A. Se trata como si no hubiera gasto.
+      return leer(vacia).gastos?.find((g) => g.fecha === fecha) ?? null
+    },
+    async sumaGastos(v: Ventana) {
+      return (leer(vacia).gastos ?? [])
+        .filter((g) => dentro(g.fecha, v))
+        .reduce((s, g) => s + g.montoCents, 0)
+    },
+    async guardarGasto(g) {
+      con((e) => {
+        if (!e.gastos) e.gastos = []
+        const i = e.gastos.findIndex((x) => x.fecha === g.fecha)
+        if (i >= 0) e.gastos[i] = g
+        else e.gastos.push(g)
+      })
+    },
   }
 }

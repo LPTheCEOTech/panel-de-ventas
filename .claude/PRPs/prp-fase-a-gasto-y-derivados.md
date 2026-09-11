@@ -397,4 +397,7 @@ Y **la foto**:
 
 ## 13. Bitácora
 
-*(vacía)*
+| Fecha | Nota |
+|---|---|
+| 2026-09-10 | **Código completo.** Migración 003, kernel + 4 funciones, capa Supabase + Demo, endpoint `/api/gasto`, pantalla `/gasto` con FormGasto, nav actualizado, mockup con Gasto en embudo + AOV en `.plata-pie` + card Costos + nueva pantalla `?s=gasto`, gemelas+porteo CSS (52 gemelas, 244 reglas, 0 huérfanas), verificador con 4 comprobaciones nuevas, semilla con GASTOS_DEMO. Gate local verde (typecheck, 32/32 tests, lint, sin-cliente, build). Aprendizajes: **(1)** El pie `.plata-pie` usaba `repeat(3,…)`; con AOV subió a 4 columnas y en móvil baja a 2×2 vía media query. **(2)** Poner un `.fnr` con `.spend` como paso 0 dentro de `.fn` corría todas las reglas `nth-child(N)`. Fix: renderizar el paso Gasto **afuera** de `.fn`, y agregar `.fnr.spend` con track vacío y color neutro. **(3)** Un `Leandro` en comentario disparó `sin-cliente.py` — el chequeo mira comentarios también, no solo strings. |
+| 2026-09-10 | **Sin ejecutar contra base real.** Falta correr `003_gastos.sql`, `npm run semilla -- cargar`, `npm run verificar` y la foto en los 4 modos. Bloqueado por `.env.local` ausente en este worktree. |

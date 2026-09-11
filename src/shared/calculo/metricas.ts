@@ -40,6 +40,24 @@ export interface Metricas extends Totales {
   ticketPromedioCents: number | null
 }
 
+/**
+ * Métricas + tres derivados que cuestan plata: CAC, costo por asistida y AOV.
+ *
+ * 🔴 Nada acá se guarda. Se calcula al leer, en cada render. Un mes sin
+ * cierres deja `cac` y `aov` en `null`; un mes sin asistidos deja
+ * `costoPorLlamadaAsistida` en `null`. Todo se pinta como `—`.
+ *
+ * 🔴 AOV NO es lo mismo que ticket promedio. Ticket = revenue ÷ cierres
+ * («cuánto vale una venta firmada»). AOV = cash ÷ cierres («cuánto entra por
+ * cliente ganado»). Son dos preguntas distintas y por eso conviven.
+ */
+export interface MetricasConCosto extends Metricas {
+  gastoCents: number
+  cac: number | null
+  costoPorLlamadaAsistida: number | null
+  aov: number | null
+}
+
 const CERO: Totales = {
   leads: 0, agendas: 0, llamadas: 0, asistieron: 0,
   reagendadas: 0, cierres: 0, revenueCents: 0, cashCents: 0,
@@ -249,6 +267,9 @@ export interface PasoEmbudo {
   /** El texto de la derecha. `null` cuando no hay divisor. */
   conversion: { etiqueta: string; tasa: Tasa } | null
   esDinero?: boolean
+  /** 🔴 Fase A · el paso 0 del embudo. No comparte escala con los leads (es
+   *  plata, no un conteo) y se dibuja sin barra: el número solo. */
+  esGasto?: boolean
 }
 
 /**
@@ -263,13 +284,20 @@ export interface PasoEmbudo {
  * La legibilidad la resuelve el `min-width` de la barra, que garantiza que el
  * número de adentro se lea aunque el paso sea el 4% del primero.
  */
-export function embudo(m: Metricas): PasoEmbudo[] {
+export function embudo(m: Metricas, gastoCents?: number): PasoEmbudo[] {
   const base = m.leads
   const ancho = (n: number) => (base > 0 ? Math.max(4, (n / base) * 100) : 4)
   // El cash NO es un conteo: no puede compartir la escala de los leads. Se
   // dibuja como la porción de los cierres que efectivamente se cobró.
   const anchoCash = ancho(m.cierres) * (m.porcentajeCobro ?? 0)
+  // 🔴 Si el caller pasa un `gastoCents` (Fase A), el embudo arranca en Gasto.
+  // Sin arg, el kernel devuelve los 6 pasos históricos: el test antiguo sigue
+  // verde y el llamador que todavía no sabe de gasto sigue funcionando.
+  const gasto: PasoEmbudo[] = gastoCents === undefined ? [] : [
+    { nombre: 'Gasto', valor: gastoCents, ancho: 0, conversion: null, esDinero: true, esGasto: true },
+  ]
   return [
+    ...gasto,
     { nombre: 'Leads', valor: m.leads, ancho: base > 0 ? 100 : 4, conversion: { etiqueta: '', tasa: base > 0 ? 1 : null } },
     { nombre: 'Agendas', valor: m.agendas, ancho: ancho(m.agendas), conversion: { etiqueta: 'agenda', tasa: m.tasaAgenda } },
     { nombre: 'Llamadas', valor: m.llamadas, ancho: ancho(m.llamadas), conversion: { etiqueta: 'de agenda', tasa: m.llamadasSobreAgendas } },
@@ -281,4 +309,46 @@ export function embudo(m: Metricas): PasoEmbudo[] {
 
 export function enVentana<T extends { fecha: string }>(filas: readonly T[], v: Ventana): T[] {
   return filas.filter((r) => dentro(r.fecha, v))
+}
+
+// ---------------------------------------------------------------- costo
+
+/**
+ * Cost per Acquired Customer: cuánto costó cada cierre.
+ *
+ * 🔴 Divisor 0 → `null`. Redondeo a centavo entero con `Math.round`, igual que
+ * `ticketPromedioCents`. Redondear al peso lo hace `dinero()` al pintar; acá
+ * se guarda el centavo real para que `verificar.mjs` pueda comparar exacto.
+ */
+export function cac(gastoCents: number, cierres: number): number | null {
+  return cierres > 0 ? Math.round(gastoCents / cierres) : null
+}
+
+export function costoPorLlamadaAsistida(gastoCents: number, asistieron: number): number | null {
+  return asistieron > 0 ? Math.round(gastoCents / asistieron) : null
+}
+
+/**
+ * Average Order Value: cash cobrado ÷ cierres.
+ *
+ * 🔴 No es lo mismo que ticket promedio (revenue ÷ cierres). Ticket es lo que
+ * se firmó; AOV es lo que efectivamente entró por cliente ganado.
+ */
+export function aov(cashCents: number, cierres: number): number | null {
+  return cierres > 0 ? Math.round(cashCents / cierres) : null
+}
+
+export function metricasConCosto(
+  setters: readonly ReporteSetter[],
+  closers: readonly ReporteCloser[],
+  gastoCents: number
+): MetricasConCosto {
+  const m = metricas(setters, closers)
+  return {
+    ...m,
+    gastoCents,
+    cac: cac(gastoCents, m.cierres),
+    costoPorLlamadaAsistida: costoPorLlamadaAsistida(gastoCents, m.asistieron),
+    aov: aov(m.cashCents, m.cierres),
+  }
 }

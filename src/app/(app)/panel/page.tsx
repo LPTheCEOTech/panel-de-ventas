@@ -1,5 +1,6 @@
 import {
-  barrasPorDia, barrasPorSemana, delta, embudo, metricas, rankingClosers, rankingSetters,
+  barrasPorDia, barrasPorSemana, delta, embudo, metricas, metricasConCosto,
+  rankingClosers, rankingSetters,
 } from '@/shared/calculo/metricas'
 import { dentro, hoyEn, sumarDias, ventana, ventanaAnterior } from '@/shared/calculo/periodo'
 import { IconoInfo } from '@/shared/chasis/iconos'
@@ -7,7 +8,7 @@ import { datos } from '@/shared/datos/indice'
 import { tituloDeVentana } from '@/shared/formato'
 import type { Periodo } from '@/shared/tipos'
 import {
-  CashPorDia, Embudo, LlamadaAEquipo, Plata, RankingClosers, RankingSetters, SinEquipo, Tasas,
+  CashPorDia, Costos, Embudo, LlamadaAEquipo, Plata, RankingClosers, RankingSetters, SinEquipo, Tasas,
 } from '@/features/panel/piezas'
 import { SelectorPeriodo } from '@/features/panel/selector-periodo'
 
@@ -43,16 +44,18 @@ export default async function PanelDeVentas({
   // con qué*. Los KPIs siguen siendo del día solo.
   const vGrafico = periodo === 'dia' ? { desde: sumarDias(v.hasta, -6), hasta: v.hasta } : v
 
-  const [personas, setters, closers, settersPrevios, closersPrevios, closersGrafico] = await Promise.all([
+  const [personas, setters, closers, settersPrevios, closersPrevios, closersGrafico, gastoCents] = await Promise.all([
     capa.leerPersonas(),
     capa.leerReportesSetter(v),
     capa.leerReportesCloser(v),
     capa.leerReportesSetter(previa),
     capa.leerReportesCloser(previa),
     periodo === 'dia' ? capa.leerReportesCloser(vGrafico) : Promise.resolve([]),
+    // Fase A · el gasto del mismo período. `sumaGastos` devuelve 0 si no hay.
+    capa.sumaGastos(v),
   ])
 
-  const m = metricas(setters, closers)
+  const m = metricasConCosto(setters, closers, gastoCents)
   const mPrevia = metricas(settersPrevios, closersPrevios)
   const deltas: [number | null, number | null, number | null] = [
     delta(m.tasaAgenda, mPrevia.tasaAgenda),
@@ -101,13 +104,20 @@ export default async function PanelDeVentas({
         <Tasas m={m} deltas={deltas} />
       </div>
 
+      {/* 🔴 Fase A · CAC y Costo por asistida en su propia banda. AOV ya vive
+          en `.plata` (es una vista del dinero). Con gasto = 0 los dos dan $0;
+          con cierres/asistidos = 0 dan —. */}
+      {hayEquipo && (
+        <Costos m={m} simbolo={config.simbolo} />
+      )}
+
       {!hayDatos ? (
         <LlamadaAEquipo />
       ) : (
         <>
           <div className="grid2">
             <Embudo
-              pasos={embudo(m)} simbolo={config.simbolo}
+              pasos={embudo(m, gastoCents)} simbolo={config.simbolo}
               avisoAgendas={m.agendas !== m.llamadas}
               deQue={deQue}
             />

@@ -10,7 +10,7 @@
  *
  * 🔴 El instalador NO corre esto.
  */
-import { PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, ORO } from '../src/shared/datos/semilla.ts'
+import { GASTOS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, ORO } from '../src/shared/datos/semilla.ts'
 import { conectar, morir } from './comun.mjs'
 
 const comando = process.argv[2]
@@ -23,6 +23,12 @@ if (comando === 'limpiar') {
     if (error) morir(`No se pudo limpiar ${t}: ${error.message}`)
     console.log(`✅ ${t}: ${count ?? 0} filas de demo borradas`)
   }
+  // Fase A · los gastos no dependen de personas: se pueden borrar acá o al
+  // final, da igual. Se ignora "relation does not exist" para que `limpiar`
+  // funcione contra bases que todavía no aplicaron la migración 003.
+  const g = await sb.from('gastos').delete({ count: 'exact' }).eq('es_demo', true)
+  if (g.error && !/does not exist/i.test(g.error.message)) morir(`No se pudo limpiar gastos: ${g.error.message}`)
+  console.log(`✅ gastos: ${g.count ?? 0} de demo borrados`)
   const { error, count } = await sb.from('personas').delete({ count: 'exact' }).eq('es_demo', true)
   if (error) morir(`No se pudo limpiar personas: ${error.message}`)
   console.log(`✅ personas: ${count ?? 0} de demo borradas`)
@@ -90,4 +96,24 @@ const { error: errC } = await sb.from('reportes_closer').upsert(
 if (errC) morir(`reportes_closer: ${errC.message}`)
 console.log(`✅ reportes_closer: ${REPORTES_CLOSER_DEMO.length}`)
 
-console.log(`\n${ORO.filas} filas plantadas. Ahora: npm run verificar\n`)
+// Fase A · los siete gastos de la semana de oro. Suman $14.400 y ese es el
+// número que el verificador contrasta. Si la migración 003 todavía no corrió,
+// se avisa pero no se muere: las 4 comprobaciones nuevas fallarán y quedará
+// claro qué se rompió.
+const gResp = await sb.from('gastos').upsert(
+  GASTOS_DEMO.map((g) => ({
+    fecha: g.fecha, monto_cents: g.montoCents, nota: g.nota ?? null, es_demo: true,
+  })),
+  { onConflict: 'fecha' }
+)
+if (gResp.error) {
+  if (/does not exist/i.test(gResp.error.message)) {
+    console.log(`⚠️  gastos: tabla no encontrada. Correr migración 003_gastos.sql. Saltado.`)
+  } else {
+    morir(`gastos: ${gResp.error.message}`)
+  }
+} else {
+  console.log(`✅ gastos: ${GASTOS_DEMO.length}`)
+}
+
+console.log(`\n${ORO.filas} filas plantadas${gResp.error ? '' : ' + ' + GASTOS_DEMO.length + ' gastos'}. Ahora: npm run verificar\n`)

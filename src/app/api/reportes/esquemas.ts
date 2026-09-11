@@ -26,3 +26,13 @@ export const zCloser = z.object({
 })
 
 export const zConsulta = z.object({ fecha, persona: personaId })
+
+// Fase A · Gasto. No es un reporte por persona: es un gasto diario del negocio.
+export const zGasto = z.object({
+  fecha,
+  montoCents: dineroCents,
+  nota: z.string().trim().max(500).nullable().optional(),
+})
+
+/** Solo la fecha (para el GET /api/gasto?fecha=…). */
+export const zConsultaGasto = z.object({ fecha })

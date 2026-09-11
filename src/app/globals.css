@@ -284,7 +284,11 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .plata .medidor{margin-top:14px;background:var(--m2)}
 
-.plata-pie{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:auto;
+/* 🔴 Fase A · el pie de .plata subio de 3 a 4 columnas para hacerle lugar a
+   AOV al lado de Ticket promedio. Los dos responden preguntas distintas
+   (ticket es lo que se firmo, AOV lo que efectivamente entro) y por eso
+   conviven. En celular baja a 2×2 en la media query de 600px. */
+.plata-pie{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:auto;
   padding-top:15px;border-top:1px solid var(--m2)}
 
 .plata .medidor + .plata-pie{margin-top:18px}
@@ -357,6 +361,17 @@ button,input,select,textarea{font:inherit;color:inherit}
 .fn-v{text-align:right;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.4px}
 
 .fnr:nth-child(6) .fn-v{color:var(--m6)}
+
+/* 🔴 Fase A · el paso 0 del embudo: el gasto. Se renderiza AFUERA de .fn
+   (arriba de la lista) para no correr las reglas nth-child que colorean los
+   seis pasos de leads→cash. Sin barra rellena: el gasto no es un conteo, no
+   comparte escala con los leads. Solo el numero, y una linea de puntos que
+   separa el costo del resto del funnel. */
+.fnr.spend{padding:6px 0 12px;margin-bottom:8px;border-bottom:1px dashed var(--line)}
+
+.fnr.spend .fn-track{background:var(--hueco);opacity:.6}
+
+.fnr.spend .fn-v{color:var(--muted)}
 
 /* ---------- grafico de dias ---------- */
 /* 🔴 La barra vive en su PROPIA pista. Cuando el porcentaje se aplicaba a la
@@ -730,7 +745,9 @@ button,input,select,textarea{font:inherit;color:inherit}
   .resumen{gap:12px;margin-bottom:12px}
   .plata{padding:16px}
   .plata-v{font-size:32px;letter-spacing:-1.3px}
-  .plata-pie{gap:10px;padding-top:12px}
+  /* 🔴 Fase A · con AOV el pie tiene 4 piezas: en celular se apilan 2×2 para
+     que no salgan cuatro numeros de 11px en una linea. */
+  .plata-pie{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:12px}
   .plata-pie > div{padding-top:11px}
   .plata-pie b{font-size:15px}
   .tasas{padding:2px 15px}

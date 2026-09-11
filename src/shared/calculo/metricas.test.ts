@@ -6,11 +6,12 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
-  ORO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, SEMANA_ORO,
+  GASTOS_DEMO, ORO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO, SEMANA_ORO,
 } from '../datos/semilla'
 import { dineroCorto, dinero, porcentaje, porcentajeEntero, puntos, EL_GUION, iniciales, tituloDeVentana } from '../formato'
 import {
-  barrasPorDia, barrasPorSemana, delta, embudo, metricas, rankingClosers, rankingSetters, tasa,
+  aov, barrasPorDia, barrasPorSemana, cac, costoPorLlamadaAsistida,
+  delta, embudo, metricas, metricasConCosto, rankingClosers, rankingSetters, tasa,
 } from './metricas'
 import { diasDe, ventana, ventanaAnterior } from './periodo'
 
@@ -167,4 +168,64 @@ test('un día del período rinde solo ese día', () => {
   )
   assert.equal(m.cashCents, ORO.cashPorDia[3])
   assert.equal(m.cierres, 5)
+})
+
+// ---------------------------------------------------------------- Fase A · costo
+
+test('Fase A · la semilla de gastos suma la semana de oro', () => {
+  assert.equal(GASTOS_DEMO.length, 7)
+  const total = GASTOS_DEMO.reduce((s, g) => s + g.montoCents, 0)
+  assert.equal(total, ORO.gastoSemana)
+  assert.equal(dinero(total), '$14,400')
+})
+
+test('Fase A · CAC / costo por asistida / AOV cuadran contra el oro', () => {
+  const total = GASTOS_DEMO.reduce((s, g) => s + g.montoCents, 0)
+  const m = metricasConCosto(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO, total)
+  assert.equal(m.gastoCents, ORO.gastoSemana)
+  assert.equal(m.cac, ORO.cacSemana)
+  assert.equal(m.costoPorLlamadaAsistida, ORO.costoAsistida)
+  assert.equal(m.aov, ORO.aovSemana)
+  // y las pinturas: dinero() redondea al peso con Math.round
+  assert.equal(dinero(m.cac!), '$626')
+  assert.equal(dinero(m.costoPorLlamadaAsistida!), '$229')
+  assert.equal(dinero(m.aov!), '$1,800')
+})
+
+test('🔴 Fase A · divisor 0 en CAC / AOV / c-asistida devuelve null', () => {
+  // vacío: 0 cierres, 0 asistidos
+  const m = metricasConCosto([], [], 100_000_00)
+  assert.equal(m.gastoCents, 100_000_00)   // el gasto se lee igual
+  assert.equal(m.cac, null)
+  assert.equal(m.costoPorLlamadaAsistida, null)
+  assert.equal(m.aov, null)
+  assert.equal(dinero(m.gastoCents), '$100,000')
+  // y las funciones sueltas, para ancla:
+  assert.equal(cac(100_000_00, 0), null)
+  assert.equal(costoPorLlamadaAsistida(100_000_00, 0), null)
+  assert.equal(aov(100_000_00, 0), null)
+})
+
+test('Fase A · gasto = 0 no rompe: CAC y c-asistida quedan en 0, AOV sigue vivo', () => {
+  // mes sin gastos cargados: los tres derivados que dependen del gasto dan 0,
+  // pero AOV se calcula igual porque no depende del gasto
+  const m = metricasConCosto(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO, 0)
+  assert.equal(m.gastoCents, 0)
+  assert.equal(m.cac, 0)
+  assert.equal(m.costoPorLlamadaAsistida, 0)
+  assert.equal(m.aov, ORO.aovSemana)
+})
+
+test('Fase A · el embudo con gasto tiene 7 pasos y el 0 es Gasto sin barra', () => {
+  const m = metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO)
+  const pasos = embudo(m, ORO.gastoSemana)
+  assert.deepEqual(pasos.map((p) => p.nombre),
+    ['Gasto', 'Leads', 'Agendas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
+  assert.equal(pasos[0].esGasto, true)
+  assert.equal(pasos[0].esDinero, true)
+  assert.equal(pasos[0].ancho, 0)   // sin barra: el paso 0 es un número solo
+  assert.equal(pasos[0].valor, ORO.gastoSemana)
+  // el resto queda igual: la escala sigue siendo Leads = 100
+  assert.equal(pasos[1].nombre, 'Leads')
+  assert.equal(pasos[1].ancho, 100)
 })

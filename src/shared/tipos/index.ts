@@ -31,6 +31,20 @@ export interface ReporteCloser {
   cashCents: number
 }
 
+/**
+ * Un gasto diario de captación, en centavos. Uno por fecha (PK).
+ *
+ * 🔴 Es del NEGOCIO, no de una persona: no hay `personaId`. Si un día se gastó
+ * en dos plataformas, la app pide la suma con la nota como ayuda-memoria
+ * («$8k Meta, $6k Google»). Varias filas por día convertirían al panel en un
+ * mini-libro contable, y no es lo que se pidió.
+ */
+export interface Gasto {
+  fecha: string       // ISO YYYY-MM-DD
+  montoCents: number
+  nota?: string | null
+}
+
 export type Periodo = 'dia' | 'semana' | 'mes'
 
 export interface Ventana {

@@ -3,9 +3,10 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-/** Las cinco pantallas, en el orden del mockup. */
+/** Las pantallas del panel, en el orden del mockup. */
 export const PANTALLAS = [
   { href: '/panel', texto: 'Panel' },
+  { href: '/gasto', texto: 'Gasto' },
   { href: '/reporte-setter', texto: 'Reporte Setter' },
   { href: '/reporte-closer', texto: 'Reporte Closer' },
   { href: '/equipo', texto: 'Equipo' },

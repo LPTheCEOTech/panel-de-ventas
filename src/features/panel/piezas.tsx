@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
-import type { Barra, FilaRanking, Metricas, PasoEmbudo, Tasa } from '@/shared/calculo/metricas'
+import type { Barra, FilaRanking, Metricas, MetricasConCosto, PasoEmbudo, Tasa } from '@/shared/calculo/metricas'
+import { EL_GUION } from '@/shared/formato'
 import {
   dinero, dineroCorto, iniciales, numero, plural, porcentaje, porcentajeEntero, puntos,
 } from '@/shared/formato'
@@ -22,7 +23,7 @@ function ancho(t: Tasa): string {
  * que la primera— cuando en realidad es el DENOMINADOR de la primera. Acá vive
  * adentro: en la frase, en el medidor y en el pie.
  */
-export function Plata({ m, simbolo }: { m: Metricas; simbolo: string }) {
+export function Plata({ m, simbolo }: { m: MetricasConCosto; simbolo: string }) {
   return (
     <div className="plata">
       <div className="plata-h">
@@ -47,13 +48,62 @@ export function Plata({ m, simbolo }: { m: Metricas; simbolo: string }) {
         <div>
           <span>Ticket promedio</span>
           <b className={`num${m.ticketPromedioCents === null ? ' sin' : ''}`}>
-            {m.ticketPromedioCents === null ? '—' : dinero(m.ticketPromedioCents, simbolo)}
+            {m.ticketPromedioCents === null ? EL_GUION : dinero(m.ticketPromedioCents, simbolo)}
           </b>
         </div>
         <div>
           <span>Cierres</span>
           <b className="num">{numero(m.cierres)}</b>
         </div>
+        {/* 🔴 Fase A · AOV como cuarto peldaño del pie, al lado de ticket
+            promedio. Los dos responden preguntas distintas —ticket es lo que se
+            firmó, AOV lo que efectivamente entró por cliente— y por eso conviven. */}
+        <div>
+          <span>AOV</span>
+          <b className={`num${m.aov === null ? ' sin' : ''}`}>
+            {m.aov === null ? EL_GUION : dinero(m.aov, simbolo)}
+          </b>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * 🔴 Fase A · CAC + Costo por asistida.
+ *
+ * AOV vive en `.plata` (es una vista del dinero); estos dos no dependen del
+ * cash sino del gasto, y por eso van en su propia tarjeta bajo la banda. Con
+ * gasto = 0 los dos dan `$0`; con cierres = 0 (o asistidos = 0) dan `—`.
+ */
+export function Costos({ m, simbolo }: { m: MetricasConCosto; simbolo: string }) {
+  return (
+    <div className="card tasas">
+      <Costo_ etiqueta="Costo de adquisición (CAC)"
+        valor={m.cac} simbolo={simbolo}
+        contexto={<><b>{dinero(m.gastoCents, simbolo)}</b> ÷ <b>{numero(m.cierres)}</b> {m.cierres === 1 ? 'cliente' : 'clientes'}</>} />
+      <Costo_ etiqueta="Costo por llamada asistida"
+        valor={m.costoPorLlamadaAsistida} simbolo={simbolo}
+        contexto={<><b>{dinero(m.gastoCents, simbolo)}</b> ÷ <b>{numero(m.asistieron)}</b> {m.asistieron === 1 ? 'asistida' : 'asistidas'}</>} />
+    </div>
+  )
+}
+
+function Costo_({
+  etiqueta, valor, simbolo, contexto,
+}: {
+  etiqueta: string; valor: number | null; simbolo: string; contexto: React.ReactNode
+}) {
+  return (
+    <div className="tasa">
+      <div className="tasa-h">
+        <span className="tasa-l">{etiqueta}</span>
+      </div>
+      <div className="tasa-b">
+        <span className={`tasa-v num${valor === null ? ' sin' : ''}`}>
+          {valor === null ? EL_GUION : dinero(valor, simbolo)}
+        </span>
+        <span className="tasa-c num">{contexto}</span>
       </div>
     </div>
   )
@@ -105,17 +155,34 @@ export function Tasas({ m, deltas }: { m: Metricas; deltas: [number | null, numb
 export function Embudo({
   pasos, simbolo, avisoAgendas, deQue,
 }: { pasos: PasoEmbudo[]; simbolo: string; avisoAgendas: boolean; deQue: string }) {
+  // 🔴 Fase A · el paso Gasto se renderiza AFUERA de `.fn`. Adentro rompería
+  // las reglas `nth-child` que colorean los seis pasos reales del embudo
+  // (Leads → Cash). Y visualmente es honesto: el gasto NO es un conteo del
+  // funnel, es el costo que lo produjo.
+  const gasto = pasos[0]?.esGasto ? pasos[0] : null
+  const funnel = gasto ? pasos.slice(1) : pasos
+
   return (
     <div className="card">
       <div className="card-head"><div><h3>Embudo {deQue}</h3><p>de leads a cash collected</p></div></div>
+      {gasto && (
+        <div className="fnr spend">
+          <span className="fn-n">
+            <strong>{gasto.nombre}</strong>
+            <small>costo de captación</small>
+          </span>
+          <span className="fn-track" aria-hidden="true"></span>
+          <span className="fn-v num">{dineroCorto(gasto.valor, simbolo)}</span>
+        </div>
+      )}
       <div className="fn">
-        {pasos.map((p, i) => (
+        {funnel.map((p, i) => (
           <div className="fnr" key={p.nombre}>
             <span className="fn-n">
               <strong>{p.nombre}</strong>
               <small>
                 {i === 0 ? 'conversaciones iniciadas'
-                  : p.conversion === null || p.conversion.tasa === null ? '—'
+                  : p.conversion === null || p.conversion.tasa === null ? EL_GUION
                   : <>{p.conversion.etiqueta} <b>{porcentajeEntero(p.conversion.tasa)}</b></>}
               </small>
             </span>

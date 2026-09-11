@@ -9,7 +9,7 @@
  * cambia, Y cuenta las filas (un corte silencioso de PostgREST a las 1.000
  * filas solo se ve contando).
  */
-import { metricas, rankingClosers, rankingSetters, barrasPorDia } from '../src/shared/calculo/metricas.ts'
+import { metricas, metricasConCosto, rankingClosers, rankingSetters, barrasPorDia } from '../src/shared/calculo/metricas.ts'
 import { ORO, SEMANA_ORO } from '../src/shared/datos/semilla.ts'
 import { dinero, porcentaje, porcentajeEntero } from '../src/shared/formato/index.ts'
 import { conectar } from './comun.mjs'
@@ -30,6 +30,13 @@ const { data: sCrudos, error: e2 } = await sb.from('reportes_setter')
 const { data: cCrudos, error: e3 } = await sb.from('reportes_closer')
   .select('fecha, persona_id, llamadas, asistieron, reagendadas, cierres, revenue_cents, cash_cents')
   .gte('fecha', V.desde).lte('fecha', V.hasta)
+// Fase A · gastos de la misma ventana. Si la tabla todavia no existe (la
+// migracion 003 no se corrio contra la base), se ignora el error y se sigue:
+// las 4 comprobaciones nuevas fallaran diciendo que el gasto dio 0.
+const gastosResp = await sb.from('gastos').select('fecha, monto_cents')
+  .gte('fecha', V.desde).lte('fecha', V.hasta)
+const gastosCrudos = gastosResp.data ?? []
+const gastosError = gastosResp.error
 
 for (const e of [e1, e2, e3]) {
   if (e) { console.error(`\n🔴 No se pudo leer la base: ${e.message}\n`); process.exit(1) }
@@ -80,6 +87,20 @@ const barras = barrasPorDia(V, closers)
 comprobar('barras', barras.length, 7)
 comprobar('cash por día', barras.map((b) => b.cashCents).join(','), ORO.cashPorDia.join(','))
 comprobar('la más alta llega al 100', barras.find((b) => b.esMaxima)?.altura ?? 0, 100)
+
+// ── Fase A · gasto y derivados ─────────────────────────────────
+console.log('\n── Gasto y derivados (Fase A) ──\n')
+if (gastosError) {
+  console.log(`⚠️  no pude leer gastos: ${gastosError.message}`)
+  fallos.push(`gastos: ${gastosError.message}`)
+} else {
+  const gastoCents = gastosCrudos.reduce((s, g) => s + Number(g.monto_cents), 0)
+  const mc = metricasConCosto(setters, closers, gastoCents)
+  comprobar('gasto de la semana', dinero(mc.gastoCents), dinero(ORO.gastoSemana))
+  comprobar('CAC', dinero(mc.cac ?? 0), dinero(ORO.cacSemana))
+  comprobar('costo por asistida', dinero(mc.costoPorLlamadaAsistida ?? 0), dinero(ORO.costoAsistida))
+  comprobar('AOV', dinero(mc.aov ?? 0), dinero(ORO.aovSemana))
+}
 
 console.log(`
 ────────────────────────────────────────────────
