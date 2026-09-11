@@ -3,21 +3,29 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-/** Las pantallas del panel, en el orden del mockup. */
-export const PANTALLAS = [
+import type { RolUsuario } from '@/shared/tipos'
+
+interface Pantalla { href: string; texto: string; soloAdmin?: boolean }
+
+/** 🔴 Fase C · Gasto, Equipo y Ajustes son solo-admin. El miembro ve Panel y
+ *  los dos reportes (los formularios se filtran solos). */
+export const PANTALLAS: readonly Pantalla[] = [
   { href: '/panel', texto: 'Panel' },
-  { href: '/gasto', texto: 'Gasto' },
+  { href: '/gasto', texto: 'Gasto', soloAdmin: true },
   { href: '/reporte-setter', texto: 'Reporte Setter' },
   { href: '/reporte-closer', texto: 'Reporte Closer' },
-  { href: '/equipo', texto: 'Equipo' },
-  { href: '/ajustes', texto: 'Ajustes' },
-] as const
+  { href: '/equipo', texto: 'Equipo', soloAdmin: true },
+  { href: '/ajustes', texto: 'Ajustes', soloAdmin: true },
+]
 
-export function Nav() {
+export function Nav({ rol }: { rol?: RolUsuario }) {
   const ruta = usePathname()
+  // 🔴 Sin rol (dev/demo sin auth): la app corre como admin y se ven todas.
+  const esMiembro = rol === 'miembro'
+  const visibles = PANTALLAS.filter((p) => !(esMiembro && p.soloAdmin))
   return (
     <nav className="nav" aria-label="Secciones">
-      {PANTALLAS.map((p) => (
+      {visibles.map((p) => (
         <Link
           key={p.href} href={p.href}
           // el mockup usa <button>; acá va un Link, que es navegable y anda

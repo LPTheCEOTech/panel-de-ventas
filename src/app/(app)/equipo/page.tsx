@@ -1,12 +1,18 @@
+import { redirect } from 'next/navigation'
+
 import { rankingClosers, rankingSetters } from '@/shared/calculo/metricas'
 import { hoyEn, ventana } from '@/shared/calculo/periodo'
 import { IconoEquipo } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
+import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { dinero, numero, plural } from '@/shared/formato'
 import { ListaEquipo } from '@/features/equipo/lista'
 
 export default async function Equipo() {
   const capa = datos()
+  // Fase C · Equipo es solo admin: invitar, dar de baja, etc.
+  const sesion = await sesionActual()
+  if (sesion && sesion.usuario.rol !== 'admin') redirect('/panel')
   const config = await capa.leerConfiguracion()
   const v = ventana('semana', hoyEn(config.zonaHoraria), config.inicioSemana)
 

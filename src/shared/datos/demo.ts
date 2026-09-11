@@ -14,7 +14,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 
-import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
+import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
 import { dentro } from '@/shared/calculo/periodo'
 import { GASTOS_DEMO, PERSONAS_DEMO, REPORTES_CLOSER_DEMO, REPORTES_SETTER_DEMO } from './semilla'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from './interfaz'
@@ -25,6 +25,7 @@ interface EstadoDemo {
   setter: ReporteSetter[]
   closer: ReporteCloser[]
   gastos: Gasto[]
+  usuarios: Usuario[]
 }
 
 /**
@@ -49,7 +50,7 @@ function inicial(vacia: boolean): EstadoDemo {
   if (vacia) {
     return {
       config: { ...CONFIGURACION_POR_DEFECTO, nombreNegocio: 'Mi Negocio', iniciales: 'MN', usuarioNombre: 'Yo' },
-      personas: [], setter: [], closer: [], gastos: [],
+      personas: [], setter: [], closer: [], gastos: [], usuarios: [],
     }
   }
   return {
@@ -58,6 +59,7 @@ function inicial(vacia: boolean): EstadoDemo {
     setter: REPORTES_SETTER_DEMO.map((r) => ({ ...r })),
     closer: REPORTES_CLOSER_DEMO.map((r) => ({ ...r })),
     gastos: GASTOS_DEMO.map((g) => ({ ...g })),
+    usuarios: [],
   }
 }
 
@@ -118,8 +120,12 @@ export function capaDemo(vacia = false): CapaDeDatos {
         if (p) p.activo = activo
       })
     },
-    async leerReportesSetter(v: Ventana) { return leer(vacia).setter.filter((r) => dentro(r.fecha, v)) },
-    async leerReportesCloser(v: Ventana) { return leer(vacia).closer.filter((r) => dentro(r.fecha, v)) },
+    async leerReportesSetter(v: Ventana, personaId?: string) {
+      return leer(vacia).setter.filter((r) => dentro(r.fecha, v) && (!personaId || r.personaId === personaId))
+    },
+    async leerReportesCloser(v: Ventana, personaId?: string) {
+      return leer(vacia).closer.filter((r) => dentro(r.fecha, v) && (!personaId || r.personaId === personaId))
+    },
     async buscarReporteSetter(fecha, personaId) {
       return leer(vacia).setter.find((r) => r.fecha === fecha && r.personaId === personaId) ?? null
     },
@@ -145,6 +151,24 @@ export function capaDemo(vacia = false): CapaDeDatos {
         const i = e.gastos.findIndex((x) => x.fecha === g.fecha)
         if (i >= 0) e.gastos[i] = g
         else e.gastos.push(g)
+      })
+    },
+
+    async buscarUsuario(authUserId) {
+      return leer(vacia).usuarios?.find((u) => u.authUserId === authUserId) ?? null
+    },
+    async crearUsuario(authUserId, personaId, rol: RolUsuario) {
+      return con((e) => {
+        if (!e.usuarios) e.usuarios = []
+        const u: Usuario = { authUserId, personaId, rol }
+        e.usuarios.push(u)
+        return u
+      })
+    },
+    async borrarUsuario(authUserId) {
+      con((e) => {
+        if (!e.usuarios) e.usuarios = []
+        e.usuarios = e.usuarios.filter((u) => u.authUserId !== authUserId)
       })
     },
   }

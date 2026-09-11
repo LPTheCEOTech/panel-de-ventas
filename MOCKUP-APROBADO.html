@@ -386,6 +386,14 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   background-repeat:no-repeat;background-position:right 11px center;padding-right:30px;cursor:pointer}
 .field input[type="date"]{max-width:190px}
 .form-grid select{max-width:330px}
+/* 🔴 Fase C · en modo miembro, el <select> de persona desaparece y en su
+   lugar mostramos el nombre en un div. Mismo alto que el input para que la
+   fila no salte, mismo padding, y el nombre en negrita porque lo que
+   confirma es que quien carga es esa persona. */
+.confirma-persona{background:var(--hueco);border:1px solid var(--border);
+  border-radius:var(--r-ctl);padding:9px 11px;font-size:13.5px;color:var(--muted);
+  min-height:38px;display:flex;align-items:center}
+.confirma-persona b{color:var(--ink);font-weight:700}
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 .step button{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;height:38px;

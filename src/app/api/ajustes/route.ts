@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { datos } from '@/shared/datos/indice'
+import { soloAdmin } from '@/shared/datos/guardias'
 
 const zAjustes = z.object({
   nombreNegocio: z.string().trim().min(1).max(60).optional(),
@@ -21,6 +22,8 @@ const zAjustes = z.object({
 })
 
 export async function PATCH(request: NextRequest) {
+  const negado = await soloAdmin()
+  if (negado) return negado
   const p = zAjustes.safeParse(await request.json().catch(() => null))
   if (!p.success) {
     return NextResponse.json({ error: p.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })

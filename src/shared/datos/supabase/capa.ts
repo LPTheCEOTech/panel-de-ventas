@@ -1,6 +1,6 @@
 import 'server-only'
 
-import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, Ventana } from '@/shared/tipos'
+import type { Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from '../interfaz'
 import { clienteServidor } from './cliente'
 
@@ -106,18 +106,20 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       reventar('cambiarActivo', error)
     },
 
-    async leerReportesSetter(v: Ventana): Promise<ReporteSetter[]> {
-      const { data, error } = await sb
-        .from('reportes_setter').select(F_SETTER)
-        .gte('fecha', v.desde).lte('fecha', v.hasta).order('fecha')
+    async leerReportesSetter(v: Ventana, personaId?: string): Promise<ReporteSetter[]> {
+      let q = sb.from('reportes_setter').select(F_SETTER)
+        .gte('fecha', v.desde).lte('fecha', v.hasta)
+      if (personaId) q = q.eq('persona_id', personaId)
+      const { data, error } = await q.order('fecha')
       reventar('leerReportesSetter', error)
       return (data ?? []).map(aSetter)
     },
 
-    async leerReportesCloser(v: Ventana): Promise<ReporteCloser[]> {
-      const { data, error } = await sb
-        .from('reportes_closer').select(F_CLOSER)
-        .gte('fecha', v.desde).lte('fecha', v.hasta).order('fecha')
+    async leerReportesCloser(v: Ventana, personaId?: string): Promise<ReporteCloser[]> {
+      let q = sb.from('reportes_closer').select(F_CLOSER)
+        .gte('fecha', v.desde).lte('fecha', v.hasta)
+      if (personaId) q = q.eq('persona_id', personaId)
+      const { data, error } = await q.order('fecha')
       reventar('leerReportesCloser', error)
       return (data ?? []).map(aCloser)
     },
@@ -197,6 +199,29 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         { onConflict: 'fecha' }
       )
       reventar('guardarGasto', error)
+    },
+
+    async buscarUsuario(authUserId: string): Promise<Usuario | null> {
+      const { data, error } = await sb
+        .from('usuarios').select('auth_user_id, persona_id, rol')
+        .eq('auth_user_id', authUserId).maybeSingle()
+      reventar('buscarUsuario', error)
+      if (!data) return null
+      return { authUserId: data.auth_user_id, personaId: data.persona_id ?? null, rol: data.rol as RolUsuario }
+    },
+
+    async crearUsuario(authUserId: string, personaId: string | null, rol: RolUsuario): Promise<Usuario> {
+      const { data, error } = await sb
+        .from('usuarios')
+        .insert({ auth_user_id: authUserId, persona_id: personaId, rol })
+        .select('auth_user_id, persona_id, rol').single()
+      reventar('crearUsuario', error)
+      return { authUserId: data!.auth_user_id, personaId: data!.persona_id ?? null, rol: data!.rol as RolUsuario }
+    },
+
+    async borrarUsuario(authUserId: string): Promise<void> {
+      const { error } = await sb.from('usuarios').delete().eq('auth_user_id', authUserId)
+      reventar('borrarUsuario', error)
     },
   }
 }

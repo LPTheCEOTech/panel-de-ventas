@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
+import { soloAdmin } from '@/shared/datos/guardias'
 import { subirLogo, borrarLogo } from '@/shared/datos/supabase/logo'
 
 const MAX_BYTES = 256 * 1024   // 256 KB — un logo de topbar no necesita más
@@ -17,6 +18,8 @@ const TIPOS_OK = new Set(['image/png', 'image/jpeg', 'image/svg+xml', 'image/web
  * hay Storage local; se prueba contra la base real.
  */
 export async function POST(request: NextRequest) {
+  const negado = await soloAdmin()
+  if (negado) return negado
   const capa = datos()
   if (capa.motor !== 'supabase') {
     return NextResponse.json(
@@ -81,6 +84,8 @@ export async function POST(request: NextRequest) {
 }
 
 export async function DELETE() {
+  const negado = await soloAdmin()
+  if (negado) return negado
   const capa = datos()
   if (capa.motor !== 'supabase') {
     return NextResponse.json({ error: 'Solo contra la base real' }, { status: 501 })

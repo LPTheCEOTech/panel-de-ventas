@@ -1,9 +1,16 @@
+import { redirect } from 'next/navigation'
+
 import { hoyEn } from '@/shared/calculo/periodo'
 import { datos } from '@/shared/datos/indice'
+import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { FormGasto } from '@/features/gasto/form'
 
 export default async function Gasto() {
-  const capa = datos()
+  const [capa, sesion] = [datos(), await sesionActual()]
+  // 🔴 Fase C · el gasto es del negocio: solo admin puede cargarlo. Al miembro
+  // se le redirige a /panel (nunca al gasto). Sin sesión (dev/demo) sigue
+  // pasando: la app se comporta como admin en ese modo.
+  if (sesion && sesion.usuario.rol !== 'admin') redirect('/panel')
   const config = await capa.leerConfiguracion()
   const hoy = hoyEn(config.zonaHoraria)
 

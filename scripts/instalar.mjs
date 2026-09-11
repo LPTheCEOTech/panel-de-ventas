@@ -20,7 +20,7 @@ import pg from 'pg'
 import { abrirPreguntas, conectar, morir } from './comun.mjs'
 
 const RAIZ = dirname(dirname(fileURLToPath(import.meta.url)))
-const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql', '003_gastos.sql', '004_logo.sql']
+const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql', '003_gastos.sql', '004_logo.sql', '005_usuarios.sql']
 const MINIMO_CONTRASENA = 12
 const BUCKET_LOGO = 'logos'
 
@@ -112,6 +112,21 @@ if (errUsuarios) morir(`No se pudo consultar los usuarios: ${errUsuarios.message
 
 if (usuarios.users.length > 0) {
   console.log(`✅ Ya hay ${usuarios.users.length} usuario(s). No se crea otro.`)
+  // Fase C · aseguramos que exista una fila `usuarios` con rol='admin' para
+  // los que ya estaban (re-instalador contra una base con auth ya poblada).
+  // Solo tocamos filas que faltan: nunca degradamos un admin existente.
+  for (const u of usuarios.users) {
+    const { data: fila } = await sb.from('usuarios').select('rol').eq('auth_user_id', u.id).maybeSingle()
+    if (!fila) {
+      const { error: errIns } = await sb.from('usuarios').insert({ auth_user_id: u.id, persona_id: null, rol: 'admin' })
+      if (errIns && !/does not exist/i.test(errIns.message)) morir(`No pude asegurar admin ${u.email}: ${errIns.message}`)
+      if (errIns && /does not exist/i.test(errIns.message)) {
+        console.log(`⚠️  tabla \`usuarios\` no existe. Corré la migración 005 y volvé a instalar.`)
+        break
+      }
+      console.log(`✅ ${u.email} marcado como admin en \`usuarios\`.`)
+    }
+  }
 } else {
   console.log('\nY el usuario con el que vas a entrar.\n')
   const correo = await preguntar('Tu correo')
@@ -119,9 +134,26 @@ if (usuarios.users.length > 0) {
   const contrasena = await preguntar(`Contraseña (mínimo ${MINIMO_CONTRASENA})`, undefined, true)
   if (contrasena.length < MINIMO_CONTRASENA) morir(`La contraseña necesita al menos ${MINIMO_CONTRASENA} caracteres.`)
 
-  const { error } = await sb.auth.admin.createUser({ email: correo, password: contrasena, email_confirm: true })
+  const { data: creado, error } = await sb.auth.admin.createUser({ email: correo, password: contrasena, email_confirm: true })
   if (error) morir(`No se pudo crear el usuario: ${error.message}`)
   console.log(`\n✅ Usuario ${correo} creado y confirmado (sin mandar ningún correo).`)
+
+  // 🔴 Fase C · lo insertamos en `usuarios` como admin. `persona_id = null`
+  // porque el admin no es un vendedor. Si falla porque la tabla no existe
+  // (migración 005 pendiente), avisamos pero no morimos.
+  const authUserId = creado?.user?.id
+  if (authUserId) {
+    const { error: errUsr } = await sb.from('usuarios').insert({ auth_user_id: authUserId, persona_id: null, rol: 'admin' })
+    if (errUsr) {
+      if (/does not exist/i.test(errUsr.message)) {
+        console.log(`⚠️  Tabla \`usuarios\` no existe. Corré la migración 005 y ejecutá el instalador de nuevo.`)
+      } else {
+        morir(`No pude marcar como admin: ${errUsr.message}`)
+      }
+    } else {
+      console.log('✅ Marcado como admin en `usuarios`.')
+    }
+  }
 }
 
 cerrar()

@@ -1,16 +1,26 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { hoyEn } from '@/shared/calculo/periodo'
 import { IconoAviso } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
+import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { FormSetter } from '@/features/reportes/form-setter'
 
 export default async function ReporteSetter() {
   const capa = datos()
-  const config = await capa.leerConfiguracion()
-  const personas = (await capa.leerPersonas()).filter(
+  const [config, sesion] = await Promise.all([capa.leerConfiguracion(), sesionActual()])
+  const todas = (await capa.leerPersonas()).filter(
     (p) => p.activo && (p.rol === 'setter' || p.rol === 'ambos')
   )
+  // 🔴 Fase C · un miembro solo puede cargar como sí mismo. Si es setter (o
+  // ambos), va con su persona bloqueada; si no lo es, no tiene nada que
+  // reportar acá → /panel.
+  const esMiembro = sesion?.usuario.rol === 'miembro'
+  const propia = esMiembro ? todas.find((p) => p.id === sesion?.usuario.personaId) ?? null : null
+  if (esMiembro && !propia) redirect('/panel')
+  const personas = esMiembro && propia ? [propia] : todas
+  const bloqueadoA = propia?.id ?? undefined
 
   return (
     /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
@@ -28,7 +38,7 @@ export default async function ReporteSetter() {
       {personas.length === 0 ? (
         <SinPersonas rol="setters" />
       ) : (
-        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} />
+        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} bloqueadoA={bloqueadoA} />
       )}
     </div>
   )

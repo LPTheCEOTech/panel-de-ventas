@@ -48,6 +48,19 @@ export function ListaEquipo({
     if (await pedir('/api/equipo', 'POST', { nombre, rol })) setNombre('')
   }
 
+  // 🔴 Fase C · invitar por correo: crea el auth user + la persona (si no
+  // existe) + la fila `usuarios` con rol miembro, y Supabase manda el correo.
+  const [correoInv, setCorreoInv] = useState('')
+  const [invOk, setInvOk] = useState<string | null>(null)
+  async function invitar() {
+    setInvOk(null)
+    if (await pedir('/api/equipo/invitar', 'POST', { correo: correoInv, nombre, rol })) {
+      setInvOk(`Invitación enviada a ${correoInv}. Cuando acepte, ya queda vinculado a ${nombre}.`)
+      setCorreoInv('')
+      setNombre('')
+    }
+  }
+
   return (
     <div className="trabajo">
     <div className="card">
@@ -145,6 +158,41 @@ export function ListaEquipo({
           <span>
             Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los
             formularios, pero sus números siguen contando en las semanas que ya trabajó.
+          </span>
+        </div>
+      </div>
+
+      {/* 🔴 Fase C · misma tarjeta lateral: invitar por correo. Reusa nombre +
+          rol de arriba y suma un correo. Cuando el invitado acepte y elija
+          contraseña, entra directamente a su panel filtrado. */}
+      <div className="card">
+        <div className="card-head">
+          <div><h3>Invitar por correo</h3><p>se envía el correo con el link para elegir contraseña</p></div>
+        </div>
+
+        <div className="addrow">
+          <div className="field">
+            <label htmlFor="e-correo">Correo</label>
+            <input
+              id="e-correo" type="email" value={correoInv} placeholder="persona@ejemplo.com" maxLength={254}
+              onChange={(e) => setCorreoInv(e.target.value)}
+            />
+          </div>
+          <button
+            className="btn-primary" onClick={invitar} type="button"
+            disabled={ocupado || correoInv.trim().length < 5 || nombre.trim().length < 2}
+          >
+            Invitar
+          </button>
+        </div>
+
+        {invOk && <div className="note"><IconoInfo /><span>{invOk}</span></div>}
+
+        <div className="note">
+          <IconoInfo />
+          <span>
+            Reusa <b>Nombre</b> y <b>Rol</b> de arriba. Si ya existe una
+            persona con ese nombre, la reutiliza; si no, la crea.
           </span>
         </div>
       </div>

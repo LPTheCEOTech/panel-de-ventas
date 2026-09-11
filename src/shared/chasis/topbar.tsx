@@ -1,5 +1,5 @@
 import { iniciales as calcularIniciales } from '@/shared/formato'
-import type { Configuracion } from '@/shared/tipos'
+import type { Configuracion, Sesion } from '@/shared/tipos'
 import { IconoSalir } from './iconos'
 import { Nav } from './nav'
 import { ToggleTema } from './toggle-tema'
@@ -14,7 +14,15 @@ import { ToggleTema } from './toggle-tema'
  * contenedor, en una pantalla ancha la marca arranca en el borde y el título
  * de la página 60 px más adentro: dos verticales distintas a la vista.
  */
-export function Topbar({ config }: { config: Configuracion }) {
+export function Topbar({ config, sesion }: { config: Configuracion; sesion?: Sesion | null }) {
+  // 🔴 Fase C · con sesión activa el nombre y el rol vienen del usuario
+  // logueado (correo + rol de app, y si está ligado a una persona ese nombre
+  // y rol de vendedor). Sin sesión (modo dev/demo sin auth), la app cae al
+  // `usuario_nombre`/`usuario_rol` de `configuracion` — backwards compat.
+  const nombreQuien = sesion?.persona?.nombre ?? sesion?.correo ?? config.usuarioNombre
+  const rolQuien = sesion
+    ? (sesion.usuario.rol === 'admin' ? 'Admin' : sesion.persona ? etiquetaRol(sesion.persona.rol) : 'Miembro')
+    : config.usuarioRol
   return (
     <header className="topbar">
       <div className="topbar-in">
@@ -44,15 +52,15 @@ export function Topbar({ config }: { config: Configuracion }) {
         </span>
       </div>
 
-      <Nav />
+      <Nav rol={sesion?.usuario.rol} />
 
       <div className="topbar-right">
         <ToggleTema />
         <div className="quien">
-          <span className="av">{calcularIniciales(config.usuarioNombre)}</span>
+          <span className="av">{calcularIniciales(nombreQuien)}</span>
           <span className="qn">
-            {config.usuarioNombre}
-            <small>{config.usuarioRol}</small>
+            {nombreQuien}
+            <small>{rolQuien}</small>
           </span>
         </div>
         <form action="/api/auth/logout" method="post">
@@ -64,4 +72,10 @@ export function Topbar({ config }: { config: Configuracion }) {
       </div>
     </header>
   )
+}
+
+function etiquetaRol(rol: 'setter' | 'closer' | 'ambos'): string {
+  if (rol === 'setter') return 'Setter'
+  if (rol === 'closer') return 'Closer'
+  return 'Setter y closer'
 }

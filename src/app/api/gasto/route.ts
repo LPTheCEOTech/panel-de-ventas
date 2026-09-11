@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
+import { soloAdmin } from '@/shared/datos/guardias'
 import { zConsultaGasto, zGasto } from '../reportes/esquemas'
 
 /** ¿Ya hay un gasto para esa fecha? Alimenta el aviso de reemplazo. */
@@ -15,6 +16,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Fase C · gasto es del negocio: solo admin.
+  const negado = await soloAdmin()
+  if (negado) return negado
+
   let cuerpo: unknown
   try {
     cuerpo = await request.json()

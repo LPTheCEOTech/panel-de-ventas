@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { datos } from '@/shared/datos/indice'
+import { soloAdmin } from '@/shared/datos/guardias'
 
 const zAlta = z.object({
   nombre: z.string().trim().min(2, 'El nombre necesita al menos 2 letras').max(80),
@@ -11,6 +12,8 @@ const zAlta = z.object({
 const zBaja = z.object({ id: z.string().min(1).max(64), activo: z.boolean() })
 
 export async function POST(request: NextRequest) {
+  const negado = await soloAdmin()
+  if (negado) return negado
   const p = zAlta.safeParse(await request.json().catch(() => null))
   if (!p.success) {
     return NextResponse.json({ error: p.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
@@ -32,6 +35,8 @@ export async function POST(request: NextRequest) {
 
 /** Alta y baja LÓGICA. No hay DELETE: los reportes que cargó tienen que seguir contando. */
 export async function PATCH(request: NextRequest) {
+  const negado = await soloAdmin()
+  if (negado) return negado
   const p = zBaja.safeParse(await request.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   try {

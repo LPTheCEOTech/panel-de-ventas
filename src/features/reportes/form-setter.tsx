@@ -11,10 +11,13 @@ import { Derivado, Stepper } from './piezas'
 
 interface Existente { conversaciones: number; agendas: number }
 
-export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string }) {
+export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[]; hoy: string; bloqueadoA?: string }) {
   const router = useRouter()
   const [fecha, setFecha] = useState(hoy)
-  const [personaId, setPersonaId] = useState(personas[0]?.id ?? '')
+  // 🔴 Fase C · si el server nos manda `bloqueadoA` es porque el que carga es
+  // un miembro y solo puede reportar como sí mismo. El estado arranca con esa
+  // persona y no puede cambiar; el <select> se reemplaza por una confirmación.
+  const [personaId, setPersonaId] = useState(bloqueadoA ?? personas[0]?.id ?? '')
   const [conversaciones, setConversaciones] = useState(0)
   const [agendas, setAgendas] = useState(0)
   const [existente, setExistente] = useState<Existente | null>(null)
@@ -82,9 +85,13 @@ export function FormSetter({ personas, hoy }: { personas: Persona[]; hoy: string
           </div>
           <div className="field c8">
             <label htmlFor="f-setter">Setter <span className="req">*</span></label>
-            <select id="f-setter" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
-              {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            </select>
+            {bloqueadoA ? (
+              <div className="confirma-persona"><b>{persona?.nombre}</b></div>
+            ) : (
+              <select id="f-setter" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
+                {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              </select>
+            )}
           </div>
         </div>
 

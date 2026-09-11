@@ -4,7 +4,7 @@
  * base, y el día que cambie el motor no se toca ni una pantalla.
  */
 import type {
-  Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, Ventana,
+  Configuracion, Gasto, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana,
 } from '@/shared/tipos'
 
 export interface CapaDeDatos {
@@ -19,8 +19,12 @@ export interface CapaDeDatos {
   crearPersona(nombre: string, rol: Rol): Promise<Persona>
   cambiarActivo(id: string, activo: boolean): Promise<void>
 
-  leerReportesSetter(v: Ventana): Promise<ReporteSetter[]>
-  leerReportesCloser(v: Ventana): Promise<ReporteCloser[]>
+  /** 🔴 Fase C · `personaId` opcional: si llega, filtra al miembro logueado.
+   *  Sin arg, devuelve todo — es lo que ve el admin y lo que corre el
+   *  verificador. La barrera vive acá (server-side), no en RLS: la app usa
+   *  service_role y RLS no aplica. */
+  leerReportesSetter(v: Ventana, personaId?: string): Promise<ReporteSetter[]>
+  leerReportesCloser(v: Ventana, personaId?: string): Promise<ReporteCloser[]>
 
   /** Un reporte que ya existe para esa persona y esa fecha, o `null`. Es lo que
    *  alimenta el aviso de "ya cargaste este día, ¿reemplazar?". */
@@ -38,6 +42,14 @@ export interface CapaDeDatos {
   sumaGastos(v: Ventana): Promise<number>
   /** UPSERT por fecha (PK). La misma cara visible que reportes. */
   guardarGasto(g: Gasto): Promise<void>
+
+  /** Fase C · resuelve `auth.users → usuarios`. `null` si el auth user existe
+   *  pero no está vinculado. La app manda a /pendiente en ese caso. */
+  buscarUsuario(authUserId: string): Promise<Usuario | null>
+  /** Alta de un usuario. `personaId` null si es admin. */
+  crearUsuario(authUserId: string, personaId: string | null, rol: RolUsuario): Promise<Usuario>
+  /** Baja del usuario en `usuarios` (no toca `auth.users`). */
+  borrarUsuario(authUserId: string): Promise<void>
 }
 
 export const CONFIGURACION_POR_DEFECTO: Configuracion = {

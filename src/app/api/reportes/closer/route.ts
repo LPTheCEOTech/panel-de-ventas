@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
+import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { zCloser, zConsulta } from '../esquemas'
 
 export async function GET(request: NextRequest) {
@@ -30,8 +31,18 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // 🔴 Fase C · override server-side. Ver `/api/reportes/setter/route.ts`.
+  const sesion = await sesionActual()
+  const datosGuardar =
+    sesion?.usuario.rol === 'miembro'
+      ? (sesion.usuario.personaId
+          ? { ...p.data, personaId: sesion.usuario.personaId }
+          : null)
+      : p.data
+  if (!datosGuardar) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+
   try {
-    await datos().guardarReporteCloser(p.data)
+    await datos().guardarReporteCloser(datosGuardar)
   } catch (e) {
     console.error('[api/reportes/closer]', e)
     return NextResponse.json({ error: 'No se pudo guardar en la base' }, { status: 500 })

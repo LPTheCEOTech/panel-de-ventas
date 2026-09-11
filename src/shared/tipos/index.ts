@@ -52,6 +52,30 @@ export interface Ventana {
   hasta: string // inclusive
 }
 
+/**
+ * 🔴 Fase C · rol de la APP (no del vendedor).
+ *  - `admin`: ve todo (panel completo, gasto, ajustes, equipo). El instalador
+ *    lo crea con `persona_id = null` — no es un vendedor.
+ *  - `miembro`: ligado a una fila de `personas`. Ve solo sus propios reportes,
+ *    sin ranking, sin gasto/CAC (datos del negocio), sin ajustes.
+ */
+export type RolUsuario = 'admin' | 'miembro'
+
+/** La fila de `usuarios`: liga un auth.users → persona → rol de app. */
+export interface Usuario {
+  authUserId: string
+  personaId: string | null
+  rol: RolUsuario
+}
+
+/** El usuario actual resuelto desde el proxy o desde el layout. */
+export interface Sesion {
+  authUserId: string
+  correo: string
+  usuario: Usuario
+  persona: Persona | null
+}
+
 export interface Configuracion {
   nombreNegocio: string
   iniciales: string

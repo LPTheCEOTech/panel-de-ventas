@@ -15,11 +15,13 @@ interface Existente {
 }
 
 export function FormCloser({
-  personas, hoy, simbolo,
-}: { personas: Persona[]; hoy: string; simbolo: string }) {
+  personas, hoy, simbolo, bloqueadoA,
+}: { personas: Persona[]; hoy: string; simbolo: string; bloqueadoA?: string }) {
   const router = useRouter()
   const [fecha, setFecha] = useState(hoy)
-  const [personaId, setPersonaId] = useState(personas[0]?.id ?? '')
+  // 🔴 Fase C · si el server nos manda `bloqueadoA`, el que carga es un
+  // miembro cargando lo suyo. No hay <select>: hay una confirmación del nombre.
+  const [personaId, setPersonaId] = useState(bloqueadoA ?? personas[0]?.id ?? '')
   const [llamadas, setLlamadas] = useState(0)
   const [asistieron, setAsistieron] = useState(0)
   const [reagendadas, setReagendadas] = useState(0)
@@ -100,9 +102,13 @@ export function FormCloser({
           </div>
           <div className="field c8">
             <label htmlFor="c-closer">Closer <span className="req">*</span></label>
-            <select id="c-closer" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
-              {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
-            </select>
+            {bloqueadoA ? (
+              <div className="confirma-persona"><b>{persona?.nombre}</b></div>
+            ) : (
+              <select id="c-closer" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
+                {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+              </select>
+            )}
           </div>
         </div>
 

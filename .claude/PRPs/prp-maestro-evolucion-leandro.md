@@ -39,7 +39,7 @@ Decisiones que **ya tomó Jack** y no se re-preguntan:
 |---|---|---|---|
 | **A** | [`prp-fase-a-gasto-y-derivados.md`](./prp-fase-a-gasto-y-derivados.md) | Cargar gasto diario y mostrar CAC, costo por asistida y AOV en el panel. | 🟡 CÓDIGO LISTO · gate real pendiente |
 | **B** | [`prp-fase-b-logo.md`](./prp-fase-b-logo.md) | Subir un logo en Ajustes que reemplace al cuadradito de iniciales del topbar. | 🟡 CÓDIGO LISTO · gate real pendiente |
-| **C** | [`prp-fase-c-multiusuario-roles.md`](./prp-fase-c-multiusuario-roles.md) | Invitar por correo, ligar cada usuario a una persona, y que cada rol vea solo lo suyo. | ⏳ PENDIENTE |
+| **C** | [`prp-fase-c-multiusuario-roles.md`](./prp-fase-c-multiusuario-roles.md) | Invitar por correo, ligar cada usuario a una persona, y que cada rol vea solo lo suyo. | 🟡 CÓDIGO LISTO · gate real pendiente |
 | **D** | [`prp-fase-d-reporte-post-llamada.md`](./prp-fase-d-reporte-post-llamada.md) | Rehacer el reporte del closer como una fila por llamada, sin tocar setters. | ⏳ PENDIENTE |
 
 > A medida que cada hijo se cierre, se actualiza su estado a **✅ HECHA** y se
@@ -178,3 +178,4 @@ contra la base de Leandro.
 |---|---|---|
 | 2026-09-10 | A | Código completo. Gate local en verde. Falta ejecutar contra la base real (migración 003, semilla, verificar, foto) — bloqueado por ausencia de `.env.local`. |
 | 2026-09-10 | B | Código completo. Gate local en verde. Falta ejecutar migración 004, crear bucket `logos` público (el instalador lo intenta), y foto con y sin logo. |
+| 2026-09-10 | C | Código completo. Gate local en verde. Multiusuario + roles + invitar por correo listos. Falta migración 005, re-correr instalador (para marcar admin), invitar un correo con SMTP configurado, y foto con 3 sesiones (sin-login, admin, miembro). |

@@ -5,6 +5,7 @@ import {
 import { dentro, hoyEn, sumarDias, ventana, ventanaAnterior } from '@/shared/calculo/periodo'
 import { IconoInfo } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
+import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { tituloDeVentana } from '@/shared/formato'
 import type { Periodo } from '@/shared/tipos'
 import {
@@ -32,11 +33,18 @@ export default async function PanelDeVentas({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const capa = datos()
-  const config = await capa.leerConfiguracion()
+  const [config, sesion] = await Promise.all([capa.leerConfiguracion(), sesionActual()])
   const { periodo, fecha, fechaExplicita } = leerParametros(await searchParams, config.zonaHoraria)
 
   const v = ventana(periodo, fecha, config.inicioSemana)
   const previa = ventanaAnterior(periodo, v)
+
+  // 🔴 Fase C · si es miembro, todo se filtra por `personaId` propio. El admin
+  // (o el modo dev sin sesión) sigue viendo todo. El filtro vive server-side,
+  // en el `.eq('persona_id', …)` de la capa: la app usa service_role, RLS no
+  // aplica, así que la barrera tiene que estar acá.
+  const esMiembro = sesion?.usuario.rol === 'miembro'
+  const filtro = esMiembro ? sesion?.usuario.personaId ?? undefined : undefined
 
   // 🔴 El gráfico NO usa la misma ventana que los números. En modo "Día" una
   // sola barra no es un gráfico: se muestran los últimos 7 días terminando en
@@ -46,13 +54,15 @@ export default async function PanelDeVentas({
 
   const [personas, setters, closers, settersPrevios, closersPrevios, closersGrafico, gastoCents] = await Promise.all([
     capa.leerPersonas(),
-    capa.leerReportesSetter(v),
-    capa.leerReportesCloser(v),
-    capa.leerReportesSetter(previa),
-    capa.leerReportesCloser(previa),
-    periodo === 'dia' ? capa.leerReportesCloser(vGrafico) : Promise.resolve([]),
-    // Fase A · el gasto del mismo período. `sumaGastos` devuelve 0 si no hay.
-    capa.sumaGastos(v),
+    capa.leerReportesSetter(v, filtro),
+    capa.leerReportesCloser(v, filtro),
+    capa.leerReportesSetter(previa, filtro),
+    capa.leerReportesCloser(previa, filtro),
+    periodo === 'dia' ? capa.leerReportesCloser(vGrafico, filtro) : Promise.resolve([]),
+    // 🔴 Fase A + C · gasto es del NEGOCIO: solo el admin lo ve. Al miembro
+    // le va 0 (no oculta la pieza porque .plata no se rompe con $0, pero CAC
+    // y costo/asistida se ocultan más abajo).
+    esMiembro ? Promise.resolve(0) : capa.sumaGastos(v),
   ])
 
   const m = metricasConCosto(setters, closers, gastoCents)
@@ -106,8 +116,12 @@ export default async function PanelDeVentas({
 
       {/* 🔴 Fase A · CAC y Costo por asistida en su propia banda. AOV ya vive
           en `.plata` (es una vista del dinero). Con gasto = 0 los dos dan $0;
-          con cierres/asistidos = 0 dan —. */}
-      {hayEquipo && (
+          con cierres/asistidos = 0 dan —.
+          🔴 Fase C · esta banda es solo para admin. CAC y costo/asistida son
+          datos del NEGOCIO (dependen del gasto), no del vendedor. AOV se le
+          oculta al miembro por el mismo motivo aunque no dependa del gasto:
+          es una vista comercial que no le suma al vendedor. */}
+      {hayEquipo && !esMiembro && (
         <Costos m={m} simbolo={config.simbolo} />
       )}
 
@@ -117,7 +131,10 @@ export default async function PanelDeVentas({
         <>
           <div className="grid2">
             <Embudo
-              pasos={embudo(m, gastoCents)} simbolo={config.simbolo}
+              /* Fase C · el paso «Gasto» solo si es admin (o dev sin sesión).
+                 Sin arg, el kernel devuelve 6 pasos y el embudo no muestra la
+                 franja gris de arriba. */
+              pasos={esMiembro ? embudo(m) : embudo(m, gastoCents)} simbolo={config.simbolo}
               avisoAgendas={m.agendas !== m.llamadas}
               deQue={deQue}
             />
@@ -136,7 +153,11 @@ export default async function PanelDeVentas({
               }
             />
           </div>
-          {config.rankingVisible && (
+          {/* 🔴 Fase C · el ranking existe para comparar entre personas. Al
+              miembro le mostraría datos ajenos (compañeros); se oculta. Es la
+              decisión recomendada por el PRP; el admin la puede revertir a
+              «ranking recortado con solo la fila propia» si lo pide Jack. */}
+          {config.rankingVisible && !esMiembro && (
             <div className="grid2">
               <RankingClosers filas={rankingClosers(personas, closers)} simbolo={config.simbolo} />
               <RankingSetters filas={rankingSetters(personas, setters)} />

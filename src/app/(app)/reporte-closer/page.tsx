@@ -1,16 +1,23 @@
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 
 import { hoyEn } from '@/shared/calculo/periodo'
 import { IconoAviso } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
+import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { FormCloser } from '@/features/reportes/form-closer'
 
 export default async function ReporteCloser() {
   const capa = datos()
-  const config = await capa.leerConfiguracion()
-  const personas = (await capa.leerPersonas()).filter(
+  const [config, sesion] = await Promise.all([capa.leerConfiguracion(), sesionActual()])
+  const todas = (await capa.leerPersonas()).filter(
     (p) => p.activo && (p.rol === 'closer' || p.rol === 'ambos')
   )
+  const esMiembro = sesion?.usuario.rol === 'miembro'
+  const propia = esMiembro ? todas.find((p) => p.id === sesion?.usuario.personaId) ?? null : null
+  if (esMiembro && !propia) redirect('/panel')
+  const personas = esMiembro && propia ? [propia] : todas
+  const bloqueadoA = propia?.id ?? undefined
 
   return (
     /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
@@ -45,6 +52,7 @@ export default async function ReporteCloser() {
           personas={personas}
           hoy={hoyEn(config.zonaHoraria)}
           simbolo={config.simbolo}
+          bloqueadoA={bloqueadoA}
         />
       )}
     </div>
