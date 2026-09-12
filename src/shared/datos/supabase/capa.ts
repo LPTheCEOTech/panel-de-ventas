@@ -203,7 +203,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
 
     async leerLlamadas(v: Ventana, personaId?: string): Promise<Llamada[]> {
       let q = sb.from('llamadas')
-        .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa')
+        .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre')
         .eq('activa', true)
         .gte('fecha', v.desde).lte('fecha', v.hasta)
       if (personaId) q = q.eq('persona_id', personaId)
@@ -214,6 +214,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         asistio: f.asistio, reagendada: f.reagendada, cerro: f.cerro,
         revenueCents: Number(f.revenue_cents), cashCents: Number(f.cash_cents),
         nota: f.nota ?? null, activa: f.activa,
+        leadNombre: f.lead_nombre ?? '',
       }))
     },
 
@@ -223,13 +224,15 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         asistio: l.asistio, reagendada: l.reagendada, cerro: l.cerro,
         revenue_cents: l.revenueCents, cash_cents: l.cashCents,
         nota: l.nota ?? null,
-      }).select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa').single()
+        lead_nombre: l.leadNombre,
+      }).select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre').single()
       reventar('crearLlamada', error)
       return {
         id: data!.id, personaId: data!.persona_id, fecha: data!.fecha,
         asistio: data!.asistio, reagendada: data!.reagendada, cerro: data!.cerro,
         revenueCents: Number(data!.revenue_cents), cashCents: Number(data!.cash_cents),
         nota: data!.nota ?? null, activa: data!.activa,
+        leadNombre: data!.lead_nombre ?? '',
       }
     },
 
@@ -238,6 +241,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         asistio: 'asistio', reagendada: 'reagendada', cerro: 'cerro',
         revenueCents: 'revenue_cents', cashCents: 'cash_cents',
         nota: 'nota', activa: 'activa',
+        leadNombre: 'lead_nombre',
       }
       const fila: Record<string, unknown> = { actualizado_en: new Date().toISOString() }
       for (const [k, v] of Object.entries(cambios)) {

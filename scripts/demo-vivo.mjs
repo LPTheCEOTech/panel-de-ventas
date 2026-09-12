@@ -68,6 +68,17 @@ const entre = (s, min, max) => Math.round(min + dado(s) * (max - min))
 
 const TICKET = 300_000 // $3.000 en centavos
 
+// Fase D (sesion 2) · nombres ficticios para los leads generados por demo-vivo.
+// Mismos criterios que la semilla: nadie real, mix rioplatense claramente demo.
+const LEAD_NOMBRES_VIVO = [
+  'Ana Torres', 'Bruno Vega', 'Camila Paz', 'Diego Ruiz', 'Elena Cruz',
+  'Fabián Ortiz', 'Gabriela Núñez', 'Hernán Silva', 'Irene Molina',
+  'Julio Márquez', 'Karina Duarte', 'Leandro Pérez', 'Micaela Cabrera',
+  'Nahuel Romero', 'Ornella Vargas', 'Patricio Sosa', 'Quimey Lara',
+  'Ramiro Godoy', 'Selena Ríos', 'Tobías Farías', 'Ursula Peña',
+  'Vicente Aguirre', 'Ximena Castro', 'Yamila Correa', 'Zeus Palacios',
+]
+
 const filasSetter = [], filasCloser = [], filasLlamadas = [], filasGastos = []
 const desde = aMs(hoy) - SEMANAS_ATRAS * 7 * dia
 
@@ -120,12 +131,17 @@ for (let t = desde; t <= aMs(hoy); t += dia) {
       const cerro = n < cierres
       const reagendada = !cerro && asistio && (n - cierres) < reagendadas
       const esCobroSinCierre = cierres === 0 && n === 0 && cashFinal > 0
+      // Fase D (sesion 2) · nombre determinista del lead. Un nombre por (persona, fecha, n)
+      const leadNombre = LEAD_NOMBRES_VIVO[
+        Math.abs(entre(`ln${fecha}${p.id}${n}`, 0, LEAD_NOMBRES_VIVO.length - 1))
+      ]
       filasLlamadas.push({
         persona_id: p.id, fecha,
         asistio, reagendada, cerro,
         revenue_cents: cerro ? TICKET : 0,
         cash_cents: cerro ? cashPorCierre[n] : (esCobroSinCierre ? cashFinal : 0),
         activa: true, es_demo: true,
+        lead_nombre: leadNombre,
       })
     }
   }

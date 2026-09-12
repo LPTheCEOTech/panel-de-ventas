@@ -21,6 +21,7 @@ const dineroCents = z.number().int().min(0).max(1_000_000_000)
 const zNueva = z.object({
   fecha,
   personaId: z.string().min(1).max(64).optional(),
+  leadNombre: z.string().trim().min(2, 'Escribí el nombre del lead').max(80),
   asistio: z.boolean(),
   reagendada: z.boolean(),
   cerro: z.boolean(),
@@ -31,6 +32,7 @@ const zNueva = z.object({
 
 const zCambios = z.object({
   id: z.string().min(1).max(64),
+  leadNombre: z.string().trim().min(2).max(80).optional(),
   asistio: z.boolean().optional(),
   reagendada: z.boolean().optional(),
   cerro: z.boolean().optional(),
@@ -68,6 +70,7 @@ export async function POST(request: NextRequest) {
   try {
     const l = await datos().crearLlamada({
       fecha: p.data.fecha, personaId,
+      leadNombre: p.data.leadNombre,
       asistio: p.data.asistio, reagendada: p.data.reagendada, cerro: p.data.cerro,
       revenueCents: p.data.revenueCents, cashCents: p.data.cashCents,
       nota: p.data.nota ?? null,

@@ -32,9 +32,15 @@ export function PanelLlamada({
   const router = useRouter()
   const [personaId, setPersonaId] = useState(bloqueadoA ?? personas[0]?.id ?? '')
   const [fecha, setFecha] = useState(hoy)
+  const [leadNombre, setLeadNombre] = useState('')
   const [asistio, setAsistio] = useState(true)
   const [reagendada, setReagendada] = useState(false)
   const [cerro, setCerro] = useState(false)
+  // 🔴 Fase D (sesion 2) · el caso «cobré una cuota de una venta anterior» es
+  // legítimo pero no es «cerró». Antes lo permitíamos con un aviso ambiguo;
+  // ahora es un checkbox explícito que revela SOLO el Cash cuando no hubo
+  // cierre en esta llamada.
+  const [cobroAnterior, setCobroAnterior] = useState(false)
   const [revenueCents, setRevenue] = useState(0)
   const [cashCents, setCash] = useState(0)
   const [nota, setNota] = useState('')
@@ -45,11 +51,16 @@ export function PanelLlamada({
 
   const persona = personas.find((p) => p.id === personaId)
 
-  // 🔴 Aviso —no bloqueo— si cargaste cash sin marcar cierre. Es legítimo
-  // («cobré la cuota de una venta anterior»), pero no pasa desapercibido.
+  // 🔴 Fase D (sesion 2) · condicionales de UI. Revenue solo si cerró.
+  // Cash si cerró O si el usuario marcó explícitamente «cobro anterior».
+  // Prender «cerró» apaga automáticamente «cobro anterior» (son excluyentes:
+  // si cerró en esta llamada, no es cobro de una anterior).
+  const mostrarRevenue = cerro
+  const mostrarCash = cerro || (!cerro && cobroAnterior)
+
   const avisos: string[] = []
-  if (cashCents > 0 && !cerro) avisos.push('Cargaste cash sin marcar cierre. ¿Es cash de una venta anterior?')
   if (cerro && !asistio) avisos.push('Marcaste cerró sin marcar asistió. ¿Cerraste por mensaje después?')
+  if (!cerro && cobroAnterior) avisos.push('Cash de una venta anterior. No cuenta como cierre nuevo.')
 
   const contador = useMemo(() => {
     let n = 0, a = 0, c = 0, rev = 0, cash = 0
@@ -69,8 +80,12 @@ export function PanelLlamada({
     try {
       const cuerpo = {
         fecha, personaId,
+        leadNombre: leadNombre.trim(),
         asistio, reagendada, cerro,
-        revenueCents, cashCents,
+        // 🔴 si el campo está oculto, mandamos 0 explícitamente. Nunca mandar
+        // basura si el usuario tipeó algo y después apagó el switch.
+        revenueCents: mostrarRevenue ? revenueCents : 0,
+        cashCents: mostrarCash ? cashCents : 0,
         nota: nota.trim() === '' ? null : nota.trim(),
       }
       const r = await fetch('/api/llamadas', {
@@ -81,7 +96,8 @@ export function PanelLlamada({
       if (!r.ok) { setError(d?.error ?? 'No se pudo guardar.'); return }
       setLlamadas((xs) => [...xs, d.llamada as Llamada])
       // limpia el formulario para la siguiente
-      setAsistio(true); setReagendada(false); setCerro(false)
+      setLeadNombre('')
+      setAsistio(true); setReagendada(false); setCerro(false); setCobroAnterior(false)
       setRevenue(0); setCash(0); setNota('')
       router.refresh()
     } catch {
@@ -147,22 +163,54 @@ export function PanelLlamada({
             </div>
           </div>
 
+          <div className="section-title">Con quién</div>
+          <div className="form-grid">
+            <div className="field c12 full">
+              <label htmlFor="ll-lead">Nombre del lead <span className="req">*</span></label>
+              <input
+                id="ll-lead" type="text" value={leadNombre} maxLength={80}
+                placeholder="Nombre y apellido del lead"
+                onChange={(e) => setLeadNombre(e.target.value)}
+              />
+            </div>
+          </div>
+
           <div className="section-title">Cómo fue esta llamada</div>
           <div className="switches-llamada">
             <label className="sw"><input type="checkbox" checked={asistio} onChange={(e) => setAsistio(e.target.checked)} /> Asistió</label>
             <label className="sw"><input type="checkbox" checked={reagendada} onChange={(e) => setReagendada(e.target.checked)} /> Reagendada</label>
-            <label className="sw"><input type="checkbox" checked={cerro} onChange={(e) => setCerro(e.target.checked)} /> Cerró</label>
+            <label className="sw"><input type="checkbox" checked={cerro} onChange={(e) => {
+              const v = e.target.checked
+              setCerro(v)
+              // 🔴 prender «cerró» apaga «cobro anterior» — son excluyentes
+              if (v) setCobroAnterior(false)
+            }} /> Cerró</label>
           </div>
 
-          <div className="section-title">Plata</div>
-          <div className="form-grid">
-            <CampoDinero ancho="c6" nombre="revenue" etiqueta="Revenue contratado" valorCents={revenueCents}
-              onCambio={setRevenue} simbolo={simbolo}
-              pista="Lo que firmó en esta llamada. 0 si no cerró." />
-            <CampoDinero ancho="c6" nombre="cash" etiqueta="Cash collected" valorCents={cashCents} hero
-              onCambio={setCash} simbolo={simbolo}
-              pista={<>Solo lo que <b>entró en esta llamada</b>.</>} />
-          </div>
+          {!cerro && (
+            <div className="switches-llamada" style={{ marginTop: 6 }}>
+              <label className="sw"><input type="checkbox" checked={cobroAnterior} onChange={(e) => setCobroAnterior(e.target.checked)} /> Cobro de venta anterior</label>
+            </div>
+          )}
+
+          {(mostrarRevenue || mostrarCash) && (
+            <>
+              <div className="section-title">Plata</div>
+              <div className="form-grid">
+                {mostrarRevenue && (
+                  <CampoDinero ancho="c6" nombre="revenue" etiqueta="Revenue contratado" valorCents={revenueCents}
+                    onCambio={setRevenue} simbolo={simbolo}
+                    pista="Lo que firmó en esta llamada." />
+                )}
+                <CampoDinero ancho={mostrarRevenue ? 'c6' : 'c8'} nombre="cash" etiqueta="Cash collected"
+                  valorCents={cashCents} hero
+                  onCambio={setCash} simbolo={simbolo}
+                  pista={cerro
+                    ? <>Solo lo que <b>entró en esta llamada</b>.</>
+                    : <>Cobro que <b>entró hoy</b> de una venta anterior.</>} />
+              </div>
+            </>
+          )}
 
           <div className="form-grid">
             <div className="field c12 full">
@@ -177,7 +225,9 @@ export function PanelLlamada({
 
           <div className="form-actions">
             <span className="helper">Se guarda al enviar y aparece abajo al instante.</span>
-            <button className="btn-primary" onClick={guardar} disabled={guardando || !personaId} type="button">
+            <button className="btn-primary" onClick={guardar}
+              disabled={guardando || !personaId || leadNombre.trim().length < 2}
+              type="button">
               {guardando ? 'Guardando…' : 'Guardar llamada'}
             </button>
           </div>
@@ -211,6 +261,7 @@ export function PanelLlamada({
             {delDia.map((l, i) => (
               <div className="llamada-row" key={l.id}>
                 <span className="ll-n">#{i + 1}</span>
+                <span className="ll-lead">{l.leadNombre || '(sin nombre)'}</span>
                 <div className="ll-badges">
                   <span className={`pill ${l.asistio ? 'set' : 'no'}`}>{l.asistio ? 'asistió' : 'no asistió'}</span>
                   {l.reagendada && <span className="pill clo">reagendada</span>}

@@ -258,6 +258,7 @@ test('Fase D · una llamada agenda cuenta aunque no asista', () => {
     id: 'x', personaId: 'p', fecha: '2026-07-20',
     asistio: false, reagendada: true, cerro: false,
     revenueCents: 0, cashCents: 0, activa: true, nota: null,
+    leadNombre: 'Lead de prueba',
   }]
   const [a] = agregarLlamadas(l)
   assert.equal(a.llamadas, 1)

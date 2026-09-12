@@ -417,12 +417,17 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
    sigue el molde de .entry (Equipo) pero más apretado — se leen 4-6 filas
    sin scroll. */
 .llamadas-lista{display:flex;flex-direction:column;gap:8px;margin-top:6px}
-.llamada-row{display:grid;grid-template-columns:36px minmax(0,1fr) 90px 28px;
+/* 🔴 Fase D (sesion 2) · el renglon suma una columna «lead nombre» entre el
+   numero y los badges. Grid pasa a 5 columnas. En celular la del lead
+   quiere overflow ellipsis. */
+.llamada-row{display:grid;grid-template-columns:36px minmax(0,1.4fr) minmax(0,1fr) 90px 28px;
   align-items:center;gap:10px;padding:10px 4px;
   border-bottom:1px solid var(--line)}
 .llamada-row:last-child{border-bottom:0}
 .ll-n{font-family:var(--display);font-weight:800;font-size:12px;color:var(--faint);
   text-align:center}
+.ll-lead{font-size:12.5px;font-weight:600;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ll-badges{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
 .ll-cash{text-align:right;font-family:var(--display);font-weight:800;font-size:14.5px;
   letter-spacing:-.3px;color:var(--m7)}
@@ -653,6 +658,16 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   /* 🔴 Fase A · con AOV el pie tiene 4 piezas: en celular se apilan 2×2 para
      que no salgan cuatro numeros de 11px en una linea. */
   .plata-pie{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:12px}
+  /* Fase D · en celular la fila de llamadas colapsa: el nombre del lead
+     se lleva el ancho, los badges bajan y el cash + boton borrar quedan
+     al final del renglon. */
+  .llamada-row{grid-template-columns:28px minmax(0,1fr) 70px 24px;
+    grid-template-areas:'n l l c' 'n b b b';row-gap:4px;column-gap:8px}
+  .llamada-row .ll-n{grid-area:n}
+  .llamada-row .ll-lead{grid-area:l}
+  .llamada-row .ll-badges{grid-area:b}
+  .llamada-row .ll-cash{grid-area:c}
+  .llamada-row .del{grid-column:4;grid-row:1}
   .plata-pie > div{padding-top:11px}
   .plata-pie b{font-size:15px}
   .tasas{padding:2px 15px}
@@ -716,6 +731,13 @@ body[data-view="mobile"] .banda{margin-bottom:12px}
 body[data-view="mobile"] .plata{padding:16px}
 body[data-view="mobile"] .plata-v{font-size:32px;letter-spacing:-1.3px}
 body[data-view="mobile"] .plata-pie{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:12px}
+body[data-view="mobile"] .llamada-row{grid-template-columns:28px minmax(0,1fr) 70px 24px;
+    grid-template-areas:'n l l c' 'n b b b';row-gap:4px;column-gap:8px}
+body[data-view="mobile"] .llamada-row .ll-n{grid-area:n}
+body[data-view="mobile"] .llamada-row .ll-lead{grid-area:l}
+body[data-view="mobile"] .llamada-row .ll-badges{grid-area:b}
+body[data-view="mobile"] .llamada-row .ll-cash{grid-area:c}
+body[data-view="mobile"] .llamada-row .del{grid-column:4;grid-row:1}
 body[data-view="mobile"] .plata-pie > div{padding-top:11px}
 body[data-view="mobile"] .plata-pie b{font-size:15px}
 body[data-view="mobile"] .tasas{padding:2px 15px}
@@ -1195,17 +1217,27 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
             <div class="confirma-persona"><b>Andrea Ríos</b></div>
           </div>
         </div>
+        <!-- 🔴 Fase D (sesion 2) · nombre del lead obligatorio, arriba de los
+             switches. La lista del dia lo usa para reconocer «esa» llamada. -->
+        <div class="section-title">Con quién</div>
+        <div class="form-grid">
+          <div class="field full c12"><label>Nombre del lead <span class="req">*</span></label>
+            <input type="text" value="Sofía Ramírez" maxlength="80" placeholder="Nombre y apellido del lead"></div>
+        </div>
         <div class="section-title">Cómo fue esta llamada</div>
         <div class="switches-llamada">
           <label class="sw"><input type="checkbox" checked> Asistió</label>
           <label class="sw"><input type="checkbox"> Reagendada</label>
           <label class="sw"><input type="checkbox" checked> Cerró</label>
         </div>
+        <!-- 🔴 Fase D · el checkbox «Cobro anterior» aparece solo cuando
+             «Cerró» esta apagado. Cuando esta encendido (este ejemplo), esta
+             fila no se renderiza. -->
         <div class="section-title">Plata</div>
         <div class="form-grid">
           <div class="field c6"><label>Revenue contratado <span class="req">*</span></label>
             <div class="money-inp"><span class="cur">$</span><input class="num" value="3,000" inputmode="decimal"></div>
-            <span class="hint">Lo que firmó en esta llamada. 0 si no cerró.</span></div>
+            <span class="hint">Lo que firmó en esta llamada.</span></div>
           <div class="field c6"><label>Cash collected <span class="req">*</span></label>
             <div class="money-inp hero"><span class="cur">$</span><input class="num" value="1,500" inputmode="decimal"></div>
             <span class="hint">Solo lo que <b>entró en esta llamada</b>.</span></div>
@@ -1240,6 +1272,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
       <div class="llamadas-lista">
         <div class="llamada-row">
           <span class="ll-n">#1</span>
+          <span class="ll-lead">Sofía Ramírez</span>
           <div class="ll-badges">
             <span class="pill set">asistió</span>
             <span class="pill amb">cerró</span>
@@ -1249,6 +1282,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         </div>
         <div class="llamada-row">
           <span class="ll-n">#2</span>
+          <span class="ll-lead">Mateo López</span>
           <div class="ll-badges">
             <span class="pill set">asistió</span>
             <span class="pill clo">reagendada</span>
@@ -1258,6 +1292,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         </div>
         <div class="llamada-row">
           <span class="ll-n">#3</span>
+          <span class="ll-lead">Valentina Pérez</span>
           <div class="ll-badges">
             <span class="pill no">no asistió</span>
           </div>
@@ -1266,6 +1301,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         </div>
         <div class="llamada-row">
           <span class="ll-n">#4</span>
+          <span class="ll-lead">Bruno Álvarez</span>
           <div class="ll-badges">
             <span class="pill set">asistió</span>
             <span class="pill amb">cerró</span>

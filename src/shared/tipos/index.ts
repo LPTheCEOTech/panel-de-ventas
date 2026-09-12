@@ -58,6 +58,10 @@ export interface Llamada {
   cashCents: number
   nota?: string | null
   activa: boolean
+  /** 🔴 Fase D (sesion 2) · nombre del lead que atendió la llamada.
+   *  Obligatorio en el form (Zod exige >= 2). En filas viejas puede ser
+   *  '' hasta que se editen (el front lo pinta como «(sin nombre)»). */
+  leadNombre: string
 }
 
 /**

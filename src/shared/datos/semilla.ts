@@ -119,6 +119,34 @@ export const REPORTES_CLOSER_DEMO: ReporteCloser[] = Object.entries(CLOSERS).fla
  * cargar la semilla. Correr `npm run semilla -- cargar` dos veces no genera
  * duplicados porque el upsert por PK.
  */
+/**
+ * 🔴 Fase D (sesion 2) · nombres ficticios rioplatenses para que la lista
+ * del día se vea como una lista de leads REAL, no como `Lead demo 1/96`.
+ *
+ * Deterministas: dos corridas de la semilla producen los mismos nombres.
+ * La selección es `LEAD_NOMBRES[(hash de fecha+persona+n) % length]` —
+ * hash simple para que dos filas seguidas casi nunca repitan.
+ *
+ * 🔴 CERO nombres de contactos reales de Leandro. Son inventados obvios.
+ */
+const LEAD_NOMBRES = [
+  'Sofía Ramírez', 'Mateo López', 'Valentina Pérez', 'Bruno Álvarez',
+  'Camila Vega', 'Nicolás Aguirre', 'Milena Ortiz', 'Julián Cabrera',
+  'Rocío Domínguez', 'Ezequiel Herrera', 'Luciana Molina', 'Tomás Ríos',
+  'Agustina Vera', 'Facundo Peralta', 'Martina Sosa', 'Ignacio Correa',
+  'Bianca Suárez', 'Emilio Navarro', 'Delfina Castro', 'Santino Reyes',
+  'Renata Silva', 'Joaquín Espinoza', 'Isabella Márquez', 'Benjamín Roldán',
+  'Antonella Quiroga', 'Lautaro Miranda', 'Julieta Salinas', 'Iván Farías',
+  'Malena Ledesma', 'Franco Palacios',
+]
+
+function hashLead(fecha: string, personaId: string, n: number): number {
+  let h = 2166136261
+  const s = `${fecha}${personaId}${n}`
+  for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) }
+  return (h >>> 0) % LEAD_NOMBRES.length
+}
+
 export const LLAMADAS_DEMO: Llamada[] = Object.entries(CLOSERS).flatMap(
   ([personaId, [llamadas, asistieron, reagendadas, cierres, cashDia]]) =>
     SEMANA_ORO.flatMap((fecha, i) => {
@@ -153,6 +181,7 @@ export const LLAMADAS_DEMO: Llamada[] = Object.entries(CLOSERS).flatMap(
           cashCents: cerro ? cashPorCierre[n] : (esCobroSinCierre ? cashCents : 0),
           nota: null,
           activa: true,
+          leadNombre: LEAD_NOMBRES[hashLead(fecha, personaId, n)],
         })
       }
       return filas

@@ -119,6 +119,7 @@ const lResp = await sb.from('llamadas').insert(
     asistio: l.asistio, reagendada: l.reagendada, cerro: l.cerro,
     revenue_cents: l.revenueCents, cash_cents: l.cashCents,
     nota: l.nota ?? null, activa: l.activa, es_demo: true,
+    lead_nombre: l.leadNombre,
   }))
 )
 if (lResp.error) {
