@@ -78,7 +78,7 @@ export function Plata({ m, simbolo }: { m: MetricasConCosto; simbolo: string }) 
  */
 export function Costos({ m, simbolo }: { m: MetricasConCosto; simbolo: string }) {
   return (
-    <div className="card tasas">
+    <div className="card tasas panel-costos banda">
       <Costo_ etiqueta="Costo de adquisición (CAC)"
         valor={m.cac} simbolo={simbolo}
         contexto={<><b>{dinero(m.gastoCents, simbolo)}</b> ÷ <b>{numero(m.cierres)}</b> {m.cierres === 1 ? 'cliente' : 'clientes'}</>} />

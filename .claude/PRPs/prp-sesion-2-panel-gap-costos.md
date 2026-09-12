@@ -297,3 +297,4 @@ Y **la foto**:
 | Fecha | Nota |
 |---|---|
 | 2026-09-11 | PRP generado. Estado: PENDIENTE de aprobación de Jack. |
+| 2026-09-11 | **Ejecutado. Opción C (`.banda`).** Mockup: nueva regla `.banda{margin-bottom:16px}` + `:last-child{margin-bottom:0}` + gemela mobile `12px`. `<div class="card tasas panel-costos">` pasa a `panel-costos banda`. Componente `<Costos>` en piezas.tsx gana la clase igual. Porteo limpio (0 huérfanas, 265 reglas). Gate local: typecheck, 37/37 tests, lint, sin-cliente (65 archivos), build (12/12) — todo verde. |

@@ -244,6 +244,15 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .grid2:last-child{margin-bottom:0}
 
+/* 🔴 Fase E · una tarjeta suelta que necesita el ritmo de arriba a abajo del
+   panel (.resumen → .banda → .grid2 → .grid2). Sin esto, una tarjeta que no
+   vive dentro de .grid2 (ej. .panel-costos) queda sin margen inferior y el
+   hueco hacia la siguiente banda se colapsa. `:last-child` protege de un
+   margin colgado al final. */
+.banda{margin-bottom:16px}
+
+.banda:last-child{margin-bottom:0}
+
 .note{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-inner);
   padding:10px 12px;font-size:12px;color:var(--muted);margin-top:14px;display:flex;gap:9px;
   align-items:flex-start;line-height:1.5}
@@ -812,6 +821,7 @@ button,input,select,textarea{font:inherit;color:inherit}
   .card{padding:14px 15px}
   .grid2{gap:12px;margin-bottom:12px}
   .resumen{gap:12px;margin-bottom:12px}
+  .banda{margin-bottom:12px}
   .plata{padding:16px}
   .plata-v{font-size:32px;letter-spacing:-1.3px}
   /* 🔴 Fase A · con AOV el pie tiene 4 piezas: en celular se apilan 2×2 para
