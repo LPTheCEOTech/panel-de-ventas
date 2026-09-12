@@ -52,11 +52,11 @@ Decisiones que **ya tomó Jack** y no se re-preguntan:
 
 | # | PRP | Objetivo (1 línea) | Estado |
 |---|---|---|---|
-| **E** | [`prp-sesion-2-panel-gap-costos.md`](./prp-sesion-2-panel-gap-costos.md) | Arreglar la separación entre `.panel-costos` y las bandas de arriba/abajo (fix en mockup + porteo). | ⏳ PENDIENTE |
-| **A** | [`prp-sesion-2-equipo-unificado.md`](./prp-sesion-2-equipo-unificado.md) | Un solo formulario en Equipo: nombre + rol + correo → siempre manda invitación. | ⏳ PENDIENTE |
-| **B** | [`prp-sesion-2-favicon-y-titulo.md`](./prp-sesion-2-favicon-y-titulo.md) | Favicon dinámico = logo (o SVG con iniciales) + `<title>` = nombre del panel. | ⏳ PENDIENTE |
-| **C** | [`prp-sesion-2-color-picker-visual.md`](./prp-sesion-2-color-picker-visual.md) | Popover visual (sat/brillo + hue + hex) reemplazando el input hex de Ajustes. | ⏳ PENDIENTE |
-| **D** | [`prp-sesion-2-nombre-lead-y-cerro.md`](./prp-sesion-2-nombre-lead-y-cerro.md) | Campo «Nombre del lead» + Revenue/Cash condicionales al switch «Cerró» (con excepción para cobro anterior). | ⏳ PENDIENTE |
+| **E** | [`prp-sesion-2-panel-gap-costos.md`](./prp-sesion-2-panel-gap-costos.md) | Arreglar la separación entre `.panel-costos` y las bandas de arriba/abajo (fix en mockup + porteo). | ✅ HECHA |
+| **A** | [`prp-sesion-2-equipo-unificado.md`](./prp-sesion-2-equipo-unificado.md) | Un solo formulario en Equipo: nombre + rol + correo → siempre manda invitación. | ✅ HECHA |
+| **B** | [`prp-sesion-2-favicon-y-titulo.md`](./prp-sesion-2-favicon-y-titulo.md) | Favicon dinámico = logo (o SVG con iniciales) + `<title>` = nombre del panel. | ✅ HECHA |
+| **C** | [`prp-sesion-2-color-picker-visual.md`](./prp-sesion-2-color-picker-visual.md) | Popover visual (sat/brillo + hue + hex) reemplazando el input hex de Ajustes. | ✅ HECHA |
+| **D** | [`prp-sesion-2-nombre-lead-y-cerro.md`](./prp-sesion-2-nombre-lead-y-cerro.md) | Campo «Nombre del lead» + Revenue/Cash condicionales al switch «Cerró» (con excepción para cobro anterior). | ✅ HECHA |
 
 > A medida que cada hijo se cierre, se actualiza su estado a **✅ HECHA** y se
 > escribe una línea en la bitácora de este archivo.
@@ -199,3 +199,8 @@ Nunca se edita un `.sql` que ya se corrió contra la base de Leandro.
 | Fecha | Fase | Nota |
 |---|---|---|
 | 2026-09-11 | — | PRP maestro y 5 hijos generados. Estado: PENDIENTE de aprobación de Jack. |
+| 2026-09-11 | E | ✅ Hecha. Clase `.banda{margin-bottom:16px}` (12px mobile), `<Costos>` gana `panel-costos banda`. Sin regla nueva a mano en globals.css. |
+| 2026-09-11 | A | ✅ Hecha. `POST /api/equipo` acepta `{nombre, rol, correo}` y hace `inviteUserByEmail + crearPersona + crearUsuario('miembro')`. Endpoint `/api/equipo/invitar` eliminado. Card única en Equipo. Aprendizaje: borrar route requiere `rm -rf .next` para tipos de Next 16. |
+| 2026-09-11 | B | ✅ Hecha. Endpoint `/api/favicon` sirve SVG dinámico con `iniciales` sobre `marca`, cache 60 s. `layout.tsx` con `icons` en `generateMetadata`. Logo del bucket sigue solo en topbar. |
+| 2026-09-11 | C | ✅ Hecha. `ColorPicker` custom con Gradiente + Hue (Pointer Events, teclado con flechas + shift). `color-utils.ts` con hex/hsv + 4 tests. Aprendizaje: `setState` en `useEffect` para sincronizar dispara `react-hooks/set-state-in-effect`; fix con handler `aplicarHsv()`. |
+| 2026-09-11 | D | ✅ Hecha. Migración 007 (`lead_nombre NOT NULL DEFAULT ''`), aplicada contra base real. Tipo, capa, semilla (30 nombres ficticios rioplatenses, hash determinista), endpoint (Zod exige >=2), form condicional (`mostrarRevenue = cerro`, `mostrarCash = cerro \|\| cobroAnterior`), checkbox «Cobro de venta anterior» excluyente con «Cerró», lista muestra `leadNombre`. Ejecutado contra base real: `verificar` 27/27 verde. |
