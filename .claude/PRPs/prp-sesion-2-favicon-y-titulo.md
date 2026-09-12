@@ -363,3 +363,4 @@ Total: ~4-6 fotos. Agrupables por navegador.
 | Fecha | Nota |
 |---|---|
 | 2026-09-11 | PRP generado. Estado: PENDIENTE de aprobación de Jack. |
+| 2026-09-11 | **Ejecutado. Opción C (SVG dinámico siempre)** — el logo del bucket sigue solo en el topbar. Endpoint `/api/favicon/route.ts` (nombre sin `.svg` en el path para evitar el dot en carpeta): SVG 192×192 con `configuracion.iniciales` sobre `configuracion.marca`. Contraste calculado con `hexAHsl` (mismo umbral que `sobreMarca` de `marca.ts`). Cache 60 s. Escape de caracteres XML por si acaso. Fallback sin BD → `PV` verde. Layout raíz: `generateMetadata` gana `icons: { icon: [{ url: '/api/favicon', type: 'image/svg+xml' }] }`. Gate local: typecheck, 37/37 tests, lint, sin-cliente (65), build (11/11). |

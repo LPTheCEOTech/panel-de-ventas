@@ -7,11 +7,20 @@ import './globals.css'
 /**
  * El título sale de la BASE, no de una constante: es el panel del negocio de
  * quien lo instaló, y en la pestaña del navegador tiene que decir su nombre.
+ *
+ * 🔴 Fase B (sesion 2) · favicon dinámico. El endpoint `/api/favicon` sirve
+ * un SVG con las iniciales sobre el color de marca. Sin dependencia del
+ * bucket de Storage: siempre carga. El logo del negocio vive en el topbar
+ * (Fase B pasada), no en la pestaña.
  */
 export async function generateMetadata(): Promise<Metadata> {
   try {
     const { nombreNegocio } = await datos().leerConfiguracion()
-    return { title: nombreNegocio, description: 'Panel de métricas de ventas' }
+    return {
+      title: nombreNegocio,
+      description: 'Panel de métricas de ventas',
+      icons: { icon: [{ url: '/api/favicon', type: 'image/svg+xml' }] },
+    }
   } catch {
     // sin base todavía (recién clonado), el layout igual tiene que renderizar
     return { title: 'Panel de Ventas' }
