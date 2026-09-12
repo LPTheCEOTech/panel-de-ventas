@@ -10,12 +10,16 @@ import type { Persona, Rol } from '@/shared/tipos'
 const ETIQUETA: Record<Rol, string> = { setter: 'Setter', closer: 'Closer', ambos: 'Setter y closer' }
 const CLASE: Record<Rol, string> = { setter: 'set', closer: 'clo', ambos: 'amb' }
 
+const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export function ListaEquipo({
   personas, resumen,
 }: { personas: Persona[]; resumen: Record<string, { valor: string; unidad: string }> }) {
   const router = useRouter()
   const [nombre, setNombre] = useState('')
   const [rol, setRol] = useState<Rol>('setter')
+  const [correo, setCorreo] = useState('')
+  const [aviso, setAviso] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
 
@@ -44,20 +48,15 @@ export function ListaEquipo({
     }
   }
 
+  // 🔴 Fase A (sesion 2) · un solo flow: agregar SIEMPRE manda invitación.
+  // El endpoint crea la persona (o la reusa), manda el correo por Supabase
+  // Auth y vincula la fila `usuarios` con rol miembro.
   async function agregar() {
-    if (await pedir('/api/equipo', 'POST', { nombre, rol })) setNombre('')
-  }
-
-  // 🔴 Fase C · invitar por correo: crea el auth user + la persona (si no
-  // existe) + la fila `usuarios` con rol miembro, y Supabase manda el correo.
-  const [correoInv, setCorreoInv] = useState('')
-  const [invOk, setInvOk] = useState<string | null>(null)
-  async function invitar() {
-    setInvOk(null)
-    if (await pedir('/api/equipo/invitar', 'POST', { correo: correoInv, nombre, rol })) {
-      setInvOk(`Invitación enviada a ${correoInv}. Cuando acepte, ya queda vinculado a ${nombre}.`)
-      setCorreoInv('')
+    setAviso(null)
+    if (await pedir('/api/equipo', 'POST', { nombre, rol, correo })) {
+      setAviso(`Invitación enviada a ${correo}. Cuando acepte, queda vinculada a ${nombre}.`)
       setNombre('')
+      setCorreo('')
     }
   }
 
@@ -126,7 +125,7 @@ export function ListaEquipo({
     <div className="lado">
       <div className="card">
         <div className="card-head">
-          <div><h3>Agregar a alguien</h3><p>aparece en los formularios al instante</p></div>
+          <div><h3>Agregar al equipo</h3><p>se envía un correo con el link para elegir contraseña</p></div>
         </div>
 
         <div className="addrow">
@@ -135,7 +134,6 @@ export function ListaEquipo({
             <input
               id="e-nombre" value={nombre} placeholder="Nombre y apellido" maxLength={80}
               onChange={(e) => setNombre(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter' && nombre.trim().length >= 2) agregar() }}
             />
           </div>
           <div className="field">
@@ -146,53 +144,34 @@ export function ListaEquipo({
               <option value="ambos">Setter y closer</option>
             </select>
           </div>
-          <button className="btn-primary" onClick={agregar} disabled={ocupado || nombre.trim().length < 2} type="button">
-            Agregar
+          <div className="field">
+            <label htmlFor="e-correo">Correo</label>
+            <input
+              id="e-correo" type="email" value={correo} placeholder="persona@ejemplo.com" maxLength={254}
+              onChange={(e) => setCorreo(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && nombre.trim().length >= 2 && CORREO_RE.test(correo.trim())) agregar()
+              }}
+            />
+          </div>
+          <button
+            className="btn-primary" onClick={agregar} type="button"
+            disabled={ocupado || nombre.trim().length < 2 || !CORREO_RE.test(correo.trim())}
+          >
+            Agregar e invitar
           </button>
         </div>
 
+        {aviso && <div className="note"><IconoInfo /><span>{aviso}</span></div>}
         {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
 
         <div className="note">
           <IconoInfo />
           <span>
-            Dar de baja a alguien <b>no borra su historial</b>: deja de aparecer en los
+            Al guardar, se manda el correo con el link para elegir contraseña. Si ya
+            existe una persona con ese nombre, la reutiliza; si no, la crea. Dar de
+            baja a alguien <b>no borra su historial</b>: deja de aparecer en los
             formularios, pero sus números siguen contando en las semanas que ya trabajó.
-          </span>
-        </div>
-      </div>
-
-      {/* 🔴 Fase C · misma tarjeta lateral: invitar por correo. Reusa nombre +
-          rol de arriba y suma un correo. Cuando el invitado acepte y elija
-          contraseña, entra directamente a su panel filtrado. */}
-      <div className="card">
-        <div className="card-head">
-          <div><h3>Invitar por correo</h3><p>se envía el correo con el link para elegir contraseña</p></div>
-        </div>
-
-        <div className="addrow">
-          <div className="field">
-            <label htmlFor="e-correo">Correo</label>
-            <input
-              id="e-correo" type="email" value={correoInv} placeholder="persona@ejemplo.com" maxLength={254}
-              onChange={(e) => setCorreoInv(e.target.value)}
-            />
-          </div>
-          <button
-            className="btn-primary" onClick={invitar} type="button"
-            disabled={ocupado || correoInv.trim().length < 5 || nombre.trim().length < 2}
-          >
-            Invitar
-          </button>
-        </div>
-
-        {invOk && <div className="note"><IconoInfo /><span>{invOk}</span></div>}
-
-        <div className="note">
-          <IconoInfo />
-          <span>
-            Reusa <b>Nombre</b> y <b>Rol</b> de arriba. Si ya existe una
-            persona con ese nombre, la reutiliza; si no, la crea.
           </span>
         </div>
       </div>

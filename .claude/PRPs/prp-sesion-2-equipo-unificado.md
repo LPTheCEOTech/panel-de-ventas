@@ -298,3 +298,4 @@ npm run verificar
 | Fecha | Nota |
 |---|---|
 | 2026-09-11 | PRP generado. Estado: PENDIENTE de aprobación de Jack. |
+| 2026-09-11 | **Ejecutado.** `POST /api/equipo` refactor completo: acepta `{nombre, rol, correo}`, hace `inviteUserByEmail` + reusar/crear persona + `crearUsuario(miembro)`. Endpoint `/api/equipo/invitar` **eliminado** (Opción A del §5.2). `lista.tsx` con card única «Agregar al equipo» (Nombre + Rol + Correo + botón «Agregar e invitar»), sin la segunda card. Mockup actualizado. Se **difirió** mostrar correo por persona en la lista (Opción C de §5.5 queda para otro PRP) — el aviso post-alta ya lo menciona. **Aprendizaje**: al borrar una API route hay que limpiar `.next/` (Next 16 mantiene tipos generados en `.next/types/validator.ts` apuntando al archivo viejo → typecheck falla con TS2307). Gate local: typecheck, 37/37 tests, lint, sin-cliente (64), build (11/11) — verde tras `rm -rf .next`. |
