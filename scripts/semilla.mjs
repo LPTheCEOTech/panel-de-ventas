@@ -105,18 +105,21 @@ const { error: errC } = await sb.from('reportes_closer').upsert(
 if (errC) morir(`reportes_closer: ${errC.message}`)
 console.log(`✅ reportes_closer: ${REPORTES_CLOSER_DEMO.length} (legacy)`)
 
-// 🔴 Fase D · las 96 llamadas granulares. El id es determinista
-// (`demo-<closer>-<fecha>-<n>`), así que un upsert por PK es idempotente:
-// re-correr semilla no duplica. Si la tabla no existe (migración 006 no
-// aplicada), se avisa pero no se muere.
-const lResp = await sb.from('llamadas').upsert(
+// 🔴 Fase D · las 96 llamadas granulares. El id de la tabla es `uuid` con
+// default `gen_random_uuid()`, así que no le mandamos el nuestro. Para que
+// `cargar` sea idempotente, primero borramos las demo existentes y luego
+// insertamos: correrlo dos veces deja siempre 96 filas de demo, ni una más.
+const bResp = await sb.from('llamadas').delete().eq('es_demo', true)
+if (bResp.error && !/does not exist/i.test(bResp.error.message)) {
+  morir(`llamadas (limpieza previa): ${bResp.error.message}`)
+}
+const lResp = await sb.from('llamadas').insert(
   LLAMADAS_DEMO.map((l) => ({
-    id: l.id, persona_id: idDe(l.personaId), fecha: l.fecha,
+    persona_id: idDe(l.personaId), fecha: l.fecha,
     asistio: l.asistio, reagendada: l.reagendada, cerro: l.cerro,
     revenue_cents: l.revenueCents, cash_cents: l.cashCents,
     nota: l.nota ?? null, activa: l.activa, es_demo: true,
-  })),
-  { onConflict: 'id' }
+  }))
 )
 if (lResp.error) {
   if (/does not exist/i.test(lResp.error.message)) {
