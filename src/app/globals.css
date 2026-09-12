@@ -709,9 +709,56 @@ button,input,select,textarea{font:inherit;color:inherit}
 .color-inp .muestra{width:20px;height:20px;border-radius:6px;flex-shrink:0;
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
 
+/* 🔴 Fase C (sesion 2) · la muestra pasa a ser un boton clickeable que abre
+   el popover del picker. Sin fondo, sin borde extra: sigue viendose como
+   antes pero indica interaccion con el cursor. */
+.color-inp .muestra.clic{cursor:pointer;background:none;border:0;padding:0}
+
+.color-inp .muestra.clic:focus-visible{outline:2px solid var(--m5);outline-offset:2px}
+
 .color-inp input{border:0!important;background:none!important;padding:9px 11px 9px 2px!important}
 
 .color-inp:focus-within{border-color:var(--m5);box-shadow:var(--anillo)}
+
+/* 🔴 Fase C (sesion 2) · popover del picker de color. Se ancla debajo del
+   .color-inp con position:absolute. z-index alto para pisar la barra de
+   guardar en la parte de abajo. */
+.picker-pop{position:absolute;z-index:20;top:calc(100% + 6px);left:0;
+  width:248px;padding:12px;border-radius:12px;background:var(--card);
+  border:1px solid var(--border);box-shadow:var(--sombra-alta);
+  display:flex;flex-direction:column;gap:10px}
+
+.picker-grad{position:relative;height:160px;border-radius:8px;cursor:crosshair;
+  touch-action:none;user-select:none}
+
+.picker-grad:focus-visible{outline:2px solid var(--m5);outline-offset:2px}
+
+.picker-grad-cursor{position:absolute;width:14px;height:14px;border:2px solid #fff;
+  border-radius:50%;pointer-events:none;transform:translate(-50%,-50%);
+  box-shadow:0 0 0 1px rgba(0,0,0,.4)}
+
+.picker-hue{position:relative;height:12px;border-radius:6px;cursor:pointer;
+  touch-action:none;user-select:none;
+  background:linear-gradient(to right,
+    #f00 0%,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00 100%)}
+
+.picker-hue:focus-visible{outline:2px solid var(--m5);outline-offset:2px}
+
+.picker-hue-cursor{position:absolute;top:-3px;width:4px;height:18px;background:#fff;
+  border:1px solid rgba(0,0,0,.6);border-radius:2px;
+  pointer-events:none;transform:translateX(-50%)}
+
+.picker-foot{display:flex;align-items:center;gap:10px}
+
+.picker-foot .muestra{width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+
+.picker-hex{flex:1;padding:8px 10px;font-size:12.5px;
+  font-family:var(--display);letter-spacing:.5px;text-transform:uppercase;
+  border:1px solid var(--border);border-radius:6px;background:var(--hueco);
+  color:var(--ink)}
+
+.picker-hex:focus{outline:0;border-color:var(--m5);box-shadow:var(--anillo)}
 
 .sw{display:inline-flex;align-items:center;gap:9px;cursor:pointer;font-size:12.5px;color:var(--muted)}
 
@@ -852,6 +899,8 @@ button,input,select,textarea{font:inherit;color:inherit}
   .entry .en small.solo-chico{display:block}
   .entry .hizo{width:auto;flex:0 1 auto;font-size:11.5px}
   .cfgrow{grid-template-columns:1fr;gap:8px}
+  /* Fase C · popover ocupa el ancho del contenedor en celular */
+  .picker-pop{width:100%;left:0;right:0}
   .barra-guardar{flex-wrap:wrap}
   .barra-guardar .helper{width:100%;order:3;margin-right:0}
   .barra-guardar .btn-primary{width:100%}

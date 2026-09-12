@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 
 import { IconoAviso } from '@/shared/chasis/iconos'
 import type { Configuracion } from '@/shared/tipos'
+import { ColorPicker } from './color-picker'
 
 const MONEDAS: [string, string, string][] = [
   ['USD', '$', 'USD — dólar ($)'],
@@ -94,14 +95,10 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
           <input value={c.usuarioNombre} maxLength={60} onChange={(e) => set('usuarioNombre', e.target.value)} />
         </Fila>
         <Fila titulo="Color de tu marca" explicacion="Todo el color del panel sale de acá. Cambiálo y cambia todo.">
-          <span className="color-inp">
-            <span className="muestra" style={colorValido ? { background: c.marca } : undefined} />
-            <input
-              value={c.marca} maxLength={7} placeholder="#00D97E" spellCheck={false}
-              aria-label="Color de tu marca en hexadecimal"
-              onChange={(e) => set('marca', e.target.value)}
-            />
-          </span>
+          <SelectorColor
+            valor={c.marca} colorValido={colorValido}
+            onCambio={(hex) => set('marca', hex)}
+          />
         </Fila>
       </div>
 
@@ -152,6 +149,55 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
       </button>
     </div>
     </>
+  )
+}
+
+/**
+ * 🔴 Fase C (sesion 2) · el input hex de siempre + un trigger visual que abre
+ * el popover del ColorPicker. Al abrir, guardamos el valor previo en un ref
+ * para poder revertir con Esc. Al aplicar (Enter / click afuera), queda el
+ * cambio en el estado del padre (que dispara el repintado y espera al botón
+ * "Guardar ajustes" para persistir).
+ */
+function SelectorColor({
+  valor, colorValido, onCambio,
+}: {
+  valor: string
+  colorValido: boolean
+  onCambio: (hex: string) => void
+}) {
+  const [abierto, setAbierto] = useState(false)
+  const previo = useRef(valor)
+
+  function abrir() {
+    previo.current = valor
+    setAbierto(true)
+  }
+
+  return (
+    <span className="color-inp" style={{ position: 'relative' }}>
+      <button
+        type="button" className="muestra clic"
+        style={colorValido ? { background: valor } : undefined}
+        onClick={abrir}
+        aria-label="Elegir color de tu marca"
+      />
+      <input
+        value={valor} maxLength={7} placeholder="#00D97E" spellCheck={false}
+        aria-label="Color de tu marca en hexadecimal"
+        onChange={(e) => onCambio(e.target.value)}
+      />
+      {abierto && (
+        <ColorPicker
+          valor={colorValido ? valor : '#00D97E'}
+          onCambio={onCambio}
+          onCerrar={(aplicar) => {
+            if (!aplicar) onCambio(previo.current)
+            setAbierto(false)
+          }}
+        />
+      )}
+    </span>
   )
 }
 
