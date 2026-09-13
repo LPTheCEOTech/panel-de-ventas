@@ -169,13 +169,24 @@ function SelectorColor({
   const [abierto, setAbierto] = useState(false)
   const previo = useRef(valor)
 
+  // 🔴 El picker se abre desde la muestra Y desde el input. Guardamos el
+  // valor previo solo cuando la transición es cerrado→abierto (si el picker
+  // ya estaba abierto y el user vuelve a hacer focus, no queremos pisar el
+  // "valor con el que se abrió" — Esc dejaría de revertir bien).
   function abrir() {
-    previo.current = valor
+    if (!abierto) previo.current = valor
     setAbierto(true)
   }
 
   return (
-    <span className="color-inp" style={{ position: 'relative' }}>
+    /* 🔴 stopPropagation del mousedown del contenedor: el picker cierra cuando
+       hay un mousedown FUERA del popover, pero click en el input externo
+       cae fuera del popover y adentro del contenedor. Sin esto se cerraba
+       y reabría en el mismo click (parpadeo feo). */
+    <span
+      className="color-inp" style={{ position: 'relative' }}
+      onMouseDown={(e) => { if (abierto) e.stopPropagation() }}
+    >
       <button
         type="button" className="muestra clic"
         style={colorValido ? { background: valor } : undefined}
@@ -186,6 +197,8 @@ function SelectorColor({
         value={valor} maxLength={7} placeholder="#00D97E" spellCheck={false}
         aria-label="Color de tu marca en hexadecimal"
         onChange={(e) => onCambio(e.target.value)}
+        onFocus={abrir}
+        onClick={abrir}
       />
       {abierto && (
         <ColorPicker
