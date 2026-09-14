@@ -1,98 +1,176 @@
-# Panel de Ventas — LP The CEO
+# Panel de Ventas — contexto específico
 
-Panel de métricas de ventas donde **toda la data se carga a mano**, con dos formularios de fin de
-día (setter y closer). El panel calcula las tasas, el embudo, el dinero y los rankings.
+> Este archivo lo lee tu Claude (o Cursor) para entender la app antes de tocar algo. Está pensado para el alumno que clona esta plantilla — no para el desarrollo original.
+>
+> Si sos el desarrollador original: mirá `CLAUDE.md` (doctrina de la fábrica) y los PRPs en `.claude/PRPs/`.
 
-⚠️ **Esta app NO tiene nada que ver con la app de anuncios** (`LP-Command-Center`). Ese proyecto
-quedó descartado. Acá no hay Meta Ads, ni GHL, ni integraciones de ningún tipo.
+## Qué es
 
-## Estado
+Panel de métricas de ventas donde **toda la data se carga a mano**, con:
+- Un formulario diario para setters (conversaciones + agendas)
+- Un formulario POR llamada para closers (con nombre del lead + condicionales de plata)
+- Un formulario diario para el gasto de captación (solo admin)
+- Un panel que calcula tasas, embudo, CAC, AOV, ticket promedio, rankings y cash por día
 
-Construida, verificada contra Postgres real y desplegada. El mockup va por **PAPEL v2**: el
-rediseño de las cinco pantallas está hecho y pasado por el gate (foto en 1440 y 390, claro y
-oscuro). Lo que sigue es lo que diga Jack mirándolo.
+Multiusuario con dos roles: **admin** ve y toca todo; **miembro** ve solo lo suyo, sin ajustes ni gasto ni ranking.
 
-| | |
-|---|---|
-| Producción | https://panel-de-ventas-kappa.vercel.app (cuenta de Leandro) |
-| Supabase | `fjorfclimdrtcvijlvls` · us-west-2 · **con la semilla de prueba cargada** |
-| Login | `jackmartinezglez@gmail.com` — contraseña en `.login-password` |
-| Dev | `npm run dev` → http://localhost:3110 |
-| Spec visual | `MOCKUP-APROBADO.html` — **es el spec literal, no una referencia** |
-| PRP | `.claude/PRPs/prp-panel-de-ventas-v1.md` |
-| Memoria | `.claude/memory/MEMORY.md` — leerlo al empezar |
+**Cero integraciones. Cero data del negocio en el código.** Todo lo que hace que el panel sea de un negocio y no de otro vive en la tabla `configuracion` (nombre, iniciales, color, moneda, zona, logo).
 
-## 🔴 Las reglas que no se negocian
+## Estado del código (al día de escribir esto)
 
-1. **El CSS NO se edita a mano.** `src/app/globals.css` lo GENERA `scripts/portar-css.py` desde
-   `MOCKUP-APROBADO.html`. Para cambiar un estilo: se cambia el mockup y se corre
-   `npm run portar-css`. El script **falla ruidoso** si una regla de celular queda sin su gemela
-   `@media`. Editar el CSS a mano se pierde en el siguiente porteo.
+Todo lo que Leandro pidió como feedback está entregado en dos sesiones:
 
-   Las gemelas (`body[data-view="mobile"] …`) **no se escriben a mano**: las genera
-   `python3 scripts/gemelas.py` desde las `@media` reales. El orden es siempre:
-   tocar el mockup → `gemelas.py` → `npm run portar-css`. Y por eso **toda regla
-   responsive es `max-width`**: una `min-width` no tiene gemela posible (el marco de
-   celular de la demo mide 412 px dentro de una ventana ancha) y dejaría la demo mintiendo.
-2. **Cero datos de un negocio en el código.** Nombre, color, moneda y zona horaria salen de la
-   tabla `configuracion`. `npm run sin-cliente` lo verifica y **falla** si aparece uno.
-   El color no es decorativo: `shared/chasis/marca.ts` deriva del hex los siete peldaños
-   `--m1…--m7`, los neutros y el texto sobre la marca, y el layout los inyecta como
-   `<style>`. Cambiar el hex en Ajustes repinta el panel entero, incluido el papel.
-3. **Cero emoji en la interfaz.** Iconos SVG inline (`src/shared/chasis/iconos.tsx`). Los emoji
-   salen cuadraditos en una máquina sin fuente de emoji.
-4. **Un divisor 0 muestra `—`,** nunca `NaN`, nunca `0%`. Una instalación nueva no tiene datos.
-5. **Lo derivado se deriva, nunca se guarda.** No hay ni una columna calculada en el esquema.
-6. **Baja lógica, nunca DELETE** de personas: sus reportes tienen que seguir contando.
+**Sesión 1** — Fase A (gasto + CAC + costo/asistida + AOV), Fase B (logo subible), Fase C (multiusuario + invitar por correo + roles), Fase D (Post Llamada granular).
 
-## El gate, antes de decir que algo está listo
+**Sesión 2** — Fase E (gap visual `.panel-costos`), Fase A (Equipo unificado en un solo flow), Fase B (favicon dinámico con las iniciales), Fase C (color picker visual), Fase D (nombre del lead + Revenue/Cash condicionales).
+
+Los PRPs de cada Fase viven en `.claude/PRPs/` con bitácora completa de decisiones tomadas y aprendizajes.
+
+## Datos que vive dónde
+
+```
+supabase/migraciones/
+  001_esquema.sql       configuracion, personas, reportes_setter, reportes_closer
+  002_permisos.sql      grants solo a service_role
+  003_gastos.sql        gasto diario del negocio
+  004_logo.sql          columna logo_url en configuracion
+  005_usuarios.sql      auth_user_id ↔ persona_id + rol admin/miembro
+  006_llamadas.sql      una fila POR llamada (reemplaza reportes_closer agregado)
+  007_lead_nombre.sql   nombre del lead obligatorio en cada llamada
+```
+
+**Todas se aplican de una** vía `docs/todo-en-uno.sql` (SQL Editor de Supabase). El archivo `scripts/instalar.mjs` también las aplica todas si el alumno prefiere terminal.
+
+## Reglas duras del proyecto
+
+1. **CSS del mockup, nunca `globals.css` a mano.** Circuito: `MOCKUP-APROBADO.html` → `python3 scripts/gemelas.py` → `npm run portar-css`. Las gemelas mobile (`body[data-view="mobile"]`) las genera un script — nunca se escriben a mano. Toda regla responsive es `max-width` (una `min-width` no tiene gemela posible).
+
+2. **Cero datos de un negocio en el código.** `scripts/sin-cliente.py` lo verifica y falla si aparece uno. Nombre, moneda, zona horaria, color, logo, iniciales — todo vive en `configuracion`.
+
+3. **Cero emoji en la interfaz.** SVG inline en `src/shared/chasis/iconos.tsx`. Emoji salen cuadraditos sin fuente adecuada.
+
+4. **Un divisor 0 muestra `—`,** nunca `NaN`, nunca `0%`. Una instalación nueva no tiene datos; `0%` de cierre es mentira.
+
+5. **Lo derivado se deriva, nunca se guarda.** No hay ni una columna calculada en el esquema. CAC, AOV, tasas, ranking — todo se calcula al leer.
+
+6. **Baja lógica, nunca DELETE** de personas ni de llamadas. Sus reportes tienen que seguir contando.
+
+7. **Auth en el servidor, no en el cliente.** Los endpoints (`/api/reportes/setter`, `/api/reportes/closer`, `/api/llamadas`) **overridean el `personaId` del body con el de la sesión** cuando el rol es `miembro`. Nunca confiar en lo que dice el navegador para authz.
+
+## Arquitectura
+
+```
+src/
+├── app/                              rutas
+│   ├── (app)/                        todas requieren login (layout redirige a /pendiente si no está vinculado)
+│   │   ├── panel/                    tablero principal
+│   │   ├── gasto/                    formulario del gasto diario (admin)
+│   │   ├── reporte-setter/           form setter (uno por día por persona)
+│   │   ├── llamada/                  Post Llamada (una fila por llamada)
+│   │   ├── equipo/                   agregar + invitar (admin)
+│   │   ├── ajustes/                  configuración (admin)
+│   │   └── layout.tsx                lee sesión, aplica marca CSS, monta Topbar
+│   ├── login/                        pantalla de login (única pública)
+│   ├── pendiente/                    fallback si el user está logueado pero no vinculado
+│   ├── api/                          endpoints (todos requieren admin salvo los de reportes)
+│   │   ├── favicon/                  SVG dinámico con las iniciales
+│   │   ├── ajustes/                  PATCH config
+│   │   ├── logo/                     POST/DELETE del logo (Supabase Storage)
+│   │   ├── equipo/                   POST agrega + invita (unificado)
+│   │   ├── gasto/                    POST/GET del gasto diario
+│   │   ├── llamadas/                 POST/PATCH/DELETE de llamadas
+│   │   ├── reportes/setter/          POST/GET (endpoint clásico)
+│   │   ├── reportes/closer/          POST/GET (endpoint legacy, se usa poco desde Fase D)
+│   │   └── auth/                     login + logout
+│   ├── layout.tsx                    <html> raíz, favicon dinámico
+│   └── globals.css                   generado desde MOCKUP-APROBADO.html
+│
+├── shared/
+│   ├── calculo/metricas.ts           kernel: totales, metricas, embudo, rankings, agregarLlamadas
+│   ├── datos/
+│   │   ├── interfaz.ts               CapaDeDatos (contrato)
+│   │   ├── supabase/capa.ts          implementación real
+│   │   ├── demo.ts                   implementación en memoria (para dev sin BD)
+│   │   ├── semilla.ts                42 filas de oro + 96 llamadas + 7 gastos
+│   │   ├── sesion.ts                 login, cookies, credenciales
+│   │   ├── sesion-usuario.ts         sesionActual() para RSC / route handlers
+│   │   └── guardias.ts               soloAdmin()
+│   ├── chasis/
+│   │   ├── topbar.tsx                barra de arriba con logo/iniciales + nav + logout
+│   │   ├── nav.tsx                   filtra rutas admin cuando rol=miembro
+│   │   ├── marca.ts                  deriva --m1..--m7 y neutros del hex
+│   │   └── iconos.tsx                todos los SVG inline
+│   └── tipos/                        Configuracion, Persona, ReporteSetter, ReporteCloser, Llamada, Gasto, Usuario, Sesion
+│
+└── features/                         una carpeta por pantalla, con componentes cliente
+    ├── panel/piezas.tsx              Plata, Tasas, Embudo, CashPorDia, Costos, RankingClosers/Setters
+    ├── gasto/form.tsx                CampoDinero para el gasto
+    ├── reportes/                     form-setter, form-closer, piezas (Stepper, CampoDinero, Derivado)
+    ├── llamadas/panel-llamada.tsx    form + lista con contador vivo del día
+    ├── equipo/lista.tsx              lista + card unificada de alta e invitación
+    └── ajustes/
+        ├── panel.tsx                 dos tarjetas de configuración + logo + color picker
+        ├── color-picker.tsx          popover custom con gradient sat/brillo + hue
+        └── color-utils.ts            hexToHsv / hsvToHex / hexValido
+
+supabase/migraciones/                 001 → 007
+scripts/                              instalar, semilla, verificar, gemelas, portar-css, sin-cliente, demo-vivo
+MOCKUP-APROBADO.html                  el diseño, spec literal
+docs/                                 setup-checklist, todo-en-uno.sql, uso-diario, actualizar, guia-instalacion
+.claude/PRPs/                         planes de las 9 Fases (2 sesiones)
+```
+
+## Trampas conocidas (gotchas ya pagados)
+
+Cada uno está documentado en detalle en el PRP correspondiente. En corto:
+
+- **Next 16**: el archivo es `proxy.ts`, NO `middleware.ts` (un middleware.ts no da error: simplemente no corre). `next lint` ya no existe. Sin `force-dynamic` en el layout `(app)`, las pantallas con datos se prerenderizan.
+
+- **Node 20 no trae `WebSocket`**. Supabase createClient() construye un RealtimeClient en su constructor y tira. Resuelto con un `transport` custom en `shared/datos/supabase/cliente.ts`. En Vercel (Node 24) no se ve.
+
+- **`next dev`: la API y el render corren en procesos distintos.** Por eso la capa demo se respalda en un archivo, no en memoria — si no, un POST devuelve 200 y la lista sigue vacía.
+
+- **`var(--token)` que no existe = silencio.** Si se renombra un token en el mockup, hay que grepear fuera de `globals.css` (hoy solo `login.module.css` tiene CSS propio).
+
+- **`color-scheme` decide el date-picker del navegador y el `<select>`.** Sin declararlo, en tema oscuro el calendario se abre blanco y el icono del date queda negro sobre negro.
+
+- **Supabase gratis pausa proyectos** tras 7 días sin actividad. Síntoma: «error de servidor» al entrar. Solución: Restore/Resume desde el dashboard. Documentado en `docs/setup-checklist.md`.
+
+- **Borrar una API route requiere `rm -rf .next`**. Next 16 mantiene tipos generados en `.next/types/validator.ts` que apuntan al archivo viejo.
+
+- **`setState` sincrónico en `useEffect`** dispara warning `react-hooks/set-state-in-effect` y crea renders en cascada. Consolidar en un handler.
+
+- **Cache de favicon**: Vercel + navegadores cachean fuerte. El `/api/favicon` tiene cache 60 s para que un cambio en Ajustes se vea rápido.
+
+- **Bucket `logos` público**: el `<img>` del navegador no puede autenticarse a Supabase Storage. Requiere URL firmada o público. Elegimos público — es un logo del negocio, se muestra a cualquiera que abra el panel.
+
+## Gate antes de decir «listo»
 
 ```bash
-npm run gate     # typecheck + lint + 19 tests + sin-cliente + build
-npm run verificar  # los 24 numeros de oro contra la base REAL
+npm run typecheck   # sin errores
+npm run lint        # sin warnings
+npm test            # 41 tests (kernel + sesion + color-utils)
+npm run sin-cliente # cero data hardcodeada
+npm run build       # build verde
+npm run verificar   # los 27 números de oro contra la base real
 ```
 
-Y **la foto**: escritorio (~1440) y celular (~390), claro **y** oscuro, app contra mockup. Validar
-por foto de página completa no alcanza — hay que abrir cada estado (selector, date picker, el aviso
-de "ya cargaste este día", la baja en Equipo).
+Y **la foto**: 1440×900 y 390×844, tema claro y oscuro, panel vs mockup.
 
-## El vocabulario del layout
+## Cómo pedirle cosas a tu Claude
 
-`.hoja` (1080) envuelve las cuatro pantallas de trabajo; el tablero se queda en 1320 —
-es ancho porque muestra muchas cosas a la vez, un formulario de cuatro campos no.
-`.resumen` es la banda de arriba del panel: `.plata` (el dinero, única pieza con relleno
-de marca y sombra) más `.tasas` (tres renglones con `.medidor`). En los formularios el
-CONTROL tiene su propio tope (`.step` 150 px, `.money-inp` 224): la celda la define la
-etiqueta, no el dato. Y el verde es el dinero, la acción primaria y «estás acá»: nada más.
+Cuando querés que Claude cambie algo:
 
-## Gotchas ya pagados — no los redescubras
+1. **Empezá diciendo qué pantalla + qué se ve mal / qué querés distinto.** «En el panel, la banda de costos tiene diferente separación que las demás» es mucho mejor que «arreglá el CSS».
 
-- **Next 16:** el archivo es `proxy.ts`, **no** `middleware.ts` (un `middleware.ts` no da error:
-  simplemente no corre). `next lint` no existe. Sin `force-dynamic` en el layout de `(app)`, las
-  pantallas con datos se prerenderizan y muestran los números del build — y **en `next dev` no se ve**.
-- **Node 20 no trae `WebSocket`** y `createClient()` de Supabase construye un RealtimeClient en su
-  constructor: tira antes de leer una fila. Resuelto con un `transport` en
-  `shared/datos/supabase/cliente.ts`. En Vercel no se ve, porque ahí es Node 24.
-- **En `next dev` la ruta de API y el render corren en procesos distintos.** Por eso la capa de
-  desarrollo se respalda en un archivo: si no, un POST devuelve 200 y la lista sigue vacía.
-- **Un `var(--token)` que no existe no es un error: es silencio.** `login.module.css` siguió
-  pidiendo `var(--shadow)` después de que el token pasara a llamarse `--sombra`, y la caja se
-  quedó sin sombra sin que nada fallara. Si se renombra un token del mockup, hay que grepear
-  fuera de `globals.css` — hoy solo el login tiene CSS propio.
-- **`color-scheme` es lo que pinta lo que no es nuestro:** el calendario del `<input type=date>`,
-  la lista del `<select>` y el scroll. Sin declararlo, en tema oscuro el date picker se abre
-  blanco y el icono del calendario queda negro sobre negro.
-- **`next dev` reescribía `CLAUDE.md`** en cada arranque, pegándole un bloque al final. Apagado
-  con `agentRules: false` en `next.config.ts`; si vuelve a aparecer, es que alguien lo sacó.
-- **El deploy va a la cuenta de Leandro** y los commits van firmados
-  `LPTheCEOTech <tech@lpfinancialservices.info>` — si se firman con otro correo, Vercel los bloquea.
+2. **Dejalo mirar los PRPs** (`.claude/PRPs/*.md`) para que copie el patrón. Cada Fase tiene bitácora con decisiones y aprendizajes.
 
-## Estructura
+3. **NO le pidas que edite `globals.css`** — el circuito es mockup → gemelas.py → portar-css. Los PRPs anteriores lo repiten porque cuesta acordarse.
 
-```
-src/shared/calculo/   las fórmulas. Funciones puras, con tests.
-src/shared/datos/     el puerto de datos. Las pantallas NO hablan con Supabase.
-src/shared/chasis/    topbar, iconos, tema.
-src/features/         una carpeta por pantalla.
-supabase/migraciones/ el esquema.
-```
+4. **NO le pidas cambios de esquema sin migración numerada.** El próximo número libre es `008_...sql` (los siete anteriores están usados).
+
+5. **Cuando termine, pedile el gate**: typecheck, tests, sin-cliente, build. Si toca la base, también `verificar` contra la base real.
+
+## Contacto
+
+Si algo no cierra o encontrás un bug, avisale a Leandro. Él coordina updates de la plantilla base.

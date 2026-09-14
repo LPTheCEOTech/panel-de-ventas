@@ -1,77 +1,79 @@
 # Panel de Ventas
 
-Un panel de métricas de ventas donde **toda la data se carga a mano**, con dos
-formularios de fin de día: uno para setters y otro para closers. El panel
-calcula solo las tasas, el embudo, el dinero y los rankings.
+Tu propio panel de métricas de ventas. **Todo se carga a mano** (sin integraciones), y el panel calcula solo las tasas, el embudo, el CAC, el AOV, el ticket promedio y los rankings.
 
-No hay integraciones. No hay nada que conectar. Dos formularios y listo.
+## Empezar
+
+**Mirá el video** (25 min): [link al Loom acá] · Video de despliegue paso a paso.
+
+Si te perdés a la mitad, el video es exactamente lo que dice **[`docs/setup-checklist.md`](docs/setup-checklist.md)**. Podés ir siguiéndolo escrito.
 
 ## Qué mide
 
 | | De dónde sale |
 |---|---|
-| **Tasa de agenda** | agendas ÷ conversaciones iniciadas |
-| **Tasa de asistencia** | asistieron ÷ llamadas en agenda |
+| **Cash collected** | lo que efectivamente cobraste |
+| **Revenue contratado** | lo que se firmó |
+| **% de cobro** | cash ÷ revenue |
+| **Tasa de agenda** | agendas ÷ conversaciones |
+| **Tasa de asistencia** | asistieron ÷ llamadas |
 | **Tasa de cierre** | cierres ÷ asistieron |
-| **% de cobro** | cash collected ÷ revenue contratado |
 | **Ticket promedio** | revenue ÷ cierres |
+| **AOV** | cash ÷ cierres |
+| **CAC** | gasto del período ÷ cierres |
+| **Costo por asistida** | gasto ÷ asistidos |
 | Embudo, rankings, cash por día | lo mismo, agrupado |
 
-**Nada de esto se guarda: todo se calcula al leer.** Si un día un número no
-cuadra, el problema está en un insumo y se ve cuál.
+**Nada se guarda: todo se calcula al leer.** Si un día un número no cuadra, el problema está en un dato de entrada y se ve cuál.
 
-## Instalarlo
+## Pantallas
 
-Está explicado paso a paso, sin dar por sabido nada, en
-**[docs/guia-instalacion.md](docs/guia-instalacion.md)**.
+- **Panel**: los números de arriba. Filtrás por día, semana o mes.
+- **Gasto**: cuánto gastaste en captación cada día (solo admin).
+- **Reporte Setter**: el setter carga sus conversaciones y agendas al final del día.
+- **Post Llamada**: el closer carga UNA fila POR llamada, con el nombre del lead.
+- **Equipo**: agregar / invitar al equipo (solo admin).
+- **Ajustes**: nombre, color, moneda, zona horaria, logo (solo admin).
 
-El resumen: creás tu GitHub, tu Vercel y tu Supabase, pegás tres variables, y
-corrés un comando.
+## Los roles
 
-```bash
-npm install
-cp .env.local.example .env.local   # y pegás tus tres valores
-npm run instalar
-npm run dev
-```
+- **Admin** (vos): ve todo, cambia todo, invita al equipo.
+- **Miembro** (tu equipo): ve solo lo suyo, sin ajustes, sin gasto, sin ranking, sin equipo. Solo carga sus propios reportes.
 
-## Los comandos
+Cada miembro se loguea con su propio correo (invitación por Supabase Auth).
 
-| | |
+## Documentación en el repo
+
+| Archivo | Para qué |
 |---|---|
-| `npm run dev` | levanta la app en http://localhost:3110 |
-| `npm run instalar` | crea las tablas, la configuración y tu usuario |
-| `npm run usuario -- listar` | quién puede entrar |
-| `npm run build` | compila para producción |
-| `npm test` | los tests del cálculo y de la sesión |
-| `npm run verificar` | compara la base contra los números de oro |
-| `npm run semilla -- cargar` / `-- limpiar` | datos de prueba, y sacarlos |
-| `npm run portar-css` | vuelve a portar el CSS desde el mockup |
-| `npm run sin-cliente` | comprueba que no haya datos de un negocio en el código |
+| **[docs/setup-checklist.md](docs/setup-checklist.md)** | El paso a paso del video, escrito. A prueba de tontos. |
+| **[docs/todo-en-uno.sql](docs/todo-en-uno.sql)** | El SQL que pegás en Supabase para crear todo (tablas, permisos, bucket, admin). |
+| **[docs/uso-diario.md](docs/uso-diario.md)** | Cómo cargar reportes, cómo leer el panel. |
+| **[docs/actualizar.md](docs/actualizar.md)** | Cómo traer los updates que Leandro publique. |
+| **[docs/guia-instalacion.md](docs/guia-instalacion.md)** | Versión narrativa larga de la instalación (con contexto y gotchas). |
 
-## Cómo está armado
+## Si usás Claude / Cursor / Copilot
 
-```
-src/shared/calculo/   las fórmulas. Funciones puras, con tests.
-src/shared/datos/     la capa de datos. Las pantallas no hablan con Supabase.
-src/shared/chasis/    la barra de arriba, los iconos, el tema.
-src/features/         una carpeta por pantalla.
-src/app/              las rutas.
-supabase/migraciones/ el esquema.
-MOCKUP-APROBADO.html  el diseño. Es el spec, no una referencia.
-```
+El repo tiene contexto para agentes de IA:
 
-**El CSS no se edita a mano.** `src/app/globals.css` lo genera
-`scripts/portar-css.py` desde `MOCKUP-APROBADO.html`. Para cambiar un estilo se
-cambia el mockup y se vuelve a correr el script.
+- **`CLAUDE.md`**: doctrina general (SaaS Factory + este proyecto).
+- **`CLAUDE.panel-de-ventas.md`**: contexto específico del panel (arquitectura, reglas, trampas conocidas).
 
-## Dos cosas que conviene saber antes de tocarlo
+Podés pegarles el link al repo y decirle a tu Claude «leé el CLAUDE.md y el CLAUDE.panel-de-ventas.md» — ya sabe cómo funciona todo.
 
-**Cada persona tiene un solo reporte por día.** Lo garantiza una restricción de
-la base (`unique (fecha, persona_id)`), no el formulario. Si alguien manda su
-día dos veces, se reemplaza; no se suma. Sin eso el panel inflaría los números
-sin que nada fallara.
+## Stack
 
-**Un divisor 0 muestra `—`, nunca `0%`.** Una instalación nueva no tiene datos,
-y `0%` de cierre sería mentira: no es que cerraste nada de nada, es que todavía
-no hay de qué calcular.
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Supabase**: auth + Postgres + Storage
+- **Vercel**: despliegue
+- **CSS portado desde `MOCKUP-APROBADO.html`** (no se edita a mano)
+
+## Preguntas frecuentes
+
+**¿Cuánto sale?** Todo tiene plan gratis: GitHub (privado), Supabase (base + auth + storage), Vercel (despliegue). Alcanza de sobra para un negocio con equipo chico.
+
+**¿Se rompe si crece el equipo?** No hay integraciones ni límites de usuarios en el código. El plan gratis de Supabase tiene sus topes (500 MB de base, 50 mil MAU); si los pasás, te avisan.
+
+**¿Qué pasa si el bucket del logo se cae?** El favicon y el topbar caen a un SVG con las iniciales sobre el color de marca. Nada se rompe.
+
+**¿Cómo pido ayuda?** Preguntale a tu Claude con el link al repo. Si no puede, pedile a Leandro.
