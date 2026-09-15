@@ -1,7 +1,7 @@
 # Checklist de despliegue
 
 > Este documento es la guía que sigue **el video** (link a Loom cuando esté grabado).
-> El alumno mira el video, hace clic donde se le dice, y termina con la app funcionando. Total: ~25 minutos.
+> El alumno mira el video, hace clic donde se le dice, y termina con la app funcionando. Total: ~20 minutos.
 >
 > Si te perdés a la mitad, este archivo es exactamente lo mismo que dice el video, escrito.
 
@@ -10,7 +10,7 @@
 **Lo que necesitás antes de empezar**:
 
 - Un correo electrónico (usá el mismo para las tres cuentas)
-- 25 minutos sin interrupciones
+- 20 minutos sin interrupciones
 - Un navegador (Chrome, Safari, Edge, cualquiera)
 - Un gestor de contraseñas (o un papel) para anotar 3 cosas puntuales
 
@@ -19,6 +19,7 @@
 - Terminal, consola, línea de comandos
 - Instalar Node.js, git, ni nada
 - Saber programar
+- **Tu propia copia del código**. Vas a desplegar directo del repo original — así cuando salga una mejora, tu app se actualiza sola.
 
 ---
 
@@ -41,23 +42,9 @@ Nada más. Las otras dos (Supabase y Vercel) usan el mismo correo de GitHub.
 
 ---
 
-## Etapa 1 · Copiar la plantilla (2 min)
+## Etapa 1 · Base de datos en Supabase (10 min)
 
-- [ ] Andá al repo de Leandro: `**https://github.com/LPTheCEOTech/panel-de-ventas**` (te pasa el link él).
-- [ ] Botón verde arriba a la derecha: **«Use this template» → «Create a new repository»**.
-- [ ] En la pantalla nueva:
-  - **Repository name**: `panel-de-ventas` (o el nombre que quieras)
-  - **Private** (marcado)
-  - **Create repository** (botón verde abajo)
-- [ ] Esperá 5 segundos. Se abre tu copia.
-
-Ya tenés tu propio repo. Todo lo que hagas es tuyo, nadie más lo ve.
-
----
-
-## Etapa 2 · Base de datos en Supabase (10 min)
-
-### 2.1 · Nuevo proyecto
+### 1.1 · Nuevo proyecto
 
 - [ ] En [https://supabase.com/dashboard](https://supabase.com/dashboard), botón verde arriba a la derecha: **«New project»**.
 - [ ] Completá:
@@ -68,7 +55,7 @@ Ya tenés tu propio repo. Todo lo que hagas es tuyo, nadie más lo ve.
 - [ ] **Create new project**.
 - [ ] Esperá 2 minutos hasta que el punto verde aparezca al lado del nombre.
 
-### 2.2 · Copiar las 3 claves
+### 1.2 · Copiar las 3 claves
 
 Cuando termine de crearse:
 
@@ -85,7 +72,7 @@ Cuando termine de crearse:
 
 > 🔴 **Cuidado con la service_role.** Está tapada con puntitos por seguridad. **Apretá el botón «Reveal» primero** y después **el botón de copiar** (el rectangulito al lado). NO la seleccionés con el mouse — te llevás los puntitos y no la clave, y la app no funciona sin dar un error claro.
 
-### 2.3 · Crear tu usuario admin (el que va a entrar al panel)
+### 1.3 · Crear tu usuario admin (el que va a entrar al panel)
 
 - [ ] Menú izquierdo: **Authentication** → **Users** → botón verde **«Add user» → «Create new user»**.
 - [ ] Completá:
@@ -95,13 +82,14 @@ Cuando termine de crearse:
 - [ ] **Create user**.
 - [ ] Verificá que aparece en la lista con el punto verde a la izquierda (email confirmado).
 
-### 2.4 · Correr el SQL «Todo en Uno»
+### 1.4 · Correr el SQL «Todo en Uno»
 
 Este SQL crea todas las tablas, permisos, el bucket del logo, la configuración inicial, y te marca como admin.
 
 - [ ] Menú izquierdo: **SQL Editor** → botón **«New query»** (arriba a la derecha).
-- [ ] En tu repo de GitHub abrí el archivo `**docs/todo-en-uno.sql**` → botón **«Copy raw file»** (arriba a la derecha) → pega en el editor SQL de Supabase.
-- [ ] **Antes de correrlo**: busca la línea que dice `TU_CORREO_AQUI` (`Ctrl+F` o `Cmd+F`, buscá esas letras). Reemplazá `TU_CORREO_AQUI` por el correo que usaste en el paso 2.3, entre las comillas simples. Ejemplo:
+- [ ] Abrí este archivo desde el repo público de Leandro:
+  **`https://github.com/LPTheCEOTech/panel-de-ventas/blob/main/docs/todo-en-uno.sql`** → botón **«Copy raw file»** (arriba a la derecha) → pegá en el editor SQL de Supabase.
+- [ ] **Antes de correrlo**: buscá la línea que dice `TU_CORREO_AQUI` (`Ctrl+F` o `Cmd+F`, buscá esas letras). Reemplazá `TU_CORREO_AQUI` por el correo que usaste en el paso 1.3, entre las comillas simples. Ejemplo:
   ```
   where email = 'juan@ejemplo.com'
   ```
@@ -112,27 +100,37 @@ Si alguno de los números da **0**:
 
 - Los primeros 7 en 0 → el SQL falló en esa parte. Fijate el mensaje de error rojo y decime.
 - `admins_registrados` en 0 → escribiste mal el correo en la línea del `WHERE email`. Corregí y volvé a correr solo esa línea.
-- `bucket_logos_ok` en 0 → la fila del bucket no se creó (raro). Correlo de nuevo.
+- `bucket_logos_ok` en 0 → la fila del bucket no se creó (raro). Correlo de nuevo, o creá el bucket a mano: **Storage → New bucket → nombre `logos`, Public ON, Create**.
 
 ---
 
-## Etapa 3 · App en internet con Vercel (5 min)
+## Etapa 2 · App en internet con Vercel (5 min)
 
-### 3.1 · Importar el repo
+**Acá está la magia**: no vas a crear tu propia copia del código. Vercel de tu cuenta va a leer directo del repo original de Leandro. Cuando Leandro publique una mejora, tu app se actualiza sola sin que hagas nada.
+
+### 2.1 · Importar el repo de Leandro
 
 - [ ] En [https://vercel.com/dashboard](https://vercel.com/dashboard), arriba a la derecha: **«Add New» → «Project»**.
-- [ ] Si es la primera vez, te pide instalar la app de Vercel en GitHub: **«Configure GitHub App»** → autorizás **solo el repo** que creaste en Etapa 1 → **Install &amp; Authorize**.
-- [ ] Buscás tu repo `panel-de-ventas` en la lista → **«Import»** (botón a la derecha del nombre).
+- [ ] En la sección **«Import Git Repository»**, en el buscador de la derecha, pegá:
+  ```
+  LPTheCEOTech/panel-de-ventas
+  ```
+  o directamente la URL completa: `https://github.com/LPTheCEOTech/panel-de-ventas`.
+- [ ] Si Vercel te dice que no tiene acceso al repo, apretá **«Adjust GitHub App Permissions»** → agregá acceso al repo `LPTheCEOTech/panel-de-ventas` (es público, GitHub te deja) → volvé.
+- [ ] Al lado del nombre del repo, apretá **«Import»**.
 
-### 3.2 · Cargar las 3 claves
+> 💡 **NO uses «Fork»** ni **«Use this template»**. Con esos, tenés tu propia copia y los updates no te llegan solos. Con **Import directo**, tu Vercel apunta al repo original y actualiza automáticamente.
+
+### 2.2 · Cargar las 3 claves
 
 En la pantalla de configuración del proyecto:
 
+- [ ] Podés cambiar el **Project Name** por lo que quieras (`mi-panel`, por ejemplo). Va a ser parte de tu URL: `mi-panel.vercel.app`.
 - [ ] Sección **«Environment Variables»** (más abajo, la desplegás si está colapsada).
 - [ ] Vas a agregar tres variables, una por una:
 
 
-| Key (nombre exacto)             | Value (lo que copiaste en 2.2) |
+| Key (nombre exacto)             | Value (lo que copiaste en 1.2) |
 | ------------------------------- | ------------------------------ |
 | `NEXT_PUBLIC_SUPABASE_URL`      | tu `URL`                       |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | tu `ANON_KEY`                  |
@@ -143,25 +141,25 @@ En la pantalla de configuración del proyecto:
 
 - [ ] Después de cada una, apretás **«Save»** o pasas a la siguiente.
 
-### 3.3 · Deploy
+### 2.3 · Deploy
 
 - [ ] Botón grande **«Deploy»** al final de la página.
 - [ ] Esperá 2-3 minutos. La pantalla muestra el log del build.
 - [ ] Cuando ves «Congratulations» con confeti → listo.
 - [ ] Click en la imagen de preview o en el botón **«Continue to Dashboard»**.
-- [ ] En el dashboard vas a ver tu URL: algo tipo `panel-de-ventas-xxx.vercel.app` — copiala.
+- [ ] En el dashboard vas a ver tu URL: algo tipo `mi-panel.vercel.app` — copiala.
 
 ---
 
-## Etapa 4 · Primer login + configurar tu panel (3 min)
+## Etapa 3 · Primer login + configurar tu panel (3 min)
 
 - [ ] Abrí tu URL en el navegador. Te tira a `/login`.
-- [ ] Correo y contraseña son los que usaste en la Etapa 2.3.
+- [ ] Correo y contraseña son los que usaste en la Etapa 1.3.
 - [ ] **Entrás al panel**.
 
 Los números están en cero (todavía no cargaste nada, es esperado). Vamos a personalizar antes de invitar al equipo.
 
-### 4.1 · Ajustes
+### 3.1 · Ajustes
 
 - [ ] Menú de arriba: **Ajustes**.
 - [ ] Card **«Tu negocio»**:
@@ -178,7 +176,7 @@ Los números están en cero (todavía no cargaste nada, es esperado). Vamos a pe
 - [ ] Botón abajo a la derecha: **«Guardar ajustes»**.
 - [ ] El panel se repinta con tu color y tu nombre al instante.
 
-### 4.2 · Invitar al equipo
+### 3.2 · Invitar al equipo
 
 - [ ] Menú de arriba: **Equipo**.
 - [ ] Card lateral **«Agregar al equipo»**:
@@ -195,20 +193,18 @@ Los números están en cero (todavía no cargaste nada, es esperado). Vamos a pe
 
 ## Si algo no anda
 
-
-| Lo que ves                                                   | Qué pasa                                                                                                                                                                                                                             |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| «error de servidor» en el login                              | Chequeá que las 3 env vars en Vercel estén bien (Settings → Environment Variables). Especial cuidado con `SERVICE_KEY` — si copiaste los puntitos en vez de la clave, error.                                                         |
-| «Correo o contraseña incorrectos»                            | Correo o contraseña incorrectos. Podés resetearlo desde Supabase → Authentication → Users → tres puntitos → «Send password recovery».                                                                                                |
-| Después del login te tira a **/pendiente**                   | El SQL «Todo en Uno» no te marcó como admin. Volvé al SQL Editor y correlo solo la parte del bootstrap (últimas 5 líneas antes de la comprobación).                                                                                  |
-| El panel está todo en `—`                                    | No hay reportes cargados todavía. No es un error.                                                                                                                                                                                    |
+| Lo que ves | Qué pasa |
+|---|---|
+| «error de servidor» en el login | Chequeá que las 3 env vars en Vercel estén bien (Settings → Environment Variables). Especial cuidado con `SERVICE_KEY` — si copiaste los puntitos en vez de la clave, error. |
+| «Correo o contraseña incorrectos» | Correo o contraseña incorrectos. Podés resetearlo desde Supabase → Authentication → Users → tres puntitos → «Send password recovery». |
+| Después del login te tira a **/pendiente** | El SQL «Todo en Uno» no te marcó como admin. Volvé al SQL Editor y correlo solo la parte del bootstrap (últimas 5 líneas antes de la comprobación). |
+| Vercel dice «no tengo acceso al repo» al importar | Apretá «Adjust GitHub App Permissions» → agregá acceso a `LPTheCEOTech/panel-de-ventas`. GitHub te deja porque el repo es público. |
+| El panel está todo en `—` | No hay reportes cargados todavía. No es un error. |
 | Después de una semana sin usar el panel, «error de servidor» | Supabase pausa proyectos gratuitos tras 7 días sin actividad. Andá a supabase.com → tu proyecto → botón **«Restore»** o **«Resume»**. Tarda 2 min y vuelve todo. Para evitarlo: que alguien cargue algo al menos una vez por semana. |
-
 
 ---
 
 ## ¿Y después?
 
-- **Uso diario**: `docs/uso-diario.md` — cómo se carga un reporte, cómo se lee el panel.
-- **Recibir mejoras**: `docs/actualizar.md` — cómo traer los updates que Leandro publique en la plantilla.
-
+- **Uso diario**: [`docs/uso-diario.md`](uso-diario.md) — cómo se carga un reporte, cómo se lee el panel.
+- **Cuando salga una mejora**: no hacés nada. Tu Vercel se actualiza sola. Los detalles en [`docs/actualizar.md`](actualizar.md).

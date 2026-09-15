@@ -2,11 +2,15 @@
 
 Tu propio panel de métricas de ventas. **Todo se carga a mano** (sin integraciones), y el panel calcula solo las tasas, el embudo, el CAC, el AOV, el ticket promedio y los rankings.
 
-## Empezar
+## Empezar (20 min)
 
-**Mirá el video** (25 min): [link al Loom acá] · Video de despliegue paso a paso.
+**Guía visual paso a paso**: [claude.ai/artifact/BzwYWFdzwXT455GVBaKcvR](https://claude.ai/artifact/BzwYWFdzwXT455GVBaKcvR) — abrila en tu navegador y andá haciendo lo que dice, click por click, con los botones «Copiar» donde toca.
 
-Si te perdés a la mitad, el video es exactamente lo que dice **[`docs/setup-checklist.md`](docs/setup-checklist.md)**. Podés ir siguiéndolo escrito.
+También hay un **video**: [link al Loom acá] · Sigue exactamente la misma guía, en imagen.
+
+Si preferís texto plano en el repo: [`docs/setup-checklist.md`](docs/setup-checklist.md).
+
+> 💡 **No hagas fork ni «Use this template».** Vas a desplegar este repo directo en tu Vercel — así cuando salga una mejora, tu app se actualiza sola sin que hagas nada. El video lo explica.
 
 ## Qué mide
 
@@ -49,7 +53,7 @@ Cada miembro se loguea con su propio correo (invitación por Supabase Auth).
 | **[docs/setup-checklist.md](docs/setup-checklist.md)** | El paso a paso del video, escrito. A prueba de tontos. |
 | **[docs/todo-en-uno.sql](docs/todo-en-uno.sql)** | El SQL que pegás en Supabase para crear todo (tablas, permisos, bucket, admin). |
 | **[docs/uso-diario.md](docs/uso-diario.md)** | Cómo cargar reportes, cómo leer el panel. |
-| **[docs/actualizar.md](docs/actualizar.md)** | Cómo traer los updates que Leandro publique. |
+| **[docs/actualizar.md](docs/actualizar.md)** | Qué pasa cuando salga una mejora (spoiler: casi nada, es automático). |
 | **[docs/guia-instalacion.md](docs/guia-instalacion.md)** | Versión narrativa larga de la instalación (con contexto y gotchas). |
 
 ## Stack
@@ -61,10 +65,12 @@ Cada miembro se loguea con su propio correo (invitación por Supabase Auth).
 
 ## Preguntas frecuentes
 
-**¿Cuánto sale?** Todo tiene plan gratis: GitHub (privado), Supabase (base + auth + storage), Vercel (despliegue). Alcanza de sobra para un negocio con equipo chico.
+**¿Cuánto sale?** Todo tiene plan gratis: Supabase (base + auth + storage) y Vercel (despliegue). Alcanza de sobra para un negocio con equipo chico.
 
 **¿Se rompe si crece el equipo?** No hay integraciones ni límites de usuarios en el código. El plan gratis de Supabase tiene sus topes (500 MB de base, 50 mil MAU); si los pasás, te avisan.
 
 **¿Qué pasa si el bucket del logo se cae?** El favicon y el topbar caen a un SVG con las iniciales sobre el color de marca. Nada se rompe.
 
-**¿Cómo pido ayuda?** Preguntale a tu Claude con el link al repo. Si no puede, pedile a Leandro.
+**¿Los updates me llegan solos?** Sí. Tu Vercel apunta al repo original. Cuando salga una mejora del código, Vercel dispara un deploy automáticamente. Si esa mejora trae una migración SQL (raro, pero pasa), avisamos y la corrés a mano en tu Supabase. Detalle en `docs/actualizar.md`.
+
+**¿Cómo pido ayuda?** Preguntale a Leandro. El repo es público — si tenés ojo técnico o usás Claude / Cursor, podés mirar el código directamente.

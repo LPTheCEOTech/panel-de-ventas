@@ -1,28 +1,20 @@
 # Guía de instalación — versión larga con contexto
 
-> **Si sos alumno**: NO leas este archivo primero. Mirá el video de Loom (link en el README) y seguí `docs/setup-checklist.md`. Esa es la ruta rápida, 25 minutos.
+> **Si sos alumno**: NO leas este archivo primero. Mirá el video de Loom (link en el README) y seguí `docs/setup-checklist.md`. Esa es la ruta rápida, 20 minutos.
 >
 > **Este archivo** existe para: (1) entender **por qué** cada paso, (2) el gotcha de Supabase durmiéndose, (3) troubleshoot cuando algo raro pasa.
 
 ## Panorama
 
-Vas a necesitar tres cuentas gratuitas: **GitHub** (donde vive el código), **Supabase** (donde viven tus datos + los logins) y **Vercel** (donde vive la app deployada). Las tres tienen plan gratis que alcanza de sobra para un negocio con un equipo chico.
+Vas a necesitar dos cuentas gratuitas: **Supabase** (donde viven tus datos + los logins) y **Vercel** (donde vive la app deployada). Además una cuenta de **GitHub** (gratis) para poder autorizar a Vercel a leer el repo público del código.
 
-> 💡 **Usá el mismo correo para las tres.** El día que necesites ayuda, tener todo bajo un correo evita media hora de «¿con cuál me registré?».
+**No vas a crear tu propia copia del código**. Vas a decirle a Vercel «leé del repo público de Leandro» y Vercel se encarga. Cuando Leandro publique una mejora al código, tu Vercel la detecta y la despliega automáticamente. Vos no hacés nada.
+
+> 💡 **Usá el mismo correo para las tres cuentas.** El día que necesites ayuda, tener todo bajo un correo evita media hora de «¿con cuál me registré?».
 
 ## Los pasos, con el porqué
 
-### Paso 1 — Tu copia del código (GitHub)
-
-Andá al repo de la plantilla (`LPTheCEOTech/panel-de-ventas`) y apretá **«Use this template» → «Create a new repository»**. Nombre libre, dejalo **Private**, y creá.
-
-Es una copia. Nadie más la ve. Lo que cambies no afecta la plantilla. Y cuando Leandro publique mejoras, las traés vos (mirá `docs/actualizar.md`).
-
-**Por qué template y no fork**: un fork queda «encadenado» al original y es más incómodo para hacer commits privados. «Use this template» copia una foto del código y listo, es tuyo.
-
----
-
-### Paso 2 — Base de datos + Auth (Supabase)
+### Paso 1 — Base de datos + Auth (Supabase)
 
 Creá un proyecto en Supabase. Elegí la región **más cercana a vos** (Argentina/Chile/Uruguay → São Paulo; México → US East N. Virginia; España → Ireland). La contraseña de la base, guardala en un gestor.
 
@@ -39,7 +31,7 @@ En **Project Settings → API** copiá tres cosas:
 
 **Crear tu usuario admin**: **Authentication → Users → «Add user» → «Create new user»**. Correo + contraseña de mínimo 12 caracteres. **«Auto Confirm User» prendido** — importante, si no queda pendiente de confirmar el mail y el login no anda.
 
-**Correr el SQL «Todo en Uno»**: **SQL Editor → New query**, pegás el contenido de `docs/todo-en-uno.sql`, buscás `TU_CORREO_AQUI` y lo reemplazás por tu correo (el que usaste arriba), **Run**.
+**Correr el SQL «Todo en Uno»**: **SQL Editor → New query**, pegás el contenido de `docs/todo-en-uno.sql` (desde el repo público de Leandro), buscás `TU_CORREO_AQUI` y lo reemplazás por tu correo (el que usaste arriba), **Run**.
 
 El SQL hace todo esto de una:
 - Las 4 tablas base (configuracion, personas, reportes_setter, reportes_closer).
@@ -55,25 +47,31 @@ La última consulta te devuelve una tabla con 9 números. Todos tienen que dar *
 
 ---
 
-### Paso 3 — La app en internet (Vercel)
+### Paso 2 — Deploy en Vercel apuntando al repo de Leandro
 
-En Vercel: **Add New → Project → Import** el repo del Paso 1.
+En Vercel: **Add New → Project → Import Git Repository**. En el buscador, pegás `LPTheCEOTech/panel-de-ventas` (el repo público de Leandro).
 
-Antes de apretar Deploy, cargá las **3 environment variables** que copiaste en el Paso 2:
+Si es la primera vez que usás Vercel, te pide autorizar acceso al repo. Como es público, GitHub te deja hacerlo sin necesidad de permisos del dueño. Apretás **«Adjust GitHub App Permissions»**, agregás el repo `LPTheCEOTech/panel-de-ventas`, y volvés.
+
+Antes de apretar Deploy, cargás las **3 environment variables** que copiaste en el Paso 1:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 
-**Deploy**. Tarda 2-3 minutos. Al terminar, tenés tu URL: algo tipo `panel-de-ventas-xxx.vercel.app`.
+**Deploy**. Tarda 2-3 minutos. Al terminar, tenés tu URL: algo tipo `mi-panel.vercel.app`.
+
+**¿Por qué importar directo y no forkear?** Porque cuando Leandro suba una mejora al repo, tu Vercel la detecta como un push nuevo a `main` y hace deploy automático. Si en cambio hubieras hecho fork, tu fork queda «atrás» y tenés que sincronizarlo a mano. Este esquema es **cero mantenimiento** para vos.
+
+**Trade-off**: no podés modificar el código para tu caso particular. Si querés algo custom, mirá `docs/actualizar.md` para las alternativas.
 
 > 🔴 **El primer deploy sale verde y no prueba nada.**
-> Ése lo dispara Vercel al importar el proyecto. **El que importa es el segundo** — el que sale cuando cambiás algo. Si el segundo falla y el primero no, casi siempre es porque los commits están firmados con un correo que no es el dueño de la cuenta de Vercel. Se arregla en Git (config del autor), no en Vercel.
+> Ése lo dispara Vercel al importar el proyecto. **El que importa es el segundo** — el que sale cuando Leandro pushee algo al repo o cuando cambies una env var. Si notás que el primer deploy salió pero después nada pasa aunque haya updates en el repo original: chequeá **Settings → Git** que la conexión con `LPTheCEOTech/panel-de-ventas` esté activa. Ahí también podés ver los últimos commits que Vercel detectó.
 
 ---
 
-### Paso 4 — Primer login y configurar tu panel
+### Paso 3 — Primer login y configurar tu panel
 
-Abrí la URL → login con el correo + contraseña del Paso 2. Entrás al panel (todo en cero).
+Abrí la URL → login con el correo + contraseña del Paso 1 → entrás al panel (todo en cero).
 
 **Ajustes**:
 - Nombre del panel, iniciales, tu nombre.
@@ -114,17 +112,24 @@ Si por algún motivo desaparece el bucket `logos` de Supabase Storage (raro, per
 
 Mientras tanto, el topbar y el favicon caen al fallback con las iniciales sobre el color de marca. Nada se rompe.
 
+### Los updates son automáticos, pero las migraciones no
+
+Cuando Leandro sube una **mejora de código** al repo, tu Vercel lo detecta y deploya solo. Vos no hacés nada.
+
+Cuando la mejora trae **una migración de base de datos nueva** (una tabla o columna que no existía), Leandro te avisa y **vos corrés ese archivo SQL** en tu Supabase → SQL Editor. Es exactamente igual a lo que hiciste en el Paso 1.4, pero un archivo chico. Detalles en `docs/actualizar.md`.
+
 ---
 
 ## Cuando algo no anda
 
 | Lo que ves | Casi siempre es |
 |---|---|
-| «error de servidor» al entrar | Supabase pausado (paso «se duerme»), o una clave copiada con los puntitos (Paso 2). |
+| «error de servidor» al entrar | Supabase pausado (paso «se duerme»), o una clave copiada con los puntitos (Paso 1). |
 | «Correo o contraseña incorrectos» | Eso mismo. Podés resetearlo desde Supabase → Authentication → Users → tres puntitos → «Send password recovery». |
 | Después del login te tira a **/pendiente** | El SQL «Todo en Uno» no te marcó como admin (escribiste mal el correo en la línea `WHERE email`). Corregí y correlo de nuevo. |
-| Deploy nuevo de Vercel falla y el primero había salido bien | El correo del autor de los commits. Se arregla con `git config user.email` (que coincida con el correo de la cuenta de Vercel). |
+| Vercel no importa el repo de Leandro | Apretá «Adjust GitHub App Permissions» → agregá acceso a `LPTheCEOTech/panel-de-ventas`. GitHub te deja porque el repo es público. |
 | El panel está todo en `—` | No hay reportes cargados. No es un error. |
 | Un formulario dice que no hay nadie | Falta cargar el equipo (menú Equipo). |
 | Un vendedor invitado no puede entrar | El link del correo puede haber expirado (24 hs). Andá a Supabase → Authentication → Users → tres puntitos al lado del correo → «Send magic link». |
 | Cambié las iniciales en Ajustes y la pestaña sigue igual | Cache del favicon (60 s). Refrescá con Cmd+Shift+R. |
+| Leandro publicó un update y mi app no cambia | Andá a tu proyecto en Vercel → Deployments → mirá si aparece el deploy nuevo con estado «Ready». Si no aparece, Settings → Git → verificá que el repo conectado sea `LPTheCEOTech/panel-de-ventas`. Si la conexión se rompió, «Reconnect». |
