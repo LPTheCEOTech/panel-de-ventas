@@ -52,15 +52,6 @@ Cada miembro se loguea con su propio correo (invitación por Supabase Auth).
 | **[docs/actualizar.md](docs/actualizar.md)** | Cómo traer los updates que Leandro publique. |
 | **[docs/guia-instalacion.md](docs/guia-instalacion.md)** | Versión narrativa larga de la instalación (con contexto y gotchas). |
 
-## Si usás Claude / Cursor / Copilot
-
-El repo tiene contexto para agentes de IA:
-
-- **`CLAUDE.md`**: doctrina general (SaaS Factory + este proyecto).
-- **`CLAUDE.panel-de-ventas.md`**: contexto específico del panel (arquitectura, reglas, trampas conocidas).
-
-Podés pegarles el link al repo y decirle a tu Claude «leé el CLAUDE.md y el CLAUDE.panel-de-ventas.md» — ya sabe cómo funciona todo.
-
 ## Stack
 
 - **Next.js 16** (App Router) + **React 19** + **TypeScript**

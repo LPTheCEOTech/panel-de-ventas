@@ -16,3 +16,9 @@ next-env.d.ts
 .vercel-token
 .mcp.json
 supabase/.temp/
+
+# andamiaje de la SaaS Factory / agentes IA — NUNCA se versiona en este repo.
+# Si querés usar la Factory en tu copia local, funciona igual; solo no se sube.
+.claude/
+CLAUDE.md
+CLAUDE.*.md
