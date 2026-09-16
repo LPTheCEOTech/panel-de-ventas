@@ -63,14 +63,18 @@ Cuando termine de crearse:
 - [ ] Vas a ver tres cosas para copiar. **Copialas al gestor de contraseñas**, ahora no las uses:
 
 
-| En la pantalla dice                    | Anotalo como  |
-| -------------------------------------- | ------------- |
-| **Project URL**                        | `URL`         |
-| **anon / public**                      | `ANON_KEY`    |
-| **service_role** (tapada con puntitos) | `SERVICE_KEY` |
+| En la pantalla dice                    | Anotalo como  | Se ve así (formato)                                         |
+| -------------------------------------- | ------------- | ----------------------------------------------------------- |
+| **Project URL**                        | `URL`         | `https://xxxxx.supabase.co` (nada más, sin barra al final) |
+| **anon / public**                      | `ANON_KEY`    | JWT largo, empieza con `eyJhbGciOi…`                       |
+| **service_role** (tapada con puntitos) | `SERVICE_KEY` | JWT largo, arranca igual que el anon pero **es distinto**  |
 
 
-> 🔴 **Cuidado con la service_role.** Está tapada con puntitos por seguridad. **Apretá el botón «Reveal» primero** y después **el botón de copiar** (el rectangulito al lado). NO la seleccionés con el mouse — te llevás los puntitos y no la clave, y la app no funciona sin dar un error claro.
+> 🔴 **Regla de oro para copiar las 3.** Usá el **rectangulito de copiar** que está al lado de cada campo. **NO seleccionés con el mouse.** Si arrastrás el cursor sobre la clave, te llevás los puntitos censurados en el medio y no la clave real — la app queda rota y no da un error claro. Este es el bug #1 que traba a los alumnos.
+>
+> 🔴 **Cuidado especial con la `service_role`.** Además de lo anterior, esa clave viene tapada con puntitos por seguridad. **Apretá primero el botón «Reveal»** para destaparla y **después** el rectangulito de copiar.
+>
+> ✅ **Chequeo rápido**: pegá las 3 en un bloc de notas para verlas. `URL` debe empezar con `https://` y terminar en `.supabase.co`. `ANON_KEY` y `SERVICE_KEY` son ambos JWTs (arrancan con `eyJ`, tienen 2 puntos que separan 3 bloques de texto). **`ANON_KEY` y `SERVICE_KEY` NO son iguales** — comparalos hasta el final. Si son idénticas, copiaste dos veces la misma; volvé al dashboard de Supabase y agarrá la otra.
 
 ### 1.3 · Crear tu usuario admin (el que va a entrar al panel)
 
@@ -130,14 +134,20 @@ En la pantalla de configuración del proyecto:
 - [ ] Vas a agregar tres variables, una por una:
 
 
-| Key (nombre exacto)             | Value (lo que copiaste en 1.2) |
-| ------------------------------- | ------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`      | tu `URL`                       |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | tu `ANON_KEY`                  |
-| `SUPABASE_SERVICE_ROLE_KEY`     | tu `SERVICE_KEY`               |
+| Key (nombre exacto)             | Value (lo que copiaste en 1.2) | Formato esperado                  |
+| ------------------------------- | ------------------------------ | --------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`      | tu `URL`                       | `https://xxxxx.supabase.co`       |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | tu `ANON_KEY`                  | JWT que arranca con `eyJ…`        |
+| `SUPABASE_SERVICE_ROLE_KEY`     | tu `SERVICE_KEY`               | JWT **distinto** del `ANON_KEY`   |
 
 
 > 💡 Copiá los nombres **EXACTOS** desde la tabla de arriba (mayúsculas, guiones bajos). Un typo acá y la app dice «error de servidor» sin explicar por qué.
+>
+> 🔴 **Chequeos antes de darle Save a cada una**:
+>
+> 1. `NEXT_PUBLIC_SUPABASE_URL` — pegá solo la URL de Supabase (tipo `https://xxxxx.supabase.co`). **NO pegues** la URL del artifact de Claude, ni la de este checklist en GitHub, ni la de tu propio Vercel. Solo la de tu proyecto de **Supabase**.
+> 2. `NEXT_PUBLIC_SUPABASE_ANON_KEY` — verificá que no aparezca ningún `•`, `·` ni `…` en el medio. Si ves puntitos, es porque la copiaste con el mouse en vez del botoncito de copiar — volvé al paso 1.2 y agarrala bien.
+> 3. `SUPABASE_SERVICE_ROLE_KEY` — mismo chequeo de puntitos. **Y además**: comparala con el `ANON_KEY` de arriba. Si son idénticas, copiaste dos veces la misma clave. La `service_role` es una **clave distinta** de la `anon` en Supabase → Project Settings → API.
 
 - [ ] Después de cada una, apretás **«Save»** o pasas a la siguiente.
 
@@ -147,7 +157,19 @@ En la pantalla de configuración del proyecto:
 - [ ] Esperá 2-3 minutos. La pantalla muestra el log del build.
 - [ ] Cuando ves «Congratulations» con confeti → listo.
 - [ ] Click en la imagen de preview o en el botón **«Continue to Dashboard»**.
-- [ ] En el dashboard vas a ver tu URL: algo tipo `mi-panel.vercel.app` — copiala.
+- [ ] En el dashboard vas a ver tu URL: algo tipo `mi-panel.vercel.app` — **copiala, la usás en el paso siguiente**.
+
+### 2.4 · Avisarle a Supabase cuál es tu URL de Vercel
+
+Sin este paso, las invitaciones por correo que le mandes a tu equipo van a llegar con links rotos que apuntan a `localhost`. Es corto y va una sola vez.
+
+- [ ] Volvé a Supabase → menú izquierdo **Authentication** → **URL Configuration**.
+- [ ] **Site URL**: borrá lo que hay (`http://localhost:3000`) y pegá tu URL de Vercel del paso 2.3.
+  - Ejemplo bien: `https://mi-panel.vercel.app`
+  - Ejemplo mal: `https://mi-panel.vercel.app/` (con barra al final) — sacala.
+- [ ] Más abajo, **Redirect URLs** → botón **«Add URL»** → pegá tu URL de Vercel con `/**` al final.
+  - Ejemplo: `https://mi-panel.vercel.app/**`
+- [ ] Botón **«Save»** abajo.
 
 ---
 
@@ -195,9 +217,12 @@ Los números están en cero (todavía no cargaste nada, es esperado). Vamos a pe
 
 | Lo que ves | Qué pasa |
 |---|---|
-| «error de servidor» en el login | Chequeá que las 3 env vars en Vercel estén bien (Settings → Environment Variables). Especial cuidado con `SERVICE_KEY` — si copiaste los puntitos en vez de la clave, error. |
+| «error de servidor» en el login | Casi siempre es una env var mal en Vercel. Andá a Settings → Environment Variables, abrí cada una con el ojito y revisá: (1) `NEXT_PUBLIC_SUPABASE_URL` tiene que ser tipo `https://xxxxx.supabase.co` — **no la URL del artifact, ni la de este checklist, ni la de tu Vercel**; (2) las 2 keys arrancan con `eyJ`, no tienen `•` en el medio, y `ANON_KEY` ≠ `SERVICE_KEY`. Si tocás algo, después andá a Deployments → último → tres puntitos → **Redeploy**. |
+| Vercel te muestra **«Needs Attention»** al lado de `SUPABASE_SERVICE_ROLE_KEY` | Casi seguro copiaste la misma clave que en `ANON_KEY`. Volvé al paso 1.2 y agarrá la `service_role` de Supabase (Project Settings → API → botón «Reveal» + rectangulito de copiar). Reemplazá el valor en Vercel y hacé Redeploy. |
+| «This page couldn't load — A server error occurred» al entrar | Mismo caso de arriba: env vars mal o el SQL «Todo en Uno» no se corrió. Chequeá las envs primero, después andá a Supabase → SQL Editor → History y verificá que aparezca una corrida reciente del «Todo en Uno». |
 | «Correo o contraseña incorrectos» | Correo o contraseña incorrectos. Podés resetearlo desde Supabase → Authentication → Users → tres puntitos → «Send password recovery». |
-| Después del login te tira a **/pendiente** | El SQL «Todo en Uno» no te marcó como admin. Volvé al SQL Editor y correlo solo la parte del bootstrap (últimas 5 líneas antes de la comprobación). |
+| Después del login te tira a **/pendiente** | El SQL «Todo en Uno» no te marcó como admin — casi seguro te olvidaste de reemplazar `TU_CORREO_AQUI` por tu correo real. Volvé al SQL Editor y correlo solo la parte del bootstrap (últimas 5 líneas antes de la comprobación), con tu correo entre las comillas. |
+| Invitaste a alguien y el link del correo no funciona (o abre `localhost`) | Te saltaste el paso 2.4. Andá a Supabase → Authentication → URL Configuration y configurá **Site URL** con tu URL de Vercel y **Redirect URLs** con esa URL + `/**`. |
 | Vercel dice «no tengo acceso al repo» al importar | Apretá «Adjust GitHub App Permissions» → agregá acceso a `LPTheCEOTech/panel-de-ventas`. GitHub te deja porque el repo es público. |
 | El panel está todo en `—` | No hay reportes cargados todavía. No es un error. |
 | Después de una semana sin usar el panel, «error de servidor» | Supabase pausa proyectos gratuitos tras 7 días sin actividad. Andá a supabase.com → tu proyecto → botón **«Restore»** o **«Resume»**. Tarda 2 min y vuelve todo. Para evitarlo: que alguien cargue algo al menos una vez por semana. |
