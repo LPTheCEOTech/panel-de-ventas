@@ -17,11 +17,18 @@ import { sesionActual } from '@/shared/datos/sesion-usuario'
  */
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha tiene que ser AAAA-MM-DD')
 const dineroCents = z.number().int().min(0).max(1_000_000_000)
+// 🔴 Sesión 3 · origen del lead. Enum estricto sin default; el form obliga a
+// elegir uno antes de habilitar Guardar, así que llegar acá sin el campo es
+// error del cliente y devolvemos el mensaje que ve el closer.
+const zOrigen = z.enum(['organico', 'anuncios', 'referidos'], {
+  error: 'Elegí de dónde vino el lead',
+})
 
 const zNueva = z.object({
   fecha,
   personaId: z.string().min(1).max(64).optional(),
   leadNombre: z.string().trim().min(2, 'Escribí el nombre del lead').max(80),
+  origenLead: zOrigen,
   asistio: z.boolean(),
   reagendada: z.boolean(),
   cerro: z.boolean(),
@@ -33,6 +40,7 @@ const zNueva = z.object({
 const zCambios = z.object({
   id: z.string().min(1).max(64),
   leadNombre: z.string().trim().min(2).max(80).optional(),
+  origenLead: zOrigen.optional(),
   asistio: z.boolean().optional(),
   reagendada: z.boolean().optional(),
   cerro: z.boolean().optional(),
@@ -71,6 +79,7 @@ export async function POST(request: NextRequest) {
     const l = await datos().crearLlamada({
       fecha: p.data.fecha, personaId,
       leadNombre: p.data.leadNombre,
+      origenLead: p.data.origenLead,
       asistio: p.data.asistio, reagendada: p.data.reagendada, cerro: p.data.cerro,
       revenueCents: p.data.revenueCents, cashCents: p.data.cashCents,
       nota: p.data.nota ?? null,

@@ -6,20 +6,32 @@ import { useRouter } from 'next/navigation'
 import { tasa } from '@/shared/calculo/metricas'
 import { IconoAviso, IconoEquis, IconoLapiz } from '@/shared/chasis/iconos'
 import { dinero, fechaLarga, porcentajeEntero } from '@/shared/formato'
-import type { Llamada, Persona } from '@/shared/tipos'
+import type { Llamada, OrigenLead, Persona } from '@/shared/tipos'
 import { CampoDinero } from '@/features/reportes/piezas'
 
 /**
  * 🔴 Fase D · pantalla `/llamada`: formulario chico arriba + lista del día
  * abajo con contador vivo al pie.
  *
- * El closer, al terminar una llamada, marca los tres switches, tipea el
- * revenue y el cash, y guarda. Aparece en la lista. Puede borrar (baja
- * lógica) y el contador y el panel se recalculan al instante.
+ * El closer, al terminar una llamada, marca los tres switches, elige el
+ * origen del lead, tipea el revenue y el cash, y guarda. Aparece en la
+ * lista. Puede borrar (baja lógica) y el contador y el panel se
+ * recalculan al instante.
  *
  * `bloqueadoA`: si es miembro, el server ya sabe quién carga y le manda su
  * personaId. Admin puede recibir un `<select>` (o cargar sin bloquear).
  */
+const ORIGENES: readonly OrigenLead[] = ['organico', 'anuncios', 'referidos'] as const
+
+/** 🔴 Sesión 3 · el enum de BD/Zod vive en minúscula sin tildes; los labels
+ *  bonitos se resuelven acá. Es la única fuente para los tres textos. */
+export function etiquetaOrigen(v: OrigenLead | ''): string {
+  if (v === 'organico') return 'Orgánico'
+  if (v === 'anuncios') return 'Anuncios'
+  if (v === 'referidos') return 'Referidos'
+  return ''
+}
+
 export function PanelLlamada({
   personas, hoy, simbolo, iniciales, bloqueadoA,
 }: {
@@ -33,14 +45,12 @@ export function PanelLlamada({
   const [personaId, setPersonaId] = useState(bloqueadoA ?? personas[0]?.id ?? '')
   const [fecha, setFecha] = useState(hoy)
   const [leadNombre, setLeadNombre] = useState('')
+  // 🔴 Sesión 3 · sin default. Arranca vacío para forzar elección activa;
+  // el botón Guardar está disabled hasta que se apriete una píldora.
+  const [origenLead, setOrigenLead] = useState<OrigenLead | ''>('')
   const [asistio, setAsistio] = useState(true)
   const [reagendada, setReagendada] = useState(false)
   const [cerro, setCerro] = useState(false)
-  // 🔴 Fase D (sesion 2) · el caso «cobré una cuota de una venta anterior» es
-  // legítimo pero no es «cerró». Antes lo permitíamos con un aviso ambiguo;
-  // ahora es un checkbox explícito que revela SOLO el Cash cuando no hubo
-  // cierre en esta llamada.
-  const [cobroAnterior, setCobroAnterior] = useState(false)
   const [revenueCents, setRevenue] = useState(0)
   const [cashCents, setCash] = useState(0)
   const [nota, setNota] = useState('')
@@ -51,16 +61,12 @@ export function PanelLlamada({
 
   const persona = personas.find((p) => p.id === personaId)
 
-  // 🔴 Fase D (sesion 2) · condicionales de UI. Revenue solo si cerró.
-  // Cash si cerró O si el usuario marcó explícitamente «cobro anterior».
-  // Prender «cerró» apaga automáticamente «cobro anterior» (son excluyentes:
-  // si cerró en esta llamada, no es cobro de una anterior).
+  // 🔴 Sesión 3 · Plata pegada a «Cerró». Sin la excepción del cobro anterior.
   const mostrarRevenue = cerro
-  const mostrarCash = cerro || (!cerro && cobroAnterior)
+  const mostrarCash = cerro
 
   const avisos: string[] = []
   if (cerro && !asistio) avisos.push('Marcaste cerró sin marcar asistió. ¿Cerraste por mensaje después?')
-  if (!cerro && cobroAnterior) avisos.push('Cash de una venta anterior. No cuenta como cierre nuevo.')
 
   const contador = useMemo(() => {
     let n = 0, a = 0, c = 0, rev = 0, cash = 0
@@ -81,6 +87,7 @@ export function PanelLlamada({
       const cuerpo = {
         fecha, personaId,
         leadNombre: leadNombre.trim(),
+        origenLead,
         asistio, reagendada, cerro,
         // 🔴 si el campo está oculto, mandamos 0 explícitamente. Nunca mandar
         // basura si el usuario tipeó algo y después apagó el switch.
@@ -95,9 +102,11 @@ export function PanelLlamada({
       const d = await r.json().catch(() => null)
       if (!r.ok) { setError(d?.error ?? 'No se pudo guardar.'); return }
       setLlamadas((xs) => [...xs, d.llamada as Llamada])
-      // limpia el formulario para la siguiente
+      // limpia el formulario para la siguiente. `origenLead` vuelve a ''
+      // — es una elección por-llamada, no se autoretiene.
       setLeadNombre('')
-      setAsistio(true); setReagendada(false); setCerro(false); setCobroAnterior(false)
+      setOrigenLead('')
+      setAsistio(true); setReagendada(false); setCerro(false)
       setRevenue(0); setCash(0); setNota('')
       router.refresh()
     } catch {
@@ -175,23 +184,28 @@ export function PanelLlamada({
             </div>
           </div>
 
+          {/* 🔴 Sesión 3 · origen del lead. Obligatorio SIN default; el
+              botón Guardar está disabled hasta que se elija una opción. */}
+          <div className="section-title">¿De dónde vino el lead? <span className="req">*</span></div>
+          <div className="origen-seg" role="radiogroup" aria-label="Origen del lead">
+            {ORIGENES.map((v) => (
+              <label key={v} className={`opt${origenLead === v ? ' on' : ''}`}>
+                <input
+                  type="radio" name="origen-lead" value={v}
+                  checked={origenLead === v}
+                  onChange={() => setOrigenLead(v)}
+                />
+                {etiquetaOrigen(v)}
+              </label>
+            ))}
+          </div>
+
           <div className="section-title">Cómo fue esta llamada</div>
           <div className="switches-llamada">
             <label className="sw"><input type="checkbox" checked={asistio} onChange={(e) => setAsistio(e.target.checked)} /> Asistió</label>
             <label className="sw"><input type="checkbox" checked={reagendada} onChange={(e) => setReagendada(e.target.checked)} /> Reagendada</label>
-            <label className="sw"><input type="checkbox" checked={cerro} onChange={(e) => {
-              const v = e.target.checked
-              setCerro(v)
-              // 🔴 prender «cerró» apaga «cobro anterior» — son excluyentes
-              if (v) setCobroAnterior(false)
-            }} /> Cerró</label>
+            <label className="sw"><input type="checkbox" checked={cerro} onChange={(e) => setCerro(e.target.checked)} /> Cerró</label>
           </div>
-
-          {!cerro && (
-            <div className="switches-llamada" style={{ marginTop: 6 }}>
-              <label className="sw"><input type="checkbox" checked={cobroAnterior} onChange={(e) => setCobroAnterior(e.target.checked)} /> Cobro de venta anterior</label>
-            </div>
-          )}
 
           {(mostrarRevenue || mostrarCash) && (
             <>
@@ -205,9 +219,7 @@ export function PanelLlamada({
                 <CampoDinero ancho={mostrarRevenue ? 'c6' : 'c8'} nombre="cash" etiqueta="Cash collected"
                   valorCents={cashCents} hero
                   onCambio={setCash} simbolo={simbolo}
-                  pista={cerro
-                    ? <>Solo lo que <b>entró en esta llamada</b>.</>
-                    : <>Cobro que <b>entró hoy</b> de una venta anterior.</>} />
+                  pista={<>Solo lo que <b>entró en esta llamada</b>.</>} />
               </div>
             </>
           )}
@@ -226,7 +238,7 @@ export function PanelLlamada({
           <div className="form-actions">
             <span className="helper">Se guarda al enviar y aparece abajo al instante.</span>
             <button className="btn-primary" onClick={guardar}
-              disabled={guardando || !personaId || leadNombre.trim().length < 2}
+              disabled={guardando || !personaId || leadNombre.trim().length < 2 || origenLead === ''}
               type="button">
               {guardando ? 'Guardando…' : 'Guardar llamada'}
             </button>
@@ -265,6 +277,9 @@ export function PanelLlamada({
                 <div className="ll-badges">
                   <span className={`pill ${l.asistio ? 'set' : 'no'}`}>{l.asistio ? 'asistió' : 'no asistió'}</span>
                   {l.reagendada && <span className="pill clo">reagendada</span>}
+                  {l.origenLead && (
+                    <span className={`pill org-${l.origenLead}`}>{etiquetaOrigen(l.origenLead).toLowerCase()}</span>
+                  )}
                   {l.cerro && <span className="pill amb">cerró</span>}
                 </div>
                 <span className="ll-cash num">{l.cashCents > 0 ? dinero(l.cashCents, simbolo) : '—'}</span>

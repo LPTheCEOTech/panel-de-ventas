@@ -47,6 +47,11 @@ export interface ReporteCloser {
  * 🔴 `activa` es BAJA LÓGICA. El closer se equivoca y borra; el histórico no
  * se toca.
  */
+/** 🔴 Sesión 3 · categorías del origen del lead. `''` es el estado
+ *  transitorio de las filas creadas antes de la migración 008; el
+ *  form obliga a elegir una de las tres al crear una llamada nueva. */
+export type OrigenLead = 'organico' | 'anuncios' | 'referidos'
+
 export interface Llamada {
   id: string
   personaId: string
@@ -62,6 +67,10 @@ export interface Llamada {
    *  Obligatorio en el form (Zod exige >= 2). En filas viejas puede ser
    *  '' hasta que se editen (el front lo pinta como «(sin nombre)»). */
   leadNombre: string
+  /** 🔴 Sesión 3 · de dónde vino el lead. Obligatorio en llamadas nuevas
+   *  (Zod exige uno del enum). `''` solo aparece en filas viejas pre-008;
+   *  el front omite la pill cuando el valor es ''. */
+  origenLead: OrigenLead | ''
 }
 
 /**

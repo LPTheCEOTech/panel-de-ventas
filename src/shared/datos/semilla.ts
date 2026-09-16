@@ -19,7 +19,7 @@
  * 🔴 El instalador NO corre esto. Una instalación nueva arranca vacía, y así
  * tiene que verse bien.
  */
-import type { Gasto, Llamada, Persona, ReporteCloser, ReporteSetter } from '@/shared/tipos'
+import type { Gasto, Llamada, OrigenLead, Persona, ReporteCloser, ReporteSetter } from '@/shared/tipos'
 
 /** Lunes 20 a domingo 26 de julio de 2026 — una semana real del calendario. */
 export const SEMANA_ORO = ['2026-07-20','2026-07-21','2026-07-22','2026-07-23','2026-07-24','2026-07-25','2026-07-26'] as const
@@ -147,6 +147,26 @@ function hashLead(fecha: string, personaId: string, n: number): number {
   return (h >>> 0) % LEAD_NOMBRES.length
 }
 
+/**
+ * 🔴 Sesión 3 · reparto determinista del origen del lead.
+ * Mix 60/30/10 (organico/anuncios/referidos) — un negocio con orgánico
+ * fuerte y anuncios prendidos hace poco; los referidos son minoría.
+ * Igual que `hashLead`: dos corridas de la semilla dan los mismos origenes,
+ * lo que hace verificable el número por origen si algún día se chequea.
+ */
+const ORIGENES_MIX: OrigenLead[] = [
+  'organico', 'organico', 'organico', 'organico', 'organico', 'organico',
+  'anuncios', 'anuncios', 'anuncios',
+  'referidos',
+]
+
+function hashOrigen(fecha: string, personaId: string, n: number): OrigenLead {
+  let h = 5381
+  const s = `og-${fecha}-${personaId}-${n}`
+  for (const c of s) { h = ((h << 5) + h) ^ c.charCodeAt(0) }
+  return ORIGENES_MIX[(h >>> 0) % ORIGENES_MIX.length]
+}
+
 export const LLAMADAS_DEMO: Llamada[] = Object.entries(CLOSERS).flatMap(
   ([personaId, [llamadas, asistieron, reagendadas, cierres, cashDia]]) =>
     SEMANA_ORO.flatMap((fecha, i) => {
@@ -182,6 +202,7 @@ export const LLAMADAS_DEMO: Llamada[] = Object.entries(CLOSERS).flatMap(
           nota: null,
           activa: true,
           leadNombre: LEAD_NOMBRES[hashLead(fecha, personaId, n)],
+          origenLead: hashOrigen(fecha, personaId, n),
         })
       }
       return filas

@@ -23,6 +23,12 @@
   --ambar:#B57F08; --ambar-bg:#FDF5E3; --ambar-ink:#6E4C00;
   --azul:#2C82C9;  --azul-bg:#EAF4FD;
   --rojo:#C0453C;  --rojo-bg:#FBEDEB;
+  /* 🔴 Sesión 3 · 3 categorías nuevas de origen del lead (Orgánico / Anuncios /
+     Referidos). Verde vivo, violeta y rosado — colores distintos de las pills
+     ya existentes para que no se confundan con «asistió/cerró/reagendada». */
+  --org-organico-bg:#DCFCE7; --org-organico-ink:#166534;
+  --org-anuncios-bg:#EDE9FE; --org-anuncios-ink:#5B21B6;
+  --org-referidos-bg:#FCE7F3; --org-referidos-ink:#9D174D;
   --bg:#F4F8F5; --card:#FFFFFF; --hueco:#F2F7F4; --border:#E2EBE5; --line:#EDF3EF;
   --ink:#0C1A12; --muted:#5C7167; --faint:#8B9E93;
   --sombra:0 1px 2px rgba(12,26,18,.04);
@@ -46,6 +52,9 @@
   --ambar:#E8B84B; --ambar-bg:#2C2411; --ambar-ink:#F0CC72;
   --azul:#5AA9E6;  --azul-bg:#0F2231;
   --rojo:#E07A70;  --rojo-bg:#2E1614;
+  --org-organico-bg:#0A2E1D; --org-organico-ink:#4ADE80;
+  --org-anuncios-bg:#1E1B4B; --org-anuncios-ink:#C4B5FD;
+  --org-referidos-bg:#4A0E2A; --org-referidos-ink:#F9A8D4;
   --bg:#070E0B; --card:#0E1714; --hueco:#131E19; --border:#1E2C26; --line:#18241F;
   --ink:#E9F1EC; --muted:#94A99F; --faint:#6B7E75;
   --sombra:0 1px 2px rgba(0,0,0,.5);
@@ -60,6 +69,9 @@
     --m1:#0C2A1E; --m2:#14402D; --m3:#147A5A; --m4:#1BA772; --m5:#25C888; --m6:#2FE09A; --m7:#7DF0C4;
     --ambar:#E8B84B; --ambar-bg:#2C2411; --ambar-ink:#F0CC72; --azul:#5AA9E6; --azul-bg:#0F2231;
     --rojo:#E07A70; --rojo-bg:#2E1614;
+    --org-organico-bg:#0A2E1D; --org-organico-ink:#4ADE80;
+    --org-anuncios-bg:#1E1B4B; --org-anuncios-ink:#C4B5FD;
+    --org-referidos-bg:#4A0E2A; --org-referidos-ink:#F9A8D4;
     --bg:#070E0B; --card:#0E1714; --hueco:#131E19; --border:#1E2C26; --line:#18241F;
     --ink:#E9F1EC; --muted:#94A99F; --faint:#6B7E75;
     --sombra:0 1px 2px rgba(0,0,0,.5);
@@ -694,6 +706,28 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pill.amb{background:var(--ambar-bg);color:var(--ambar-ink)}
 
 .pill.no{background:var(--hueco);color:var(--faint);border:1px solid var(--border)}
+
+/* 🔴 Sesión 3 · pills de origen del lead en la lista del día */
+.pill.org-organico{background:var(--org-organico-bg);color:var(--org-organico-ink)}
+
+.pill.org-anuncios{background:var(--org-anuncios-bg);color:var(--org-anuncios-ink)}
+
+.pill.org-referidos{background:var(--org-referidos-bg);color:var(--org-referidos-ink)}
+
+/* 🔴 Sesión 3 · segmented radio para «¿De dónde vino el lead?». Selección
+   única, sin default. La opción activa se pinta con la paleta de marca. */
+.origen-seg{display:inline-flex;background:var(--hueco);border:1px solid var(--border);
+  border-radius:var(--r-pill);padding:3px;gap:2px;margin:0 0 8px}
+
+.origen-seg .opt{position:relative;display:inline-flex;align-items:center;justify-content:center;
+  padding:6px 14px;font-size:12.5px;font-weight:600;color:var(--muted);cursor:pointer;
+  border-radius:var(--r-pill);user-select:none;min-width:96px;transition:background .12s,color .12s}
+
+.origen-seg .opt input{position:absolute;inset:0;opacity:0;cursor:pointer;margin:0}
+
+.origen-seg .opt.on,.origen-seg .opt:has(input:checked){background:var(--m1);color:var(--m7)}
+
+.origen-seg .opt:hover:not(.on):not(:has(input:checked)){color:var(--ink)}
 
 .addrow{display:flex;flex-direction:column;gap:12px}
 

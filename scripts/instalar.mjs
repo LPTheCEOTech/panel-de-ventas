@@ -20,7 +20,7 @@ import pg from 'pg'
 import { abrirPreguntas, conectar, morir } from './comun.mjs'
 
 const RAIZ = dirname(dirname(fileURLToPath(import.meta.url)))
-const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql', '003_gastos.sql', '004_logo.sql', '005_usuarios.sql', '006_llamadas.sql', '007_lead_nombre.sql']
+const MIGRACIONES = ['001_esquema.sql', '002_permisos.sql', '003_gastos.sql', '004_logo.sql', '005_usuarios.sql', '006_llamadas.sql', '007_lead_nombre.sql', '008_origen_lead.sql']
 const MINIMO_CONTRASENA = 12
 const BUCKET_LOGO = 'logos'
 

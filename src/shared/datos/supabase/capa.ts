@@ -203,7 +203,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
 
     async leerLlamadas(v: Ventana, personaId?: string): Promise<Llamada[]> {
       let q = sb.from('llamadas')
-        .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre')
+        .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre, origen_lead')
         .eq('activa', true)
         .gte('fecha', v.desde).lte('fecha', v.hasta)
       if (personaId) q = q.eq('persona_id', personaId)
@@ -215,6 +215,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         revenueCents: Number(f.revenue_cents), cashCents: Number(f.cash_cents),
         nota: f.nota ?? null, activa: f.activa,
         leadNombre: f.lead_nombre ?? '',
+        origenLead: (f.origen_lead ?? '') as Llamada['origenLead'],
       }))
     },
 
@@ -225,7 +226,8 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         revenue_cents: l.revenueCents, cash_cents: l.cashCents,
         nota: l.nota ?? null,
         lead_nombre: l.leadNombre,
-      }).select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre').single()
+        origen_lead: l.origenLead,
+      }).select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre, origen_lead').single()
       reventar('crearLlamada', error)
       return {
         id: data!.id, personaId: data!.persona_id, fecha: data!.fecha,
@@ -233,6 +235,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         revenueCents: Number(data!.revenue_cents), cashCents: Number(data!.cash_cents),
         nota: data!.nota ?? null, activa: data!.activa,
         leadNombre: data!.lead_nombre ?? '',
+        origenLead: (data!.origen_lead ?? '') as Llamada['origenLead'],
       }
     },
 
@@ -242,6 +245,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
         revenueCents: 'revenue_cents', cashCents: 'cash_cents',
         nota: 'nota', activa: 'activa',
         leadNombre: 'lead_nombre',
+        origenLead: 'origen_lead',
       }
       const fila: Record<string, unknown> = { actualizado_en: new Date().toISOString() }
       for (const [k, v] of Object.entries(cambios)) {

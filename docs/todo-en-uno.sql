@@ -208,6 +208,25 @@ end $$;
 
 
 -- =============================================================
+-- 008 · ORIGEN_LEAD (Sesión 3 · de dónde vino el lead)
+-- =============================================================
+
+alter table llamadas
+  add column if not exists origen_lead text not null default '';
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'llamadas_origen_lead_valido'
+  ) then
+    alter table llamadas
+      add constraint llamadas_origen_lead_valido
+      check (origen_lead in ('', 'organico', 'anuncios', 'referidos'));
+  end if;
+end $$;
+
+
+-- =============================================================
 -- CONFIGURACIÓN INICIAL
 -- Deja una fila mínima para que la app arranque. Todos los valores se
 -- editan después desde /ajustes en la propia app.
@@ -251,7 +270,7 @@ select id, null, 'admin'
 
 -- =============================================================
 -- COMPROBACIÓN FINAL
--- Esperado (en orden): 1, 1, 1, 1, 1, 1, 1, ≥1, 1
+-- Esperado (en orden): 1, 1, 1, 1, 1, 1, 1, 1, ≥1, 1
 -- Si algún número da 0, algo faltó y hay que revisar la parte
 -- correspondiente antes de seguir a Vercel.
 -- =============================================================
@@ -264,5 +283,6 @@ select
   (select count(*) from information_schema.tables  where table_schema='public' and table_name='usuarios')                                 as usuarios_ok,
   (select count(*) from information_schema.tables  where table_schema='public' and table_name='llamadas')                                 as llamadas_ok,
   (select count(*) from information_schema.columns where table_schema='public' and table_name='llamadas' and column_name='lead_nombre')   as lead_nombre_ok,
+  (select count(*) from information_schema.columns where table_schema='public' and table_name='llamadas' and column_name='origen_lead')   as origen_lead_ok,
   (select count(*) from usuarios where rol='admin')                                                                                       as admins_registrados,
   (select count(*) from storage.buckets where id='logos' and public = true)                                                                as bucket_logos_ok;

@@ -79,6 +79,20 @@ const LEAD_NOMBRES_VIVO = [
   'Vicente Aguirre', 'Ximena Castro', 'Yamila Correa', 'Zeus Palacios',
 ]
 
+// Sesión 3 · origen del lead. Mix 60/30/10 (organico/anuncios/referidos),
+// determinista igual que el nombre — dos corridas dan el mismo reparto.
+const ORIGENES_VIVO = [
+  'organico', 'organico', 'organico', 'organico', 'organico', 'organico',
+  'anuncios', 'anuncios', 'anuncios',
+  'referidos',
+]
+function hashOrigenVivo(fecha, personaId, n) {
+  let h = 5381
+  const s = `og-${fecha}-${personaId}-${n}`
+  for (const c of s) { h = ((h << 5) + h) ^ c.charCodeAt(0) }
+  return ORIGENES_VIVO[(h >>> 0) % ORIGENES_VIVO.length]
+}
+
 const filasSetter = [], filasCloser = [], filasLlamadas = [], filasGastos = []
 const desde = aMs(hoy) - SEMANAS_ATRAS * 7 * dia
 
@@ -142,6 +156,7 @@ for (let t = desde; t <= aMs(hoy); t += dia) {
         cash_cents: cerro ? cashPorCierre[n] : (esCobroSinCierre ? cashFinal : 0),
         activa: true, es_demo: true,
         lead_nombre: leadNombre,
+        origen_lead: hashOrigenVivo(fecha, p.id, n),
       })
     }
   }
