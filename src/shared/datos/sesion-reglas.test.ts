@@ -3,9 +3,11 @@ import { test } from 'node:test'
 
 import { cookieSegura, destinoSeguro, esRutaPublica, MENSAJE_ERROR } from './sesion-reglas'
 
-test('solo el login y su POST se ven sin sesión', () => {
+test('solo el login, su POST y la solicitud de acceso se ven sin sesión', () => {
   assert.equal(esRutaPublica('/login'), true)
   assert.equal(esRutaPublica('/api/auth/login'), true)
+  assert.equal(esRutaPublica('/solicitar-acceso'), true)
+  assert.equal(esRutaPublica('/api/solicitar-acceso'), true)
   for (const r of ['/panel', '/equipo', '/ajustes', '/reporte-setter', '/reporte-closer',
                    '/api/equipo', '/api/ajustes', '/api/reportes/setter', '/api/auth/logout', '/']) {
     assert.equal(esRutaPublica(r), false, `${r} NO puede ser pública`)

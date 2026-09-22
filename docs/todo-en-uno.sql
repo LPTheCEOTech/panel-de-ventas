@@ -8,14 +8,15 @@
 --   · Crea el bucket público `logos` en Supabase Storage.
 --   · Deja una fila de configuración inicial que se edita después desde
 --     Ajustes en la app.
---   · Te marca como admin del panel.
+--   · Crea tu usuario admin (correo + contraseña) y lo deja confirmado.
+--     No hace falta ir a Authentication → Users: este SQL lo hace por vos.
 --
 -- ================================================================
---   🔴  UN SOLO CAMBIO ANTES DE CORRER  🔴
---   Buscá `TU_CORREO_AQUI` más abajo (línea al final) y reemplazalo por
---   el correo con el que te vas a loguear.
---   Ese correo tiene que estar YA creado en Supabase → Authentication →
---   Users (con «Auto Confirm User» prendido) antes de correr esto.
+--   🔴  DOS CAMBIOS ANTES DE CORRER  🔴
+--   Buscá `TU_CORREO_AQUI` y `TU_CONTRASENA_AQUI` al final del archivo y
+--   reemplazalos por el correo y la contraseña con los que vas a entrar
+--   al panel. La contraseña: mínimo 12 caracteres, sin comillas simples.
+--   (Si usás la guía interactiva, ella los reemplaza sola.)
 -- ================================================================
 --
 -- Es idempotente: correrlo dos veces no rompe nada. Si alguna vez agregás
@@ -249,23 +250,53 @@ insert into storage.buckets (id, name, public)
 
 
 -- =============================================================
--- 🔴 BOOTSTRAP · MARCARTE COMO ADMIN
+-- 🔴 BOOTSTRAP · TU USUARIO ADMIN (correo + contraseña)
 --
--- Reemplazá TU_CORREO_AQUI por el correo con el que te vas a loguear.
--- Ese correo tiene que estar YA creado en Authentication → Users, con
--- «Auto Confirm User» prendido, antes de correr esto.
+-- Crea tu usuario directamente en auth.users, ya confirmado, y lo marca
+-- como admin del panel. NO hace falta pasar por Authentication → Users.
 --
--- Si el correo no existe todavía en auth.users, esta línea NO inserta
--- nada (silenciosamente) y el login siguiente te va a mandar a
--- /pendiente. Solución: creá el usuario en Auth y volvé a correr solo
--- esta parte.
+-- Reemplazá TU_CORREO_AQUI y TU_CONTRASENA_AQUI (entre las comillas
+-- simples). Contraseña: mínimo 12 caracteres, sin comillas simples.
+--
+-- Si el correo ya existía en auth.users (por ejemplo lo creaste a mano
+-- antes), no lo duplica ni le cambia la contraseña: solo lo marca admin.
+-- Después de correrlo podés borrar esta query del historial del SQL
+-- Editor para no dejar la contraseña escrita ahí.
 -- =============================================================
 
-insert into usuarios (auth_user_id, persona_id, rol)
-select id, null, 'admin'
-  from auth.users
- where email = 'TU_CORREO_AQUI'
+do $$
+declare
+  v_correo   text := 'TU_CORREO_AQUI';
+  v_password text := 'TU_CONTRASENA_AQUI';
+  v_id       uuid;
+begin
+  select id into v_id from auth.users where email = v_correo limit 1;
+
+  if v_id is null then
+    v_id := gen_random_uuid();
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+      confirmation_token, recovery_token, email_change_token_new, email_change
+    ) values (
+      '00000000-0000-0000-0000-000000000000', v_id, 'authenticated', 'authenticated',
+      v_correo, extensions.crypt(v_password, extensions.gen_salt('bf')), now(),
+      '{"provider":"email","providers":["email"]}'::jsonb, '{}'::jsonb, now(), now(),
+      '', '', '', ''
+    );
+  end if;
+
+  if not exists (select 1 from auth.identities where user_id = v_id and provider = 'email') then
+    insert into auth.identities (id, user_id, provider_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (gen_random_uuid(), v_id, v_id::text,
+      jsonb_build_object('sub', v_id::text, 'email', v_correo, 'email_verified', true),
+      'email', now(), now(), now());
+  end if;
+
+  insert into usuarios (auth_user_id, persona_id, rol)
+    values (v_id, null, 'admin')
     on conflict (auth_user_id) do nothing;
+end $$;
 
 
 -- =============================================================

@@ -1,0 +1,31 @@
+/* La página de acceso reusa la caja del login y solo agranda lo que un
+   alumno que recién llega necesita leer sin esfuerzo. Cero colores
+   literales: todo sale de los tokens de PAPEL. */
+.caja { max-width: 440px; }
+.texto {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--muted);
+  margin: 0 0 16px;
+}
+.texto b { color: var(--ink); }
+.boton { font-size: 15px; padding-block: 12px; }
+.ok {
+  background: var(--m1);
+  color: var(--m7);
+  border: 1px solid var(--m2);
+  border-radius: var(--r-inner);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.err {
+  background: var(--rojo-bg);
+  color: var(--rojo);
+  border-radius: var(--r-inner);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+.ok strong, .err strong { display: block; font-family: var(--display); font-size: 16px; margin-bottom: 4px; }
+.ok p, .err p { margin: 0; font-size: 13.5px; }

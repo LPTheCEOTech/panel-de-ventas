@@ -5,9 +5,11 @@ import type { CookieOptions } from '@supabase/ssr'
  * puedan probar solas.
  */
 
-/** Las ÚNICAS dos rutas que se ven sin sesión. Si el POST del login exigiera
- *  sesión, no habría forma de conseguir una. */
-const RUTAS_PUBLICAS = ['/login', '/api/auth/login']
+/** Las ÚNICAS rutas que se ven sin sesión. Si el POST del login exigiera
+ *  sesión, no habría forma de conseguir una. `/solicitar-acceso` es la puerta
+ *  de entrada de un alumno nuevo: todavía no tiene panel, así que tampoco
+ *  puede tener sesión. */
+const RUTAS_PUBLICAS = ['/login', '/api/auth/login', '/solicitar-acceso', '/api/solicitar-acceso']
 
 export function esRutaPublica(ruta: string): boolean {
   return RUTAS_PUBLICAS.includes(ruta)
