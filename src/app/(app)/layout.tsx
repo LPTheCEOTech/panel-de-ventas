@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation'
 
+import { AvisoActualizacion } from '@/shared/chasis/aviso-actualizacion'
 import { estiloDeMarca } from '@/shared/chasis/marca'
 import { Topbar } from '@/shared/chasis/topbar'
 import { datos } from '@/shared/datos/indice'
+import { estadoDeLaBase } from '@/shared/datos/migrador'
 import { hayCredenciales } from '@/shared/datos/sesion'
 import { sesionActual } from '@/shared/datos/sesion-usuario'
 
@@ -21,9 +23,10 @@ import { sesionActual } from '@/shared/datos/sesion-usuario'
 export const dynamic = 'force-dynamic'
 
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
-  const [config, sesion] = await Promise.all([
+  const [config, sesion, base] = await Promise.all([
     datos().leerConfiguracion(),
     sesionActual(),
+    estadoDeLaBase(),
   ])
 
   // 🔴 Fase C · el auth user existe (el proxy nos dejó entrar) pero no tiene
@@ -41,10 +44,24 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   // panel entero, que es lo que esa pantalla promete. Si el hex está a medio
   // escribir, no se inyecta nada y manda la rampa del mockup.
   const marca = estiloDeMarca(config.marca)
+
+  // 🔴 El aviso de actualización es SOLO para el admin: es el único que puede
+  // aplicarla, y a un vendedor un cartel que no puede resolver solo lo asusta
+  // sin darle nada. En modo dev/demo (`sesion === null`) también se muestra,
+  // igual que el resto de la app, que ahí corre como admin.
+  const esAdmin = !sesion || sesion.usuario.rol === 'admin'
+  const hayQueActualizar = base.estado === 'pendientes' || base.estado === 'sin-actualizador'
+
   return (
     <>
       {marca && <style dangerouslySetInnerHTML={{ __html: marca }} />}
       <Topbar config={config} sesion={sesion} />
+      {esAdmin && hayQueActualizar && (
+        <AvisoActualizacion
+          titulos={base.migraciones.map((m) => m.titulo)}
+          sinActualizador={base.estado === 'sin-actualizador'}
+        />
+      )}
       <main className="wrap">{children}</main>
     </>
   )

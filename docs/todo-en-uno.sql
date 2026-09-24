@@ -300,8 +300,60 @@ end $$;
 
 
 -- =============================================================
+-- ACTUALIZADOR · la puerta para las actualizaciones de un clic
+--
+-- Deja instalada una función que el panel usa para aplicarse a sí mismo
+-- las actualizaciones de base de datos que salgan más adelante. Sin esto,
+-- cada mejora obligaría a copiar y pegar SQL a mano, que es justo lo que
+-- más se rompe.
+--
+-- 🔴 `security definer` + `revoke ... from public`: la función corre con
+-- permisos de dueño, así que SOLO puede llamarla `service_role`, que vive
+-- en el servidor del panel y nunca llega al navegador.
+--
+-- 🔴 Registra qué ya se aplicó: el panel solo ofrece lo que falta, y
+-- aplicar dos veces no hace nada.
+-- =============================================================
+
+create table if not exists migraciones_aplicadas (
+  id          text        primary key,
+  aplicada_en timestamptz not null default now()
+);
+alter table migraciones_aplicadas enable row level security;
+grant select, insert on migraciones_aplicadas to service_role;
+revoke all on migraciones_aplicadas from anon, authenticated;
+
+create or replace function aplicar_migracion(id_migracion text, sql_migracion text)
+returns text
+language plpgsql
+security definer
+set search_path = public, extensions
+as $fn$
+begin
+  if exists (select 1 from migraciones_aplicadas where id = id_migracion) then
+    return 'ya-aplicada';
+  end if;
+  execute sql_migracion;
+  insert into migraciones_aplicadas (id) values (id_migracion);
+  return 'aplicada';
+end;
+$fn$;
+
+revoke all on function aplicar_migracion(text, text) from public;
+revoke all on function aplicar_migracion(text, text) from anon, authenticated;
+grant execute on function aplicar_migracion(text, text) to service_role;
+
+-- Todo lo que este archivo ya creó queda marcado como aplicado, para que el
+-- panel no ofrezca actualizaciones que la base ya tiene.
+insert into migraciones_aplicadas (id) values
+  ('001_esquema'), ('002_permisos'), ('003_gastos'), ('004_logo'),
+  ('005_usuarios'), ('006_llamadas'), ('007_lead_nombre'), ('008_origen_lead')
+  on conflict (id) do nothing;
+
+
+-- =============================================================
 -- COMPROBACIÓN FINAL
--- Esperado (en orden): 1, 1, 1, 1, 1, 1, 1, 1, ≥1, 1
+-- Esperado (en orden): 1, 1, 1, 1, 1, 1, 1, 1, 1, ≥1, 1
 -- Si algún número da 0, algo faltó y hay que revisar la parte
 -- correspondiente antes de seguir a Vercel.
 -- =============================================================
@@ -315,5 +367,6 @@ select
   (select count(*) from information_schema.tables  where table_schema='public' and table_name='llamadas')                                 as llamadas_ok,
   (select count(*) from information_schema.columns where table_schema='public' and table_name='llamadas' and column_name='lead_nombre')   as lead_nombre_ok,
   (select count(*) from information_schema.columns where table_schema='public' and table_name='llamadas' and column_name='origen_lead')   as origen_lead_ok,
+  (select count(*) from information_schema.routines where routine_schema='public' and routine_name='aplicar_migracion')                    as actualizador_ok,
   (select count(*) from usuarios where rol='admin')                                                                                       as admins_registrados,
   (select count(*) from storage.buckets where id='logos' and public = true)                                                                as bucket_logos_ok;
