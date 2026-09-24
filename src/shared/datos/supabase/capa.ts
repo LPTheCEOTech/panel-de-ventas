@@ -274,6 +274,15 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       return { authUserId: data.auth_user_id, personaId: data.persona_id ?? null, rol: data.rol as RolUsuario }
     },
 
+    async buscarUsuarioPorPersona(personaId: string): Promise<Usuario | null> {
+      const { data, error } = await sb
+        .from('usuarios').select('auth_user_id, persona_id, rol')
+        .eq('persona_id', personaId).maybeSingle()
+      reventar('buscarUsuarioPorPersona', error)
+      if (!data) return null
+      return { authUserId: data.auth_user_id, personaId: data.persona_id ?? null, rol: data.rol as RolUsuario }
+    },
+
     async crearUsuario(authUserId: string, personaId: string | null, rol: RolUsuario): Promise<Usuario> {
       const { data, error } = await sb
         .from('usuarios')

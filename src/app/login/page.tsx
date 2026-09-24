@@ -69,6 +69,25 @@ export default async function Login({
           </div>
           <button className={`btn-primary ${estilos.boton}`} type="submit">Entrar</button>
         </form>
+
+        {/* 🔴 No hay «recuperar por correo» a propósito: el correo que trae
+            Supabase de fábrica permite 2 mensajes por hora en TODO el
+            proyecto, así que un enlace de recuperación fallaría en silencio
+            justo cuando más se necesita. Se resuelve por donde el equipo ya
+            se habla. */}
+        <details className={estilos.olvide}>
+          <summary>¿Olvidaste tu contraseña?</summary>
+          <p>
+            <b>Si sos parte del equipo:</b> pedísela a quien te dio el acceso al panel.
+            Te la puede cambiar al instante desde la pantalla de Equipo.
+          </p>
+          <p>
+            <b>Si vos administrás el panel:</b> entrá a tu proyecto en{' '}
+            <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">supabase.com</a>,
+            abrí <b>Authentication → Users</b>, buscá tu correo, apretá los tres
+            puntitos de la derecha y elegí <b>Reset password</b>.
+          </p>
+        </details>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { IconoAviso } from '@/shared/chasis/iconos'
+import { MENSAJE_CONTRASENA, revisarContrasena } from '@/shared/datos/contrasenas'
 import type { Configuracion } from '@/shared/tipos'
 import { ColorPicker } from './color-picker'
 
@@ -136,6 +137,8 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
       </div>
     </div>
 
+    <MiContrasena />
+
     {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
 
     {/* 🔴 El botón guarda LAS DOS tarjetas, así que no puede vivir adentro de
@@ -149,6 +152,61 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
       </button>
     </div>
     </>
+  )
+}
+
+/**
+ * Cambiar la propia contraseña, sin correo de por medio.
+ *
+ * 🔴 No manda ningún mail a propósito: el correo que trae Supabase de fábrica
+ * permite 2 mensajes por hora en TODO el proyecto, así que un «recuperar
+ * contraseña» por mail fallaría en silencio justo cuando más se necesita.
+ * Acá el usuario ya está adentro: alcanza con que la escriba.
+ */
+function MiContrasena() {
+  const [clave, setClave] = useState('')
+  const [repetir, setRepetir] = useState('')
+  const [estado, setEstado] = useState<'espera' | 'guardando' | 'listo'>('espera')
+  const [err, setErr] = useState<string | null>(null)
+
+  const problema = clave ? revisarContrasena(clave) : null
+  const noCoincide = !!repetir && clave !== repetir
+  const puede = !problema && !noCoincide && !!clave && !!repetir
+
+  async function guardar() {
+    setEstado('guardando'); setErr(null)
+    try {
+      const r = await fetch('/api/contrasena', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ clave }),
+      })
+      const d = await r.json().catch(() => null)
+      if (!r.ok) { setErr(d?.error ?? 'No se pudo cambiar.'); setEstado('espera'); return }
+      setEstado('listo'); setClave(''); setRepetir('')
+    } catch {
+      setErr('No se pudo hablar con el servidor.'); setEstado('espera')
+    }
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 16 }}>
+      <div className="card-head"><div><h3>Tu contraseña</h3><p>la que usás para entrar acá</p></div></div>
+      <Fila titulo="Nueva contraseña" explicacion="Al menos 8 caracteres. Anotala antes de guardar.">
+        <input type="text" value={clave} maxLength={72} onChange={(e) => { setClave(e.target.value); setEstado('espera') }} />
+      </Fila>
+      <Fila titulo="Repetila" explicacion="Para asegurarnos de que no se coló un error de tipeo.">
+        <input type="text" value={repetir} maxLength={72} onChange={(e) => { setRepetir(e.target.value); setEstado('espera') }} />
+      </Fila>
+      {problema && <div className="note warn"><IconoAviso /><span>{MENSAJE_CONTRASENA[problema]}</span></div>}
+      {noCoincide && <div className="note warn"><IconoAviso /><span>Las dos no coinciden.</span></div>}
+      {err && <div className="note warn"><IconoAviso /><span>{err}</span></div>}
+      <div className="form-actions">
+        <span className="helper">{estado === 'listo' ? 'Contraseña cambiada.' : 'No se manda ningún correo: el cambio es inmediato.'}</span>
+        <button className="btn-primary" type="button" onClick={guardar} disabled={!puede || estado === 'guardando'}>
+          {estado === 'guardando' ? 'Guardando…' : 'Cambiar contraseña'}
+        </button>
+      </div>
+    </div>
   )
 }
 

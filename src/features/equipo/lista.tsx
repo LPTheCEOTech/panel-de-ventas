@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@/shared/chasis/iconos'
+import { mensajeParaElEquipo, revisarContrasena, sugerirContrasena } from '@/shared/datos/contrasenas'
 import { iniciales } from '@/shared/formato'
 import type { Persona, Rol } from '@/shared/tipos'
 
@@ -19,9 +20,17 @@ export function ListaEquipo({
   const [nombre, setNombre] = useState('')
   const [rol, setRol] = useState<Rol>('setter')
   const [correo, setCorreo] = useState('')
-  const [aviso, setAviso] = useState<string | null>(null)
+  const [clave, setClave] = useState(() => sugerirContrasena())
   const [error, setError] = useState<string | null>(null)
   const [ocupado, setOcupado] = useState(false)
+  // Lo que hay que pasarle al vendedor una vez creado. Se muestra hasta que
+  // el admin lo cierra: es el único momento en que la contraseña está a la
+  // vista, y si se pierde hay que cambiarla de nuevo.
+  const [entregar, setEntregar] = useState<{ nombre: string; correo: string; clave: string } | null>(null)
+  const [copiado, setCopiado] = useState(false)
+  // A quién le estoy cambiando la contraseña desde la lista.
+  const [cambiando, setCambiando] = useState<Persona | null>(null)
+  const [claveNueva, setClaveNueva] = useState('')
 
   const activos = personas.filter((p) => p.activo).length
   const bajas = personas.length - activos
@@ -48,16 +57,38 @@ export function ListaEquipo({
     }
   }
 
-  // 🔴 Fase A (sesion 2) · un solo flow: agregar SIEMPRE manda invitación.
-  // El endpoint crea la persona (o la reusa), manda el correo por Supabase
-  // Auth y vincula la fila `usuarios` con rol miembro.
+  // 🔴 Sin correo. El admin define la contraseña y el panel le devuelve el
+  // mensaje listo para mandarle al vendedor. El correo de Supabase permite 2
+  // mensajes por hora en todo el proyecto: con un equipo de cuatro, dos no
+  // recibían nada y no había forma de enterarse.
   async function agregar() {
-    setAviso(null)
-    if (await pedir('/api/equipo', 'POST', { nombre, rol, correo })) {
-      setAviso(`Invitación enviada a ${correo}. Cuando acepte, queda vinculada a ${nombre}.`)
-      setNombre('')
-      setCorreo('')
+    const problema = revisarContrasena(clave)
+    if (problema) { setError(problema === 'corta' ? 'La contraseña necesita al menos 8 caracteres.' : 'Esa contraseña no sirve.'); return }
+    if (await pedir('/api/equipo', 'POST', { nombre, rol, correo, clave })) {
+      setEntregar({ nombre: nombre.trim(), correo: correo.trim(), clave })
+      setCopiado(false)
+      setNombre(''); setCorreo(''); setClave(sugerirContrasena())
     }
+  }
+
+  async function guardarClaveNueva() {
+    if (!cambiando) return
+    const problema = revisarContrasena(claveNueva)
+    if (problema) { setError(problema === 'corta' ? 'La contraseña necesita al menos 8 caracteres.' : 'Esa contraseña no sirve.'); return }
+    if (await pedir('/api/contrasena', 'POST', { personaId: cambiando.id, clave: claveNueva })) {
+      setEntregar({ nombre: cambiando.nombre, correo: '', clave: claveNueva })
+      setCopiado(false)
+      setCambiando(null); setClaveNueva('')
+    }
+  }
+
+  function copiarEntrega() {
+    if (!entregar) return
+    const url = typeof window !== 'undefined' ? window.location.origin : ''
+    const texto = entregar.correo
+      ? mensajeParaElEquipo(entregar.nombre, url, entregar.correo, entregar.clave)
+      : `${entregar.nombre}, tu nueva contraseña del panel es: ${entregar.clave}\nEntrá en ${url}`
+    navigator.clipboard?.writeText(texto).then(() => setCopiado(true)).catch(() => setCopiado(false))
   }
 
   return (
@@ -107,6 +138,15 @@ export function ListaEquipo({
                 : hizo ? <><b>{hizo.valor}</b> {hizo.unidad}</>
                 : <span className="flojo">sin reportes</span>}
             </span>
+            {p.activo && (
+              <button
+                className="btn-ghost btn-sm" disabled={ocupado} type="button"
+                title={`Cambiarle la contraseña a ${p.nombre}`}
+                onClick={() => { setCambiando(p); setClaveNueva(sugerirContrasena()); setError(null) }}
+              >
+                Contraseña
+              </button>
+            )}
             <button
               className="del" disabled={ocupado}
               title={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
@@ -125,7 +165,7 @@ export function ListaEquipo({
     <div className="lado">
       <div className="card">
         <div className="card-head">
-          <div><h3>Agregar al equipo</h3><p>se envía un correo con el link para elegir contraseña</p></div>
+          <div><h3>Agregar al equipo</h3><p>le creás el acceso y se lo pasás vos</p></div>
         </div>
 
         <div className="addrow">
@@ -149,29 +189,83 @@ export function ListaEquipo({
             <input
               id="e-correo" type="email" value={correo} placeholder="persona@ejemplo.com" maxLength={254}
               onChange={(e) => setCorreo(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="e-clave">Contraseña para esa persona</label>
+            <input
+              id="e-clave" type="text" value={clave} maxLength={72}
+              onChange={(e) => setClave(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && nombre.trim().length >= 2 && CORREO_RE.test(correo.trim())) agregar()
               }}
             />
+            <span className="hint">
+              Ya te sugerimos una fácil de dictar. Podés cambiarla.{' '}
+              <button type="button" className="btn-ghost btn-sm" onClick={() => setClave(sugerirContrasena())}>
+                Sugerir otra
+              </button>
+            </span>
           </div>
           <button
             className="btn-primary" onClick={agregar} type="button"
-            disabled={ocupado || nombre.trim().length < 2 || !CORREO_RE.test(correo.trim())}
+            disabled={ocupado || nombre.trim().length < 2 || !CORREO_RE.test(correo.trim()) || !!revisarContrasena(clave)}
           >
-            Agregar e invitar
+            Crear acceso
           </button>
         </div>
 
-        {aviso && <div className="note"><IconoInfo /><span>{aviso}</span></div>}
+        {entregar && (
+          <div className="note" style={{ display: 'block' }}>
+            <b>Listo. Pasale estos datos a {entregar.nombre}:</b>
+            <div className="calc apilado" style={{ margin: '10px 0' }}>
+              {entregar.correo && (
+                <div className="dv"><span>Correo</span><b className="num">{entregar.correo}</b></div>
+              )}
+              <div className="dv"><span>Contraseña</span><b className="num">{entregar.clave}</b></div>
+            </div>
+            <button type="button" className="btn-primary btn-sm" onClick={copiarEntrega}>
+              {copiado ? '¡Copiado!' : 'Copiar mensaje para mandarle'}
+            </button>{' '}
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setEntregar(null)}>
+              Ya se lo pasé
+            </button>
+            <span className="hint" style={{ display: 'block', marginTop: 8 }}>
+              Esta contraseña no se vuelve a mostrar. Si la perdés, le ponés una nueva
+              con el botón «Contraseña» de la lista.
+            </span>
+          </div>
+        )}
+
+        {cambiando && (
+          <div className="note" style={{ display: 'block' }}>
+            <b>Nueva contraseña para {cambiando.nombre}</b>
+            <div className="field" style={{ margin: '10px 0' }}>
+              <input
+                type="text" value={claveNueva} maxLength={72}
+                onChange={(e) => setClaveNueva(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') guardarClaveNueva() }}
+              />
+            </div>
+            <button type="button" className="btn-primary btn-sm" disabled={ocupado || !!revisarContrasena(claveNueva)} onClick={guardarClaveNueva}>
+              Guardar
+            </button>{' '}
+            <button type="button" className="btn-ghost btn-sm" onClick={() => { setCambiando(null); setError(null) }}>
+              Cancelar
+            </button>
+          </div>
+        )}
+
         {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
 
         <div className="note">
           <IconoInfo />
           <span>
-            Al guardar, se manda el correo con el link para elegir contraseña. Si ya
-            existe una persona con ese nombre, la reutiliza; si no, la crea. Dar de
-            baja a alguien <b>no borra su historial</b>: deja de aparecer en los
-            formularios, pero sus números siguen contando en las semanas que ya trabajó.
+            No se manda ningún correo: le creás el acceso y le pasás los datos vos por
+            donde ya le hablás. Si ya existe una persona con ese nombre, la reutiliza;
+            si no, la crea. Dar de baja a alguien <b>no borra su historial</b>: deja de
+            aparecer en los formularios, pero sus números siguen contando en las
+            semanas que ya trabajó.
           </span>
         </div>
       </div>

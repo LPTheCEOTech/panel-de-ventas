@@ -1,27 +1,33 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
+import { MENSAJE_CONTRASENA, revisarContrasena } from '@/shared/datos/contrasenas'
 import { datos } from '@/shared/datos/indice'
 import { soloAdmin } from '@/shared/datos/guardias'
 import { clienteServidor } from '@/shared/datos/supabase/cliente'
 import { hayCredenciales } from '@/shared/datos/sesion'
 
 /**
- * 🔴 Fase A (sesion 2) · Alta e invitación en UN SOLO flujo.
+ * 🔴 Alta del equipo SIN correo.
  *
- * El correo es obligatorio: al dar de alta a alguien SIEMPRE se le manda la
- * invitación por correo (Supabase Auth) y se lo vincula a la persona nueva
- * (o existente) con rol miembro. Ya no hay «crear persona sin login» ni
- * «invitar por correo» como caminos separados: eran dos formas de hacer lo
- * mismo mal.
+ * Antes esto mandaba una invitación con `inviteUserByEmail`. El correo que
+ * trae Supabase de fábrica permite 2 mensajes por hora en TODO el proyecto:
+ * con un equipo de cuatro vendedores, dos no reciben nada y no hay ningún
+ * error — simplemente no llega. Eso fue horas de soporte preguntando «¿por
+ * qué no le llegó el mail?».
  *
- * 🔴 El admin único (persona=null) NO se crea desde acá — sigue viviendo
- * solo en `scripts/instalar.mjs`. Por diseño.
+ * Ahora el admin define la contraseña, la app crea el usuario ya confirmado,
+ * y el panel le devuelve un mensaje listo para mandarle al vendedor por
+ * donde ya le habla. Cero correos, cero esperas, cero spam.
+ *
+ * 🔴 El admin único (persona=null) NO se crea desde acá — lo crea el SQL de
+ * instalación. Por diseño.
  */
 const zAlta = z.object({
   nombre: z.string().trim().min(2, 'El nombre necesita al menos 2 letras').max(80),
   rol: z.enum(['setter', 'closer', 'ambos']),
   correo: z.string().trim().email('El correo no parece válido').max(254),
+  clave: z.string().min(1, 'Ponele una contraseña').max(72),
 })
 
 const zBaja = z.object({ id: z.string().min(1).max(64), activo: z.boolean() })
@@ -34,7 +40,10 @@ export async function POST(request: NextRequest) {
   if (!p.success) {
     return NextResponse.json({ error: p.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
   }
-  const { nombre, rol, correo } = p.data
+  const { nombre, rol, correo, clave } = p.data
+
+  const problema = revisarContrasena(clave)
+  if (problema) return NextResponse.json({ error: MENSAJE_CONTRASENA[problema] }, { status: 400 })
 
   if (!hayCredenciales()) {
     return NextResponse.json(
@@ -46,22 +55,27 @@ export async function POST(request: NextRequest) {
   const capa = datos()
   const sb = clienteServidor(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
-  // 1 · invitación por correo (Supabase manda el mail y crea el auth user)
-  const { data: invitacion, error: errInv } = await sb.auth.admin.inviteUserByEmail(correo)
-  if (errInv) {
-    if (/already been registered|already exists/i.test(errInv.message)) {
-      return NextResponse.json({ error: `Ya invitaste a ${correo}. Chequealo en Supabase → Auth.` }, { status: 409 })
-    }
-    if (/smtp|email/i.test(errInv.message)) {
+  // 1 · el usuario, ya confirmado. `email_confirm: true` es lo que evita que
+  // quede esperando un correo de verificación que nunca va a poder llegar.
+  const { data: creado, error: errAuth } = await sb.auth.admin.createUser({
+    email: correo,
+    password: clave,
+    email_confirm: true,
+  })
+  if (errAuth) {
+    if (/already been registered|already exists|duplicate/i.test(errAuth.message)) {
       return NextResponse.json({
-        error: 'Supabase no pudo mandar el correo. ¿Está SMTP configurado en Auth → SMTP Settings?',
-      }, { status: 500 })
+        error: `Ya hay alguien con el correo ${correo}. Si es la misma persona y olvidó su contraseña, usá el botón de cambiar contraseña en la lista del equipo.`,
+      }, { status: 409 })
     }
-    console.error('[api/equipo POST · inviteUserByEmail]', errInv)
-    return NextResponse.json({ error: errInv.message }, { status: 500 })
+    if (/password/i.test(errAuth.message)) {
+      return NextResponse.json({ error: 'Supabase rechazó la contraseña. Probá con una más larga.' }, { status: 400 })
+    }
+    console.error('[api/equipo POST · createUser]', errAuth)
+    return NextResponse.json({ error: errAuth.message }, { status: 500 })
   }
-  const authUserId = invitacion?.user?.id
-  if (!authUserId) return NextResponse.json({ error: 'La invitación no devolvió userId.' }, { status: 500 })
+  const authUserId = creado?.user?.id
+  if (!authUserId) return NextResponse.json({ error: 'No se pudo crear el acceso.' }, { status: 500 })
 
   // 2 · persona: reusar si existe con ese nombre (case-insensitive), si no crear.
   // Si existe con OTRO rol distinto de 'ambos', avisamos y no tocamos.
@@ -92,13 +106,18 @@ export async function POST(request: NextRequest) {
   try {
     await capa.crearUsuario(authUserId, personaId, 'miembro')
   } catch (e) {
+    // 🔴 Deshacer el acceso recién creado. Si quedara suelto, el correo ya
+    // estaría «tomado» en Auth y el admin no podría volver a agregar a esa
+    // persona: el segundo intento diría «ya hay alguien con ese correo» y
+    // no habría forma de salir sin entrar a Supabase a mano.
+    await sb.auth.admin.deleteUser(authUserId).catch(() => {})
     console.error('[api/equipo POST · crearUsuario]', e)
     return NextResponse.json({
-      error: 'La invitación se envió pero no pude vincular el usuario. Chequealo en Supabase.',
+      error: 'No pude terminar de darle acceso. Probá de nuevo.',
     }, { status: 500 })
   }
 
-  return NextResponse.json({ ok: true, correo, personaId, invitado: true })
+  return NextResponse.json({ ok: true, nombre, correo, clave, personaId })
 }
 
 /** Alta y baja LÓGICA. No hay DELETE: los reportes que cargó tienen que seguir contando. */

@@ -53,6 +53,10 @@ export interface CapaDeDatos {
   /** Fase C · resuelve `auth.users → usuarios`. `null` si el auth user existe
    *  pero no está vinculado. La app manda a /pendiente en ese caso. */
   buscarUsuario(authUserId: string): Promise<Usuario | null>
+  /** El camino inverso: de alguien del equipo a su acceso. Lo usa el admin
+   *  para cambiarle la contraseña sin depender del correo. `null` si esa
+   *  persona todavía no tiene acceso al panel. */
+  buscarUsuarioPorPersona(personaId: string): Promise<Usuario | null>
   /** Alta de un usuario. `personaId` null si es admin. */
   crearUsuario(authUserId: string, personaId: string | null, rol: RolUsuario): Promise<Usuario>
   /** Baja del usuario en `usuarios` (no toca `auth.users`). */

@@ -159,6 +159,9 @@ export function capaDemo(vacia = false): CapaDeDatos {
     async buscarUsuario(authUserId) {
       return leer(vacia).usuarios?.find((u) => u.authUserId === authUserId) ?? null
     },
+    async buscarUsuarioPorPersona(personaId) {
+      return leer(vacia).usuarios?.find((u) => u.personaId === personaId) ?? null
+    },
     async crearUsuario(authUserId, personaId, rol: RolUsuario) {
       return con((e) => {
         if (!e.usuarios) e.usuarios = []
