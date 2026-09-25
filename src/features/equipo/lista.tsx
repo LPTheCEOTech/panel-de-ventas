@@ -3,13 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@/shared/chasis/iconos'
+import { IconoAbajo, IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@/shared/chasis/iconos'
 import { mensajeParaElEquipo, revisarContrasena, sugerirContrasena } from '@/shared/datos/contrasenas'
 import { iniciales } from '@/shared/formato'
 import type { Persona, Rol } from '@/shared/tipos'
 
 const ETIQUETA: Record<Rol, string> = { setter: 'Setter', closer: 'Closer', ambos: 'Setter y closer' }
 const CLASE: Record<Rol, string> = { setter: 'set', closer: 'clo', ambos: 'amb' }
+
+/** Los colores de sistema del desplegable: lo dibuja el SO, no nuestro CSS. */
+const OPCION: React.CSSProperties = { color: 'CanvasText', background: 'Canvas' }
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -138,19 +141,37 @@ export function ListaEquipo({
                 tiene que seguir leyéndose como una etiqueta, no como un
                 formulario. Los de baja mantienen la pastilla quieta. */}
             {p.activo ? (
-              <select
+              // 🔴 El chevrón es lo único que dice «esto se puede tocar». Sin
+              // él la pastilla se lee como una etiqueta muerta: Maydelene
+              // terminó borrando a alguien del equipo para cambiarle el rol
+              // porque no había ninguna señal de que se podía. Va DENTRO de la
+              // pastilla, en `currentColor`, así toma el color de cada rol.
+              <span
                 className={`pill rol ${CLASE[p.rol]}`}
-                style={{ appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', border: 0 }}
-                value={p.rol}
-                disabled={ocupado}
-                title={`Cambiarle el rol a ${p.nombre}`}
-                aria-label={`Rol de ${p.nombre}`}
-                onChange={(e) => pedir('/api/equipo', 'PATCH', { id: p.id, rol: e.target.value as Rol })}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}
               >
-                <option value="setter">{ETIQUETA.setter}</option>
-                <option value="closer">{ETIQUETA.closer}</option>
-                <option value="ambos">{ETIQUETA.ambos}</option>
-              </select>
+                <select
+                  value={p.rol}
+                  disabled={ocupado}
+                  title={`Cambiarle el rol a ${p.nombre}`}
+                  aria-label={`Rol de ${p.nombre}`}
+                  onChange={(e) => pedir('/api/equipo', 'PATCH', { id: p.id, rol: e.target.value as Rol })}
+                  style={{
+                    appearance: 'none', WebkitAppearance: 'none',
+                    background: 'transparent', border: 0, padding: 0, margin: 0,
+                    font: 'inherit', color: 'inherit', letterSpacing: 'inherit',
+                    textTransform: 'inherit', cursor: 'pointer',
+                  }}
+                >
+                  {/* 🔴 Los colores del sistema en las opciones: el desplegable
+                      lo pinta el sistema operativo, y heredar el color claro de
+                      la pastilla dejaba el menú ilegible en tema claro. */}
+                  <option value="setter" style={OPCION}>{ETIQUETA.setter}</option>
+                  <option value="closer" style={OPCION}>{ETIQUETA.closer}</option>
+                  <option value="ambos" style={OPCION}>{ETIQUETA.ambos}</option>
+                </select>
+                <IconoAbajo />
+              </span>
             ) : (
               <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
             )}

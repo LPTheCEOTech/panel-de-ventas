@@ -37,3 +37,5 @@ export const IconoLuna = svg(<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.
 export const IconoSalir = svg(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="m16 17 5-5-5-5M21 12H9" /></>, 15)
 export const IconoIzquierda = svg(<path d="m15 18-6-6 6-6" />, 14)
 export const IconoDerecha = svg(<path d="m9 18 6-6-6-6" />, 14)
+/** El chevrón de «esto se despliega». Chico: va DENTRO de una pastilla. */
+export const IconoAbajo = svg(<path d="m6 9 6 6 6-6" />, 12)
