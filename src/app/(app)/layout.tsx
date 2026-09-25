@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 
 import { AvisoActualizacion } from '@/shared/chasis/aviso-actualizacion'
 import { estiloDeMarca } from '@/shared/chasis/marca'
+import { PantallaDeFalla, motivoDe } from '@/shared/chasis/pantalla-falla'
 import { Topbar } from '@/shared/chasis/topbar'
 import { datos } from '@/shared/datos/indice'
 import { estadoDeLaBase } from '@/shared/datos/migrador'
@@ -22,12 +23,37 @@ import { sesionActual } from '@/shared/datos/sesion-usuario'
  */
 export const dynamic = 'force-dynamic'
 
+/**
+ * Las tres lecturas que corren en TODAS las pantallas.
+ *
+ * 🔴 Van juntas y en una función aparte por dos razones. Una: si cualquiera
+ * revienta —el SQL a medio correr, una env var mal pegada— Next mostraba «This
+ * page couldn't load» y un número de ocho dígitos, que nadie puede arreglar ni
+ * contar por WhatsApp; acá el motivo real llega a la pantalla. Dos: devolver un
+ * resultado discriminado en vez de variables sueltas conserva los tipos exactos
+ * de `estadoDeLaBase()`, que es una unión.
+ *
+ * El `redirect()` del cuerpo queda AFUERA de este try a propósito: funciona
+ * lanzando una excepción, y atraparla lo rompería.
+ */
+async function cargar() {
+  try {
+    const [config, sesion, base] = await Promise.all([
+      datos().leerConfiguracion(),
+      sesionActual(),
+      estadoDeLaBase(),
+    ])
+    return { ok: true as const, config, sesion, base }
+  } catch (e) {
+    console.error('[layout] no pude leer la configuración:', e)
+    return { ok: false as const, motivo: motivoDe(e) }
+  }
+}
+
 export default async function LayoutApp({ children }: { children: React.ReactNode }) {
-  const [config, sesion, base] = await Promise.all([
-    datos().leerConfiguracion(),
-    sesionActual(),
-    estadoDeLaBase(),
-  ])
+  const carga = await cargar()
+  if (!carga.ok) return <PantallaDeFalla donde="tu panel" motivo={carga.motivo} />
+  const { config, sesion, base } = carga
 
   // 🔴 Fase C · el auth user existe (el proxy nos dejó entrar) pero no tiene
   // fila en `usuarios` — no está vinculado a ninguna persona ni tiene rol.
