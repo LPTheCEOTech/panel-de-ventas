@@ -129,7 +129,31 @@ export function ListaEquipo({
                 {p.activo ? ETIQUETA[p.rol] : 'ya no está en el equipo'}
               </small>
             </span>
-            <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
+            {/* 🔴 La pastilla del rol es un desplegable: donde ya se LEE el rol
+                es donde hay que poder cambiarlo. Antes no se podía, y pasar a
+                alguien de setter a closer obligaba a darlo de baja y volver a
+                crearlo — que además choca con «ya hay alguien con ese correo»
+                y deja a la persona trabada sin salida.
+                Va con las clases de la pastilla y sin la flecha del sistema:
+                tiene que seguir leyéndose como una etiqueta, no como un
+                formulario. Los de baja mantienen la pastilla quieta. */}
+            {p.activo ? (
+              <select
+                className={`pill rol ${CLASE[p.rol]}`}
+                style={{ appearance: 'none', WebkitAppearance: 'none', cursor: 'pointer', border: 0 }}
+                value={p.rol}
+                disabled={ocupado}
+                title={`Cambiarle el rol a ${p.nombre}`}
+                aria-label={`Rol de ${p.nombre}`}
+                onChange={(e) => pedir('/api/equipo', 'PATCH', { id: p.id, rol: e.target.value as Rol })}
+              >
+                <option value="setter">{ETIQUETA.setter}</option>
+                <option value="closer">{ETIQUETA.closer}</option>
+                <option value="ambos">{ETIQUETA.ambos}</option>
+              </select>
+            ) : (
+              <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
+            )}
             {!p.activo && <span className="pill no">De baja</span>}
             {/* 🔴 Lo que hizo es una COLUMNA, no un renglón chico debajo del nombre:
                 es el dato por el que se entra a esta pantalla. */}

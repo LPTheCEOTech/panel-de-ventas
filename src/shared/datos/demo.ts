@@ -122,6 +122,12 @@ export function capaDemo(vacia = false): CapaDeDatos {
         if (p) p.activo = activo
       })
     },
+    async cambiarRol(id, rol) {
+      con((e) => {
+        const p = e.personas.find((x) => x.id === id)
+        if (p) p.rol = rol
+      })
+    },
     async leerReportesSetter(v: Ventana, personaId?: string) {
       return leer(vacia).setter.filter((r) => dentro(r.fecha, v) && (!personaId || r.personaId === personaId))
     },

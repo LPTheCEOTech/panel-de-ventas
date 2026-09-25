@@ -30,7 +30,23 @@ const zAlta = z.object({
   clave: z.string().min(1, 'Ponele una contraseña').max(72),
 })
 
-const zBaja = z.object({ id: z.string().min(1).max(64), activo: z.boolean() })
+/**
+ * 🔴 Un solo PATCH para los dos cambios que se le hacen a alguien del equipo:
+ * darlo de baja/alta, y cambiarle el rol. Van juntos porque son la misma
+ * operación —editar la ficha— y separarlos en dos rutas obligaría al front a
+ * elegir endpoint por campo.
+ *
+ * Cambiar el rol hacía falta y no estaba: a un setter que pasaba a closer
+ * había que darlo de baja y volver a crearlo, y al recrearlo chocaba con «ya
+ * hay alguien con ese correo». Quedaba trabado sin salida.
+ */
+const zBaja = z.object({
+  id: z.string().min(1).max(64),
+  activo: z.boolean().optional(),
+  rol: z.enum(['setter', 'closer', 'ambos']).optional(),
+}).refine((d) => d.activo !== undefined || d.rol !== undefined, {
+  message: 'No hay nada que cambiar',
+})
 
 export async function POST(request: NextRequest) {
   const negado = await soloAdmin()
@@ -65,7 +81,14 @@ export async function POST(request: NextRequest) {
   if (errAuth) {
     if (/already been registered|already exists|duplicate/i.test(errAuth.message)) {
       return NextResponse.json({
-        error: `Ya hay alguien con el correo ${correo}. Si es la misma persona y olvidó su contraseña, usá el botón de cambiar contraseña en la lista del equipo.`,
+        // 🔴 Los dos motivos reales por los que alguien intenta crear de nuevo a
+        // una persona que ya existe: se le olvidó la contraseña, o le quedó mal
+        // el rol. El segundo mandaba a dar de baja y volver a crear, que
+        // terminaba justo acá, en este error, sin salida.
+        error:
+          `Ya hay alguien con el correo ${correo}. Si es la misma persona: ` +
+          `para cambiarle el rol, tocá su etiqueta (Setter / Closer) en la lista del equipo; ` +
+          `si olvidó su contraseña, usá el botón «Contraseña» de esa misma fila.`,
       }, { status: 409 })
     }
     if (/password/i.test(errAuth.message)) {
@@ -127,7 +150,9 @@ export async function PATCH(request: NextRequest) {
   const p = zBaja.safeParse(await request.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
   try {
-    await datos().cambiarActivo(p.data.id, p.data.activo)
+    const capa = datos()
+    if (p.data.rol !== undefined) await capa.cambiarRol(p.data.id, p.data.rol)
+    if (p.data.activo !== undefined) await capa.cambiarActivo(p.data.id, p.data.activo)
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('[api/equipo PATCH]', e)

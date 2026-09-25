@@ -18,6 +18,10 @@ export interface CapaDeDatos {
   leerPersonas(): Promise<Persona[]>
   crearPersona(nombre: string, rol: Rol): Promise<Persona>
   cambiarActivo(id: string, activo: boolean): Promise<void>
+  /** 🔴 Cambiar de setter a closer (o a ambos) sin dar de baja y volver a
+   *  crear: recrear choca con «ya hay alguien con ese correo» y, peor, deja
+   *  los reportes viejos colgados de otra persona. */
+  cambiarRol(id: string, rol: Rol): Promise<void>
 
   /** 🔴 Fase C · `personaId` opcional: si llega, filtra al miembro logueado.
    *  Sin arg, devuelve todo — es lo que ve el admin y lo que corre el

@@ -106,6 +106,14 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       reventar('cambiarActivo', error)
     },
 
+    async cambiarRol(id: string, rol: Rol): Promise<void> {
+      // 🔴 Solo cambia la etiqueta. Los reportes ya cargados NO se tocan: si
+      // alguien fue setter tres meses, esos números siguen siendo suyos y
+      // siguen contando en las semanas que los cargó.
+      const { error } = await sb.from('personas').update({ rol }).eq('id', id)
+      reventar('cambiarRol', error)
+    },
+
     async leerReportesSetter(v: Ventana, personaId?: string): Promise<ReporteSetter[]> {
       let q = sb.from('reportes_setter').select(F_SETTER)
         .gte('fecha', v.desde).lte('fecha', v.hasta)
