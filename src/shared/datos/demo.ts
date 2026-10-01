@@ -185,6 +185,12 @@ export function capaDemo(vacia = false): CapaDeDatos {
         return u
       })
     },
+    async vincularPersona(authUserId, personaId) {
+      con((e) => {
+        const u = e.usuarios?.find((x) => x.authUserId === authUserId)
+        if (u) u.personaId = personaId
+      })
+    },
     async borrarUsuario(authUserId) {
       con((e) => {
         if (!e.usuarios) e.usuarios = []

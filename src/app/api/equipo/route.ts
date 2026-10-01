@@ -6,6 +6,7 @@ import { datos } from '@/shared/datos/indice'
 import { soloAdmin } from '@/shared/datos/guardias'
 import { clienteServidor } from '@/shared/datos/supabase/cliente'
 import { hayCredenciales } from '@/shared/datos/sesion'
+import { mismoNombre } from '@/shared/datos/yo-en-el-equipo'
 
 /**
  * 🔴 Alta del equipo SIN correo.
@@ -69,6 +70,17 @@ export async function POST(request: NextRequest) {
   }
 
   const capa = datos()
+
+  // 🔴 Antes de crear el acceso: si ese nombre ya es de alguien con su propio
+  // acceso (un miembro, o el dueño que se sumó a su equipo), el alta chocaría
+  // al final con el índice único y el error no explicaría nada.
+  const conEseNombre = (await capa.leerPersonas()).find((x) => mismoNombre(x.nombre, nombre))
+  if (conEseNombre && (await capa.buscarUsuarioPorPersona(conEseNombre.id))) {
+    return NextResponse.json({
+      error: `«${conEseNombre.nombre}» ya tiene acceso al panel. Si es otra persona, agrégala con otro nombre.`,
+    }, { status: 409 })
+  }
+
   const sb = clienteServidor(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   // 1 · el usuario, ya confirmado. `email_confirm: true` es lo que evita que
@@ -105,7 +117,7 @@ export async function POST(request: NextRequest) {
   let personaId: string
   try {
     const personas = await capa.leerPersonas()
-    const yaHay = personas.find((x) => x.nombre.trim().toLowerCase() === nombre.trim().toLowerCase())
+    const yaHay = personas.find((x) => mismoNombre(x.nombre, nombre))
     if (yaHay) {
       if (yaHay.rol !== rol && yaHay.rol !== 'ambos') {
         return NextResponse.json({

@@ -68,6 +68,9 @@ export interface CapaDeDatos {
   buscarUsuarioPorPersona(personaId: string): Promise<Usuario | null>
   /** Alta de un usuario. `personaId` null si es admin. */
   crearUsuario(authUserId: string, personaId: string | null, rol: RolUsuario): Promise<Usuario>
+  /** Liga un usuario existente a una persona. Lo usa el dueño para entrar a
+   *  su propio equipo con su misma cuenta (persona null = desligar). */
+  vincularPersona(authUserId: string, personaId: string | null): Promise<void>
   /** Baja del usuario en `usuarios` (no toca `auth.users`). */
   borrarUsuario(authUserId: string): Promise<void>
 }

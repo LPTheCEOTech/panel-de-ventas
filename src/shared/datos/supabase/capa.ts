@@ -329,6 +329,13 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       return { authUserId: data!.auth_user_id, personaId: data!.persona_id ?? null, rol: data!.rol as RolUsuario }
     },
 
+    async vincularPersona(authUserId: string, personaId: string | null): Promise<void> {
+      // 🔴 El índice único parcial de `persona_id` impide ligar una persona que
+      // ya tiene otro acceso: la ruta lo chequea antes para dar un mensaje claro.
+      const { error } = await sb.from('usuarios').update({ persona_id: personaId }).eq('auth_user_id', authUserId)
+      reventar('vincularPersona', error)
+    },
+
     async borrarUsuario(authUserId: string): Promise<void> {
       const { error } = await sb.from('usuarios').delete().eq('auth_user_id', authUserId)
       reventar('borrarUsuario', error)
