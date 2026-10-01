@@ -240,6 +240,33 @@ export function barrasPorSemana(
   return escalar(grupos)
 }
 
+/**
+ * Las barras de un rango LARGO (más de un trimestre), una por mes.
+ *
+ * Mismo motivo que `barrasPorSemana`: con «Este año» o «Todo», por semana son
+ * 52 rayitas. Por mes son 12 o menos y se leen. Si el rango cruza de año, la
+ * etiqueta lleva el año en dos cifras para que dos «ene» no se confundan.
+ */
+export function barrasPorMes(v: Ventana, closers: readonly ReporteCloser[]): Barra[] {
+  const cruza = v.desde.slice(0, 4) !== v.hasta.slice(0, 4)
+  const grupos: { clave: string; etiqueta: string; cashCents: number }[] = []
+  const indice = new Map<string, number>()
+  for (let mes = v.desde.slice(0, 7); mes <= v.hasta.slice(0, 7); ) {
+    const [a, m] = mes.split('-').map(Number)
+    indice.set(mes, grupos.length)
+    grupos.push({ clave: mes, etiqueta: `${MES_CORTO[m - 1]}${cruza ? ` ${String(a).slice(2)}` : ''}`, cashCents: 0 })
+    mes = m === 12 ? `${a + 1}-01` : `${a}-${String(m + 1).padStart(2, '0')}`
+  }
+  for (const r of closers) {
+    if (!dentro(r.fecha, v)) continue
+    const i = indice.get(r.fecha.slice(0, 7))
+    if (i !== undefined) grupos[i].cashCents += r.cashCents
+  }
+  return escalar(grupos)
+}
+
+const MES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+
 const INICIAL_DIA = ['D', 'L', 'M', 'M', 'J', 'V', 'S']
 
 /**
