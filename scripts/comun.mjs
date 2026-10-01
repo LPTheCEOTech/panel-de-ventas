@@ -23,8 +23,8 @@ export async function conectar() {
   if (!url || !servicio) {
     morir(
       'Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.\n' +
-        '   Copiá .env.local.example a .env.local y pegá los valores de tu proyecto de Supabase.\n' +
-        '   Ojo: copialos con el botón Reveal/Copy, nunca seleccionando el texto con puntitos.'
+        '   Copia .env.local.example a .env.local y pega los valores de tu proyecto de Supabase.\n' +
+        '   Ojo: cópialos con el botón Reveal/Copy, nunca seleccionando el texto con puntitos.'
     )
   }
   for (const [nombre, valor] of [['NEXT_PUBLIC_SUPABASE_URL', url], ['SUPABASE_SERVICE_ROLE_KEY', servicio]]) {
@@ -32,7 +32,7 @@ export async function conectar() {
     if (/[•·…]/.test(valor)) {
       morir(
         `${nombre} tiene caracteres del valor ENMASCARADO (los puntitos).\n` +
-          '   Se copió lo que se ve en pantalla, no el valor. Borrala y pegala de nuevo\n' +
+          '   Se copió lo que se ve en pantalla, no el valor. Bórrala y pégala de nuevo\n' +
           '   con el botón Reveal/Copy.'
       )
     }
@@ -57,7 +57,7 @@ export async function conectar() {
     morir(
       `Las variables están pero Supabase no responde bien: ${error.message}\n` +
         '   Si el proyecto es del plan gratuito y estuvo una semana sin uso, puede estar\n' +
-        '   PAUSADO: entrá al panel de Supabase y despertálo. Se comprueba desde afuera con\n' +
+        '   PAUSADO: entra al panel de Supabase y despiértalo. Se comprueba desde afuera con\n' +
         `   dig +short ${new URL(url).hostname} @1.1.1.1`
     )
   }

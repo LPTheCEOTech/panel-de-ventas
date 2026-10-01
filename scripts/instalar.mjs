@@ -37,7 +37,7 @@ if (!cadena) {
   console.log(
     '\n⚠️  Falta SUPABASE_DB_URL (la cadena de conexión de Postgres).\n' +
       '   Está en Supabase → Project Settings → Database → Connection string (URI).\n' +
-      '   Sin ella no puedo crear las tablas solo. Podés pegar estos dos archivos\n' +
+      '   Sin ella no puedo crear las tablas solo. Puedes pegar estos archivos\n' +
       '   en el SQL Editor de Supabase y volver a correr el instalador:\n'
   )
   for (const m of MIGRACIONES) console.log(`      supabase/migraciones/${m}`)
@@ -102,7 +102,7 @@ try {
 } catch (e) {
   console.log(
     `⚠️  No pude preparar el bucket \`${BUCKET_LOGO}\`: ${e?.message ?? e}\n` +
-    `   Creálo a mano: Supabase → Storage → New bucket → nombre \`${BUCKET_LOGO}\`, Public ON.`
+    `   Créalo a mano: Supabase → Storage → New bucket → nombre \`${BUCKET_LOGO}\`, Public ON.`
   )
 }
 
@@ -121,7 +121,7 @@ if (usuarios.users.length > 0) {
       const { error: errIns } = await sb.from('usuarios').insert({ auth_user_id: u.id, persona_id: null, rol: 'admin' })
       if (errIns && !/does not exist/i.test(errIns.message)) morir(`No pude asegurar admin ${u.email}: ${errIns.message}`)
       if (errIns && /does not exist/i.test(errIns.message)) {
-        console.log(`⚠️  tabla \`usuarios\` no existe. Corré la migración 005 y volvé a instalar.`)
+        console.log(`⚠️  tabla \`usuarios\` no existe. Ejecuta la migración 005 y vuelve a instalar.`)
         break
       }
       console.log(`✅ ${u.email} marcado como admin en \`usuarios\`.`)
@@ -146,7 +146,7 @@ if (usuarios.users.length > 0) {
     const { error: errUsr } = await sb.from('usuarios').insert({ auth_user_id: authUserId, persona_id: null, rol: 'admin' })
     if (errUsr) {
       if (/does not exist/i.test(errUsr.message)) {
-        console.log(`⚠️  Tabla \`usuarios\` no existe. Corré la migración 005 y ejecutá el instalador de nuevo.`)
+        console.log(`⚠️  Tabla \`usuarios\` no existe. Ejecuta la migración 005 y corre el instalador de nuevo.`)
       } else {
         morir(`No pude marcar como admin: ${errUsr.message}`)
       }
@@ -163,8 +163,8 @@ console.log(`
 🎉 Listo.
 
    1. npm run dev  →  http://localhost:3110
-   2. Entrá con tu correo y contraseña
-   3. Andá a Equipo y cargá a tus setters y closers
+   2. Entra con tu correo y contraseña
+   3. Ve a Equipo y carga a tus setters y closers
 
 El panel va a estar vacío hasta que alguien mande su primer reporte de
 fin de día. Es así a propósito: no trae datos de ejemplo de nadie.

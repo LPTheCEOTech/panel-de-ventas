@@ -209,7 +209,7 @@ export function PanelLlamada({
 
           {(mostrarRevenue || mostrarCash) && (
             <>
-              <div className="section-title">Plata</div>
+              <div className="section-title">Dinero</div>
               <div className="form-grid">
                 {mostrarRevenue && (
                   <CampoDinero ancho="c6" nombre="revenue" etiqueta="Revenue contratado" valorCents={revenueCents}

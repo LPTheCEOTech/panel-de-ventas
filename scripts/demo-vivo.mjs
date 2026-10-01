@@ -55,7 +55,7 @@ const { data: personas, error: eP } = await sb.from('personas').select('id, nomb
 if (eP) morir(eP.message)
 const setters = personas.filter((p) => p.activo && (p.rol === 'setter' || p.rol === 'ambos'))
 const closers = personas.filter((p) => p.activo && (p.rol === 'closer' || p.rol === 'ambos'))
-if (!setters.length || !closers.length) morir('No hay equipo cargado. Corré `npm run semilla -- cargar` primero.')
+if (!setters.length || !closers.length) morir('No hay equipo cargado. Ejecuta `npm run semilla -- cargar` primero.')
 
 /** Aleatorio REPETIBLE: la misma fecha y la misma persona dan siempre el mismo
  *  número, así que volver a correr el script no cambia el panel. */
