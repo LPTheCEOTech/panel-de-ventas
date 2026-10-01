@@ -4,11 +4,11 @@ import { test } from 'node:test'
 import type { Persona } from '@/shared/tipos'
 import { decidirAccionYo, mismoNombre, type EstadoYo } from './yo-en-el-equipo'
 
-const leandro: Persona = { id: 'p1', nombre: 'Leandro P.', rol: 'closer', activo: true, orden: 1 }
+const ana: Persona = { id: 'p1', nombre: 'Ana Pérez', rol: 'closer', activo: true, orden: 1 }
 const nadie: EstadoYo = { propia: null, mismoNombre: null, mismoNombreTieneAcceso: false }
 
 test('la primera vez con nombre crea la persona', () => {
-  assert.deepEqual(decidirAccionYo(nadie, { rol: 'closer', nombre: ' Leandro P. ' }), { tipo: 'crear', nombre: 'Leandro P.', rol: 'closer' })
+  assert.deepEqual(decidirAccionYo(nadie, { rol: 'closer', nombre: ' Ana Pérez ' }), { tipo: 'crear', nombre: 'Ana Pérez', rol: 'closer' })
 })
 
 test('la primera vez sin nombre (o con una letra) pide el nombre', () => {
@@ -24,7 +24,7 @@ test('«Sin rol de venta» sin ser parte del equipo no hace nada', () => {
 })
 
 test('ya en el equipo: cambia el rol, o se da de baja con null', () => {
-  const yo: EstadoYo = { ...nadie, propia: leandro }
+  const yo: EstadoYo = { ...nadie, propia: ana }
   assert.deepEqual(decidirAccionYo(yo, { rol: 'ambos' }), { tipo: 'cambiar', personaId: 'p1', rol: 'ambos' })
   assert.deepEqual(decidirAccionYo(yo, { rol: null }), { tipo: 'cambiar', personaId: 'p1', rol: null })
   // volver después de la baja reutiliza la misma persona: no pide el nombre de nuevo
@@ -32,22 +32,22 @@ test('ya en el equipo: cambia el rol, o se da de baja con null', () => {
 })
 
 test('el mismo nombre sin acceso propio: pregunta, y con el sí la liga', () => {
-  const choca: EstadoYo = { ...nadie, mismoNombre: leandro }
-  const pregunta = decidirAccionYo(choca, { rol: 'closer', nombre: 'leandro p.' })
+  const choca: EstadoYo = { ...nadie, mismoNombre: ana }
+  const pregunta = decidirAccionYo(choca, { rol: 'closer', nombre: 'ana pérez' })
   assert.equal(pregunta.tipo === 'error' && pregunta.confirmar, true)
   assert.equal(pregunta.tipo === 'error' && pregunta.status, 409)
-  assert.deepEqual(decidirAccionYo(choca, { rol: 'closer', nombre: 'leandro p.', ligarExistente: true }), { tipo: 'ligar', personaId: 'p1', rol: 'closer' })
+  assert.deepEqual(decidirAccionYo(choca, { rol: 'closer', nombre: 'ana pérez', ligarExistente: true }), { tipo: 'ligar', personaId: 'p1', rol: 'closer' })
 })
 
 test('el mismo nombre con acceso de otra cuenta: nunca se la quita', () => {
-  const ajena: EstadoYo = { ...nadie, mismoNombre: leandro, mismoNombreTieneAcceso: true }
-  const a = decidirAccionYo(ajena, { rol: 'closer', nombre: 'Leandro P.', ligarExistente: true })
+  const ajena: EstadoYo = { ...nadie, mismoNombre: ana, mismoNombreTieneAcceso: true }
+  const a = decidirAccionYo(ajena, { rol: 'closer', nombre: 'Ana Pérez', ligarExistente: true })
   assert.equal(a.tipo, 'error')
   assert.equal(a.tipo === 'error' && a.confirmar, undefined)
   assert.match(a.tipo === 'error' ? a.error : '', /ya tiene su propio acceso/)
 })
 
 test('los nombres se comparan como el índice único de la base', () => {
-  assert.equal(mismoNombre(' Leandro P. ', 'leandro p.'), true)
-  assert.equal(mismoNombre('Leandro', 'Leandro P.'), false)
+  assert.equal(mismoNombre(' Ana Pérez ', 'ana pérez'), true)
+  assert.equal(mismoNombre('Ana', 'Ana Pérez'), false)
 })

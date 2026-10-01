@@ -21,6 +21,8 @@ export default async function ReporteSetter() {
   if (esMiembro && !propia) redirect('/panel')
   const personas = esMiembro && propia ? [propia] : todas
   const bloqueadoA = propia?.id ?? undefined
+  // El admin que también vende arranca elegido; puede seguir cargando por otros.
+  const inicial = !esMiembro && personas.some((p) => p.id === sesion?.persona?.id) ? sesion?.persona?.id : undefined
 
   return (
     /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
@@ -38,7 +40,7 @@ export default async function ReporteSetter() {
       {personas.length === 0 ? (
         <SinPersonas rol="setters" />
       ) : (
-        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} bloqueadoA={bloqueadoA} />
+        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} bloqueadoA={bloqueadoA} inicial={inicial} />
       )}
     </div>
   )

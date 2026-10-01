@@ -759,6 +759,16 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .entry.off .del:hover{border-color:var(--m4);color:var(--m6)}
 
+/* 🔴 La fila del dueño: siempre primera, con su correo a la vista y una raya
+   que la separa del equipo. No lleva la X (salir del equipo es «Sin rol de
+   venta») y su contraseña se cambia en Ajustes. El hueco ocupa el lugar de la
+   X para que la columna de lo que hizo quede alineada con las demas filas. */
+.entry.yo{border-bottom:1px solid var(--border)}
+
+.entry.yo .en small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.entry .del-hueco{width:32px;flex-shrink:0}
+
 .pill{border-radius:var(--r-pill);padding:3px 10px;font-size:10px;font-weight:700;
   text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;flex-shrink:0;text-align:center}
 

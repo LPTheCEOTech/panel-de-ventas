@@ -11,13 +11,15 @@ import { Derivado, Stepper } from './piezas'
 
 interface Existente { conversaciones: number; agendas: number }
 
-export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[]; hoy: string; bloqueadoA?: string }) {
+export function FormSetter({
+  personas, hoy, bloqueadoA, inicial,
+}: { personas: Persona[]; hoy: string; bloqueadoA?: string; inicial?: string }) {
   const router = useRouter()
   const [fecha, setFecha] = useState(hoy)
   // 🔴 Fase C · si el server nos manda `bloqueadoA` es porque el que carga es
   // un miembro y solo puede reportar como sí mismo. El estado arranca con esa
   // persona y no puede cambiar; el <select> se reemplaza por una confirmación.
-  const [personaId, setPersonaId] = useState(bloqueadoA ?? personas[0]?.id ?? '')
+  const [personaId, setPersonaId] = useState(bloqueadoA ?? inicial ?? personas[0]?.id ?? '')
   const [conversaciones, setConversaciones] = useState(0)
   const [agendas, setAgendas] = useState(0)
   const [existente, setExistente] = useState<Existente | null>(null)

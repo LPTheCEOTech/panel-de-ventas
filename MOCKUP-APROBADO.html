@@ -555,6 +555,13 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .entry:hover .del{border-color:var(--border);background:var(--card)}
 .entry .del:hover{border-color:var(--rojo);color:var(--rojo)}
 .entry.off .del:hover{border-color:var(--m4);color:var(--m6)}
+/* 🔴 La fila del dueño: siempre primera, con su correo a la vista y una raya
+   que la separa del equipo. No lleva la X (salir del equipo es «Sin rol de
+   venta») y su contraseña se cambia en Ajustes. El hueco ocupa el lugar de la
+   X para que la columna de lo que hizo quede alineada con las demas filas. */
+.entry.yo{border-bottom:1px solid var(--border)}
+.entry.yo .en small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .del-hueco{width:32px;flex-shrink:0}
 .pill{border-radius:var(--r-pill);padding:3px 10px;font-size:10px;font-weight:700;
   text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;flex-shrink:0;text-align:center}
 .pill.rol{min-width:106px}
@@ -1309,7 +1316,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <label class="sw"><input type="checkbox"> Reagendada</label>
           <label class="sw"><input type="checkbox" checked> Cerró</label>
         </div>
-        <div class="section-title">Plata</div>
+        <div class="section-title">Dinero</div>
         <div class="form-grid">
           <div class="field c6"><label>Revenue contratado <span class="req">*</span></label>
             <div class="money-inp"><span class="cur">$</span><input class="num" value="3,000" inputmode="decimal"></div>
@@ -1410,6 +1417,13 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
       <div class="card">
         <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 de baja</p></div><span class="chip n">esta semana</span></div>
 
+        <div class="entry yo"><span class="av2">AP</span>
+          <span class="en"><strong>Ana Pérez</strong><small>Tú · ana@negocio.com</small></span>
+          <span class="pill rol no">Sin rol de venta</span>
+          <span class="hizo"><span class="flojo">no vende</span></span>
+          <button class="btn-ghost btn-sm">Contraseña</button>
+          <span class="del-hueco"></span></div>
+
         <div class="entry"><span class="av2">SL</span>
           <span class="en"><strong>Sofía Lara</strong><small class="solo-chico">Setter</small></span>
           <span class="pill rol set">Setter</span>
@@ -1442,6 +1456,17 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
       </div>
 
       <div class="lado">
+        <!-- 🔴 La primera vez que el dueño elige un rol de venta: solo el nombre
+             con el que aparece. Sin correo ni contraseña, porque ya los tiene. -->
+        <div class="card">
+          <div class="note" style="display:block;margin-top:0">
+            <b>¿Con qué nombre apareces en los formularios y en el ranking?</b>
+            <div class="field" style="margin:10px 0"><input value="Ana Pérez"></div>
+            <button class="btn-primary btn-sm">Sumarme como closer</button>
+            <button class="btn-ghost btn-sm">Cancelar</button>
+            <span class="hint" style="display:block;margin-top:8px">Entras con tu misma cuenta. Sigues viendo todo como admin.</span>
+          </div>
+        </div>
         <!-- 🔴 Fase A (sesion 2) · una sola card. Nombre + Rol + Correo con un
              solo botón «Agregar e invitar». Siempre se manda el mail de
              invitación por Supabase Auth y se vincula persona ↔ usuarios. -->

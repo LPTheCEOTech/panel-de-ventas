@@ -3,22 +3,22 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { IconoAbajo, IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@/shared/chasis/iconos'
+import { IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@/shared/chasis/iconos'
 import { mensajeParaElEquipo, revisarContrasena, sugerirContrasena } from '@/shared/datos/contrasenas'
 import { iniciales } from '@/shared/formato'
 import type { Persona, Rol } from '@/shared/tipos'
-
-const ETIQUETA: Record<Rol, string> = { setter: 'Setter', closer: 'Closer', ambos: 'Setter y closer' }
-const CLASE: Record<Rol, string> = { setter: 'set', closer: 'clo', ambos: 'amb' }
-
-/** Los colores de sistema del desplegable: lo dibuja el SO, no nuestro CSS. */
-const OPCION: React.CSSProperties = { color: 'CanvasText', background: 'Canvas' }
+import { CLASE, ETIQUETA, FilaYo, NotaNombre, PastillaRol, type Yo } from './fila-yo'
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function ListaEquipo({
-  personas, resumen,
-}: { personas: Persona[]; resumen: Record<string, { valor: string; unidad: string }> }) {
+  personas, resumen, yo,
+}: {
+  personas: Persona[]
+  resumen: Record<string, { valor: string; unidad: string }>
+  /** El admin que mira. null en modo demo: sin sesión no hay a quién ligar. */
+  yo: Yo | null
+}) {
   const router = useRouter()
   const [nombre, setNombre] = useState('')
   const [rol, setRol] = useState<Rol>('setter')
@@ -34,11 +34,16 @@ export function ListaEquipo({
   // A quién le estoy cambiando la contraseña desde la lista.
   const [cambiando, setCambiando] = useState<Persona | null>(null)
   const [claveNueva, setClaveNueva] = useState('')
+  // El rol que eligió el dueño la primera vez, mientras se le pregunta el nombre.
+  const [sumando, setSumando] = useState<Rol | null>(null)
+  const [confirmar, setConfirmar] = useState<string | null>(null)
 
+  // La persona del dueño va en su propia fila, arriba: no se repite en la lista.
+  const otras = personas.filter((p) => p.id !== yo?.persona?.id)
   const activos = personas.filter((p) => p.activo).length
   const bajas = personas.length - activos
 
-  async function pedir(url: string, metodo: string, cuerpo: unknown) {
+  async function pedir(url: string, metodo: string, cuerpo: unknown, siConfirmar?: (pregunta: string) => void) {
     setOcupado(true); setError(null)
     try {
       const r = await fetch(url, {
@@ -47,7 +52,8 @@ export function ListaEquipo({
       })
       if (!r.ok) {
         const d = await r.json().catch(() => null)
-        setError(d?.error ?? 'No se pudo guardar.')
+        if (d?.confirmar && siConfirmar) siConfirmar(d.error)
+        else setError(d?.error ?? 'No se pudo guardar.')
         return false
       }
       router.refresh()
@@ -85,6 +91,20 @@ export function ListaEquipo({
     }
   }
 
+  // 🔴 La primera vez que el dueño elige un rol se le pregunta el nombre; las
+  // siguientes, el cambio es directo, como en la pastilla de cualquiera.
+  function elegirMiRol(r: Rol | null) {
+    setError(null)
+    if (!yo?.persona && r) { setSumando(r); setConfirmar(null); return }
+    pedir('/api/equipo/yo', 'POST', { rol: r })
+  }
+
+  async function sumarme(nombre: string, ligarExistente: boolean) {
+    if (await pedir('/api/equipo/yo', 'POST', { rol: sumando, nombre, ligarExistente }, setConfirmar)) {
+      setSumando(null); setConfirmar(null)
+    }
+  }
+
   function copiarEntrega() {
     if (!entregar) return
     const url = typeof window !== 'undefined' ? window.location.origin : ''
@@ -105,14 +125,16 @@ export function ListaEquipo({
         <span className="chip n">esta semana</span>
       </div>
 
-      {personas.length === 0 ? (
+      {yo && <FilaYo yo={yo} hizo={yo.persona ? resumen[yo.persona.id] : undefined} ocupado={ocupado} onElegir={elegirMiRol} />}
+
+      {otras.length === 0 ? (
         <div className="empty">
           <div className="tile" style={{ width: 44, height: 44 }}><IconoEquipo size={22} /></div>
           <h3>Todavía no hay nadie</h3>
           <p>Agrega a tus setters y closers aquí abajo. Son los nombres que van a aparecer en los dos formularios y en el ranking.</p>
         </div>
       ) : (
-        personas.map((p) => {
+        otras.map((p) => {
           const hizo = resumen[p.id]
           return (
           /* 🔴 El renglón es FLEX, no grid.
@@ -132,46 +154,12 @@ export function ListaEquipo({
                 {p.activo ? ETIQUETA[p.rol] : 'ya no está en el equipo'}
               </small>
             </span>
-            {/* 🔴 La pastilla del rol es un desplegable: donde ya se LEE el rol
-                es donde hay que poder cambiarlo. Antes no se podía, y pasar a
-                alguien de setter a closer obligaba a darlo de baja y volver a
-                crearlo — que además choca con «ya hay alguien con ese correo»
-                y deja a la persona trabada sin salida.
-                Va con las clases de la pastilla y sin la flecha del sistema:
-                tiene que seguir leyéndose como una etiqueta, no como un
-                formulario. Los de baja mantienen la pastilla quieta. */}
+            {/* Los de baja mantienen la pastilla quieta. */}
             {p.activo ? (
-              // 🔴 El chevrón es lo único que dice «esto se puede tocar». Sin
-              // él la pastilla se lee como una etiqueta muerta: Maydelene
-              // terminó borrando a alguien del equipo para cambiarle el rol
-              // porque no había ninguna señal de que se podía. Va DENTRO de la
-              // pastilla, en `currentColor`, así toma el color de cada rol.
-              <span
-                className={`pill rol ${CLASE[p.rol]}`}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 5, cursor: 'pointer' }}
-              >
-                <select
-                  value={p.rol}
-                  disabled={ocupado}
-                  title={`Cambiarle el rol a ${p.nombre}`}
-                  aria-label={`Rol de ${p.nombre}`}
-                  onChange={(e) => pedir('/api/equipo', 'PATCH', { id: p.id, rol: e.target.value as Rol })}
-                  style={{
-                    appearance: 'none', WebkitAppearance: 'none',
-                    background: 'transparent', border: 0, padding: 0, margin: 0,
-                    font: 'inherit', color: 'inherit', letterSpacing: 'inherit',
-                    textTransform: 'inherit', cursor: 'pointer',
-                  }}
-                >
-                  {/* 🔴 Los colores del sistema en las opciones: el desplegable
-                      lo pinta el sistema operativo, y heredar el color claro de
-                      la pastilla dejaba el menú ilegible en tema claro. */}
-                  <option value="setter" style={OPCION}>{ETIQUETA.setter}</option>
-                  <option value="closer" style={OPCION}>{ETIQUETA.closer}</option>
-                  <option value="ambos" style={OPCION}>{ETIQUETA.ambos}</option>
-                </select>
-                <IconoAbajo />
-              </span>
+              <PastillaRol
+                rol={p.rol} nombre={p.nombre} disabled={ocupado}
+                onCambiar={(r) => r && pedir('/api/equipo', 'PATCH', { id: p.id, rol: r })}
+              />
             ) : (
               <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
             )}
@@ -208,6 +196,16 @@ export function ListaEquipo({
     </div>
 
     <div className="lado">
+      {sumando && yo && (
+        <div className="card">
+          <NotaNombre
+            rol={sumando} sugerido={yo.nombreSugerido} confirmar={confirmar} ocupado={ocupado}
+            onSumarme={sumarme}
+            onCancelar={() => (confirmar ? setConfirmar(null) : setSumando(null))}
+          />
+          {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
+        </div>
+      )}
       <div className="card">
         <div className="card-head">
           <div><h3>Agregar al equipo</h3><p>le creas el acceso y se lo pasas tú</p></div>
@@ -301,7 +299,7 @@ export function ListaEquipo({
           </div>
         )}
 
-        {error && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
+        {error && !sumando && <div className="note warn"><IconoAviso /><span>{error}</span></div>}
 
         <div className="note">
           <IconoInfo />

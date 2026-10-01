@@ -1,11 +1,13 @@
 import { redirect } from 'next/navigation'
 
-import { rankingClosers, rankingSetters } from '@/shared/calculo/metricas'
+import { agregarLlamadas, rankingClosers, rankingSetters } from '@/shared/calculo/metricas'
 import { hoyEn, ventana } from '@/shared/calculo/periodo'
 import { IconoEquipo } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
+import { CONFIGURACION_POR_DEFECTO } from '@/shared/datos/interfaz'
 import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { dinero, numero, plural } from '@/shared/formato'
+import type { Yo } from '@/features/equipo/fila-yo'
 import { ListaEquipo } from '@/features/equipo/lista'
 
 export default async function Equipo() {
@@ -16,11 +18,14 @@ export default async function Equipo() {
   const config = await capa.leerConfiguracion()
   const v = ventana('semana', hoyEn(config.zonaHoraria), config.inicioSemana)
 
-  const [personas, setters, closers] = await Promise.all([
+  // 🔴 Los closers cargan una fila por llamada (Post Llamada), igual que en el
+  // Panel. Leer el reporte diario viejo dejaba a todos en «sin reportes».
+  const [personas, setters, llamadas] = await Promise.all([
     capa.leerPersonas(),
     capa.leerReportesSetter(v),
-    capa.leerReportesCloser(v),
+    capa.leerLlamadas(v),
   ])
+  const closers = agregarLlamadas(llamadas)
 
   // Lo que hizo cada uno esta semana, partido en dos: el número que manda y
   // lo que lo acompaña. La columna es angosta y el número tiene que poder
@@ -41,6 +46,14 @@ export default async function Equipo() {
     }
   }
 
+  // 🔴 La fila «Tú»: el admin que mira, venda o no. Sale de la sesión, no de
+  // la lista de personas. En modo demo no hay sesión y no hay fila.
+  const yo: Yo | null = sesion ? {
+    correo: sesion.correo,
+    persona: sesion.persona,
+    nombreSugerido: config.usuarioNombre === CONFIGURACION_POR_DEFECTO.usuarioNombre ? '' : config.usuarioNombre,
+  } : null
+
   return (
     <div className="hoja">
       <div className="page-head">
@@ -56,7 +69,7 @@ export default async function Equipo() {
         <span className="badge-w">Se carga a mano</span>
       </div>
 
-      <ListaEquipo personas={personas} resumen={resumen} />
+      <ListaEquipo personas={personas} resumen={resumen} yo={yo} />
     </div>
   )
 }

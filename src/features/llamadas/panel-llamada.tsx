@@ -33,16 +33,18 @@ export function etiquetaOrigen(v: OrigenLead | ''): string {
 }
 
 export function PanelLlamada({
-  personas, hoy, simbolo, iniciales, bloqueadoA,
+  personas, hoy, simbolo, iniciales, bloqueadoA, inicial,
 }: {
   personas: Persona[]
   hoy: string
   simbolo: string
   iniciales: Llamada[]
   bloqueadoA?: string
+  /** El admin que también vende: arranca elegido, pero puede cambiarlo. */
+  inicial?: string
 }) {
   const router = useRouter()
-  const [personaId, setPersonaId] = useState(bloqueadoA ?? personas[0]?.id ?? '')
+  const [personaId, setPersonaId] = useState(bloqueadoA ?? inicial ?? personas[0]?.id ?? '')
   const [fecha, setFecha] = useState(hoy)
   const [leadNombre, setLeadNombre] = useState('')
   // 🔴 Sesión 3 · sin default. Arranca vacío para forzar elección activa;

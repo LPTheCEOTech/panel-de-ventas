@@ -29,6 +29,8 @@ export default async function LlamadaPage() {
 
   const personas = esMiembro && propia ? [propia] : todas
   const bloqueadoA = propia?.id ?? undefined
+  // El admin que también vende arranca elegido; puede seguir cargando por otros.
+  const inicial = !esMiembro && personas.some((p) => p.id === sesion?.persona?.id) ? sesion?.persona?.id : undefined
 
   // Fase D · las llamadas del día para el (miembro) o para todos (admin).
   // La lista arranca poblada — así el contador vivo tiene con qué contar
@@ -68,6 +70,7 @@ export default async function LlamadaPage() {
           simbolo={config.simbolo}
           iniciales={iniciales}
           bloqueadoA={bloqueadoA}
+          inicial={inicial}
         />
       )}
     </div>
