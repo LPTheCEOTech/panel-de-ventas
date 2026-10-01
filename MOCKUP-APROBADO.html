@@ -565,6 +565,8 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .pill{border-radius:var(--r-pill);padding:3px 10px;font-size:10px;font-weight:700;
   text-transform:uppercase;letter-spacing:.4px;white-space:nowrap;flex-shrink:0;text-align:center}
 .pill.rol{min-width:106px}
+/* la pastilla editable esconde su select encima: el foco de teclado se ve en la pastilla */
+.pill.rol:focus-within{outline:2px solid currentColor;outline-offset:2px}
 .pill.set{background:var(--azul-bg);color:var(--azul)}
 .pill.clo{background:var(--m1);color:var(--m7)}
 .pill.amb{background:var(--ambar-bg);color:var(--ambar-ink)}

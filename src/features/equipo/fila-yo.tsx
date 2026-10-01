@@ -48,10 +48,15 @@ export function PastillaRol({
   onCambiar: (rol: Rol | null) => void
 }) {
   return (
+    // 🔴 El <select> va INVISIBLE y encima de toda la pastilla. Antes ocupaba
+    // solo el texto: un clic en el chevrón —justo lo que invita a tocar— no
+    // abría nada. Lo que se ve es la etiqueta; lo que recibe el clic, todo.
     <span
       className={`pill rol ${rol ? CLASE[rol] : 'no'}`}
-      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, cursor: 'pointer' }}
+      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, cursor: 'pointer' }}
     >
+      {rol ? ETIQUETA[rol] : 'Sin rol de venta'}
+      <IconoAbajo />
       <select
         value={rol ?? ''}
         disabled={disabled}
@@ -59,10 +64,9 @@ export function PastillaRol({
         aria-label={sinRol ? 'Tu rol de venta' : `Rol de ${nombre}`}
         onChange={(e) => onCambiar((e.target.value || null) as Rol | null)}
         style={{
+          position: 'absolute', inset: 0, width: '100%', height: '100%',
+          opacity: 0, margin: 0, border: 0, cursor: 'pointer',
           appearance: 'none', WebkitAppearance: 'none',
-          background: 'transparent', border: 0, padding: 0, margin: 0,
-          font: 'inherit', color: 'inherit', letterSpacing: 'inherit',
-          textTransform: 'inherit', cursor: 'pointer',
         }}
       >
         {/* 🔴 Los colores del sistema en las opciones: el desplegable lo pinta
@@ -73,7 +77,6 @@ export function PastillaRol({
         <option value="closer" style={OPCION}>{ETIQUETA.closer}</option>
         <option value="ambos" style={OPCION}>{ETIQUETA.ambos}</option>
       </select>
-      <IconoAbajo />
     </span>
   )
 }

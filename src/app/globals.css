@@ -774,6 +774,9 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .pill.rol{min-width:106px}
 
+/* la pastilla editable esconde su select encima: el foco de teclado se ve en la pastilla */
+.pill.rol:focus-within{outline:2px solid currentColor;outline-offset:2px}
+
 .pill.set{background:var(--azul-bg);color:var(--azul)}
 
 .pill.clo{background:var(--m1);color:var(--m7)}
