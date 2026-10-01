@@ -1,31 +1,16 @@
 import {
-  agregarLlamadas, barrasPorDia, barrasPorSemana, delta, embudo, metricas, metricasConCosto,
+  agregarLlamadas, barrasPorDia, barrasPorMes, barrasPorSemana, delta, embudo, metricas, metricasConCosto,
   rankingClosers, rankingSetters,
 } from '@/shared/calculo/metricas'
-import { dentro, hoyEn, sumarDias, ventana, ventanaAnterior } from '@/shared/calculo/periodo'
+import { hoyEn } from '@/shared/calculo/periodo'
+import { deQueDe, graficoDe, leerPedido, rangoAnterior, resolverRango, tituloDeRango } from '@/shared/calculo/rango'
 import { IconoInfo } from '@/shared/chasis/iconos'
 import { datos } from '@/shared/datos/indice'
 import { sesionActual } from '@/shared/datos/sesion-usuario'
-import { tituloDeVentana } from '@/shared/formato'
-import type { Periodo } from '@/shared/tipos'
 import {
   CashPorDia, Costos, Embudo, LlamadaAEquipo, Plata, RankingClosers, RankingSetters, SinEquipo, Tasas,
 } from '@/features/panel/piezas'
-import { SelectorPeriodo } from '@/features/panel/selector-periodo'
-
-const PERIODOS: Periodo[] = ['dia', 'semana', 'mes']
-
-/** `?p=dia|semana|mes` y `?f=YYYY-MM-DD` (la fecha de referencia). */
-function leerParametros(sp: Record<string, string | string[] | undefined>, zona: string) {
-  const p = Array.isArray(sp.p) ? sp.p[0] : sp.p
-  const f = Array.isArray(sp.f) ? sp.f[0] : sp.f
-  return {
-    periodo: PERIODOS.includes(p as Periodo) ? (p as Periodo) : 'semana',
-    // 🔴 se valida la forma: un `?f=` cualquiera no puede reventar la página
-    fecha: typeof f === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(f) ? f : hoyEn(zona),
-    fechaExplicita: typeof f === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(f) ? f : undefined,
-  }
-}
+import { SelectorFechas } from '@/features/panel/selector-fechas'
 
 export default async function PanelDeVentas({
   searchParams,
@@ -34,11 +19,6 @@ export default async function PanelDeVentas({
 }) {
   const capa = datos()
   const [config, sesion] = await Promise.all([capa.leerConfiguracion(), sesionActual()])
-  const { periodo, fecha, fechaExplicita } = leerParametros(await searchParams, config.zonaHoraria)
-
-  const v = ventana(periodo, fecha, config.inicioSemana)
-  const previa = ventanaAnterior(periodo, v)
-
   // 🔴 Fase C · si es miembro, todo se filtra por `personaId` propio. El admin
   // (o el modo dev sin sesión) sigue viendo todo. El filtro vive server-side,
   // en el `.eq('persona_id', …)` de la capa: la app usa service_role, RLS no
@@ -46,11 +26,22 @@ export default async function PanelDeVentas({
   const esMiembro = sesion?.usuario.rol === 'miembro'
   const filtro = esMiembro ? sesion?.usuario.personaId ?? undefined : undefined
 
-  // 🔴 El gráfico NO usa la misma ventana que los números. En modo "Día" una
-  // sola barra no es un gráfico: se muestran los últimos 7 días terminando en
-  // el elegido, que es lo que deja ver si el día fue bueno o malo *comparado
-  // con qué*. Los KPIs siguen siendo del día solo.
-  const vGrafico = periodo === 'dia' ? { desde: sumarDias(v.hasta, -6), hasta: v.hasta } : v
+  // El período: `?r=` (atajo), `?desde&hasta` (rango libre) o el `?p&f` viejo;
+  // sin nada, el mes en curso. «Todo» necesita saber dónde empiezan los datos
+  // (del miembro, si es miembro): esa consulta se hace solo cuando se pide.
+  const hoy = hoyEn(config.zonaHoraria)
+  const pedido = leerPedido(await searchParams, config.inicioSemana)
+  const primera = 'atajo' in pedido && pedido.atajo === 'todo' ? await capa.primeraFecha(filtro) : null
+  const v = resolverRango(pedido, hoy, config.inicioSemana, primera)
+  // «Todo» no tiene anterior: se compara contra nada y los chips no salen
+  const previa = rangoAnterior(v)
+
+  // 🔴 El gráfico NO siempre usa la misma ventana que los números. Un día solo
+  // no es un gráfico: se muestran los últimos 7 días terminando en él, que es
+  // lo que deja ver si fue bueno o malo *comparado con qué*. Los KPIs siguen
+  // siendo del día solo. Los rangos largos se agrupan por semana o por mes.
+  const grafico = graficoDe(v)
+  const graficoAparte = grafico.ventana.desde !== v.desde
 
   // 🔴 Fase D · el closer pasa a granularidad por llamada. El panel lee
   // `llamadas` (una fila por llamada) y las agrega con `agregarLlamadas()` al
@@ -61,9 +52,9 @@ export default async function PanelDeVentas({
     capa.leerPersonas(),
     capa.leerReportesSetter(v, filtro),
     capa.leerLlamadas(v, filtro),
-    capa.leerReportesSetter(previa, filtro),
-    capa.leerLlamadas(previa, filtro),
-    periodo === 'dia' ? capa.leerLlamadas(vGrafico, filtro) : Promise.resolve([]),
+    previa ? capa.leerReportesSetter(previa, filtro) : Promise.resolve([]),
+    previa ? capa.leerLlamadas(previa, filtro) : Promise.resolve([]),
+    graficoAparte ? capa.leerLlamadas(grafico.ventana, filtro) : Promise.resolve([]),
     // 🔴 Fase A + C · gasto es del NEGOCIO: solo el admin lo ve. Al miembro
     // le va 0 (no oculta la pieza porque .plata no se rompe con $0, pero CAC
     // y costo/asistida se ocultan más abajo).
@@ -81,7 +72,7 @@ export default async function PanelDeVentas({
     delta(m.tasaCierre, mPrevia.tasaCierre),
   ]
 
-  const deQue = { dia: 'del día', semana: 'de la semana', mes: 'del mes' }[periodo]
+  const deQue = deQueDe(v, config.inicioSemana)
   const hayEquipo = personas.some((p) => p.activo)
   const hayDatos = setters.length + closers.length > 0
 
@@ -90,13 +81,12 @@ export default async function PanelDeVentas({
       <div className="page-head">
         <div>
           <h1>Panel de Ventas</h1>
-          <div className="sub">{tituloDeVentana(periodo, v.desde, v.hasta)}</div>
+          <div className="sub">{tituloDeRango(v, config.inicioSemana)}</div>
         </div>
         <div className="head-actions">
-          <SelectorPeriodo
-            actual={periodo} fecha={fechaExplicita} ventanaActual={v}
-            inicioSemana={config.inicioSemana} esHoy={dentro(hoyEn(config.zonaHoraria), v)}
-          />
+          {/* `key`: al cambiar de período el selector arranca de cero, con el
+              borrador del calendario igual al rango nuevo */}
+          <SelectorFechas key={`${v.desde}_${v.hasta}`} rango={v} hoy={hoy} inicioSemana={config.inicioSemana} />
         </div>
       </div>
 
@@ -148,16 +138,16 @@ export default async function PanelDeVentas({
             />
             <CashPorDia
               barras={
-                periodo === 'mes'
-                  ? barrasPorSemana(v, closers, config.inicioSemana)
-                  : barrasPorDia(vGrafico, periodo === 'dia' ? closersGrafico : closers)
+                grafico.unidad === 'mes' ? barrasPorMes(v, closers)
+                  : grafico.unidad === 'semana' ? barrasPorSemana(v, closers, config.inicioSemana)
+                    : barrasPorDia(grafico.ventana, graficoAparte ? closersGrafico : closers)
               }
               simbolo={config.simbolo}
-              unidad={periodo === 'mes' ? 'semana' : 'día'}
+              unidad={grafico.unidad}
               subtitulo={
-                periodo === 'semana'
+                deQue === 'de la semana'
                   ? (config.inicioSemana === 1 ? 'lunes a domingo' : 'domingo a sábado')
-                  : periodo === 'dia' ? 'los últimos 7 días' : 'semana por semana'
+                  : grafico.subtitulo
               }
             />
           </div>

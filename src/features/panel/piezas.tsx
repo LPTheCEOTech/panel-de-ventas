@@ -208,7 +208,7 @@ export function Embudo({
 
 export function CashPorDia({
   barras, simbolo, subtitulo, unidad,
-}: { barras: Barra[]; simbolo: string; subtitulo: string; unidad: 'día' | 'semana' }) {
+}: { barras: Barra[]; simbolo: string; subtitulo: string; unidad: 'día' | 'semana' | 'mes' }) {
   // 🔴 El total sale de LAS BARRAS, no de las métricas del período.
   //
   // En modo "Día" el gráfico muestra los últimos 7 días pero las métricas son
@@ -243,7 +243,7 @@ export function CashPorDia({
         <div className="note">
           <IconoTendencia />
           <span>
-            {unidad === 'día' ? 'El día' : 'La semana'} más fuerte se llevó el <b>{share}%</b> de
+            {{ día: 'El día', semana: 'La semana', mes: 'El mes' }[unidad]} más fuerte se llevó el <b>{share}%</b> de
             todo el cash del período.
           </span>
         </div>

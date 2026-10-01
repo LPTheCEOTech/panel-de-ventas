@@ -175,31 +175,69 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
    cuatro campos en 1320 px no queda "amplio", queda estirado. */
 .hoja{max-width:1080px;margin:0 auto}
 .page-head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;
-  flex-wrap:wrap;margin-bottom:16px}
+  flex-wrap:wrap;margin-bottom:16px;position:relative}
 .page-head h1{font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.55px;line-height:1.15}
 .page-head .sub{font-size:12.5px;color:var(--faint);margin-top:3px}
 .head-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 
-/* el segmentado: el activo es una pastilla LEVANTADA, no un bloque verde.
-   El verde de la barra ya dice en que pantalla estas; que lo diga dos veces
-   convierte el acento en ruido. */
-.modo{display:inline-flex;background:var(--hueco);border:1px solid var(--border);
-  border-radius:var(--r-ctl);padding:3px;gap:2px;flex-shrink:0}
-.modo button,.modo a{background:none;border:0;padding:5px 13px;border-radius:6px;font-size:12px;
-  font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:var(--body);
-  text-decoration:none;display:inline-flex;align-items:center}
-.modo button:hover,.modo a:hover{color:var(--ink)}
-.modo button[aria-pressed="true"],.modo a[aria-pressed="true"]{background:var(--card);
-  color:var(--ink);font-weight:700;box-shadow:var(--sombra)}
-/* el paso de fecha: ‹ hoy › */
-.fnav{display:inline-flex;align-items:stretch;background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-ctl);overflow:hidden}
-.fnav a,.fnav button{background:none;border:0;color:var(--muted);padding:6px 10px;cursor:pointer;
-  display:inline-flex;align-items:center;text-decoration:none;font-size:12px;font-weight:600;
-  font-family:var(--body)}
-.fnav a:hover,.fnav button:hover{background:var(--hueco);color:var(--ink)}
-.fnav .div{width:1px;background:var(--line);flex-shrink:0}
-.fnav [aria-disabled="true"]{opacity:.3;pointer-events:none}
+/* 🔴 El filtro de fechas: UN boton que dice que periodo se esta viendo y abre
+   atajos + calendario. Reemplaza al «‹ Hoy ›» y al «Dia / Semana / Mes»: las
+   flechas eran chicas y grises y nadie encontraba el mes pasado (2026-10-01).
+   El chevron dice que se toca, como en la pastilla del rol de Equipo. */
+.fechas{position:relative}
+.fechas-btn{display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 11px 7px 12px;
+  font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;font-family:var(--body);
+  white-space:nowrap;box-shadow:var(--sombra)}
+.fechas-btn svg{color:var(--muted);flex-shrink:0}
+.fechas-btn:hover{border-color:var(--m4)}
+.fechas-btn:focus-visible{outline:2px solid var(--m5);outline-offset:2px}
+.fechas-btn[aria-expanded="true"]{border-color:var(--m5);box-shadow:var(--anillo)}
+/* mientras el servidor arma el periodo nuevo: el toque ya tuvo respuesta */
+.fechas-btn[data-pendiente]{opacity:.55}
+/* se ancla a la DERECHA: el boton vive en el borde derecho y dos meses miden
+   650 px. El popover del color se ancla a la izquierda; este no. */
+.fechas-pop{position:absolute;z-index:30;top:calc(100% + 6px);right:0;width:650px;
+  padding:14px;border-radius:12px;background:var(--card);border:1px solid var(--border);
+  box-shadow:var(--sombra-alta);display:flex;flex-direction:column;gap:12px}
+.atajos{display:flex;flex-wrap:wrap;gap:6px}
+.atajos button{background:var(--card);border:1px solid var(--border);border-radius:var(--r-pill);
+  padding:6px 12px;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;
+  font-family:var(--body);white-space:nowrap}
+.atajos button:hover{border-color:var(--m4);color:var(--ink)}
+.atajos button:focus-visible{outline:2px solid var(--m5);outline-offset:2px}
+.atajos button[aria-pressed="true"]{background:var(--m1);border-color:var(--m4);color:var(--m7);font-weight:700}
+.cal-meses{display:grid;grid-template-columns:1fr 1fr;gap:22px;padding-top:12px;
+  border-top:1px solid var(--line)}
+.cal-mes-h{display:flex;align-items:center;justify-content:space-between;height:28px;margin-bottom:4px}
+.cal-mes-h b{font-family:var(--display);font-size:13px;font-weight:700;color:var(--ink)}
+.cal-flecha{width:28px;height:28px;border:0;background:none;border-radius:7px;color:var(--muted);
+  cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0}
+.cal-flecha:hover{background:var(--hueco);color:var(--ink)}
+.cal-flecha:focus-visible{outline:2px solid var(--m5);outline-offset:1px}
+.cal-flecha:disabled{opacity:.3;cursor:default;background:none}
+/* en escritorio el ‹ va en el primer mes y el › en el segundo; en celular se
+   ve un solo mes y lleva los dos */
+.cal-mes:first-child .adelante,.cal-mes:last-child .atras{visibility:hidden}
+.cal-grilla{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px}
+.cal-grilla .dow{font-size:10.5px;font-weight:700;color:var(--faint);text-align:center;padding:4px 0 6px}
+.cal-dia{height:34px;border:0;background:none;padding:0;font-size:12.5px;color:var(--ink);cursor:pointer;
+  font-family:var(--body);font-variant-numeric:tabular-nums;position:relative;border-radius:8px}
+.cal-dia:hover{background:var(--hueco)}
+.cal-dia:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+/* los dias que todavia no pasaron: no hay datos de manana */
+.cal-dia:disabled{color:var(--faint);opacity:.5;cursor:default;background:none}
+.cal-dia.hoy::after{content:'';position:absolute;bottom:4px;left:50%;width:4px;height:4px;
+  margin-left:-2px;border-radius:50%;background:var(--m5)}
+.cal-dia.tramo{background:var(--m1);border-radius:0;color:var(--m7)}
+.cal-dia.ini,.cal-dia.fin{background:var(--m6);color:var(--sobre-marca);font-weight:700}
+.cal-dia.ini{border-radius:8px 0 0 8px}
+.cal-dia.fin{border-radius:0 8px 8px 0}
+.cal-dia.ini.fin{border-radius:8px}
+.cal-dia.ini::after,.cal-dia.fin::after{background:var(--sobre-marca)}
+.cal-pie{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding-top:12px;
+  border-top:1px solid var(--line)}
+.cal-pie .helper{margin-right:auto;font-size:12px;color:var(--muted)}
 
 /* banda que dice QUE ES la pantalla. La de solo lectura no lleva caja: es una
    nota al pie arriba, no una tarjeta mas que compite con los datos. */
@@ -669,6 +707,14 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   .wrap{padding:14px 14px 32px}
   .page-head h1{font-size:19px}
   .page-head{margin-bottom:14px}
+  /* 🔴 El filtro de fechas en celular: el boton baja abajo del titulo y el
+     panel se ancla a la cabecera entera, a todo el ancho, con un solo mes. */
+  .fechas{position:static}
+  .fechas-pop{left:0;right:0;width:auto;padding:12px}
+  .cal-meses{grid-template-columns:1fr}
+  .cal-mes:first-child{display:none}
+  .cal-mes:last-child .atras{visibility:visible}
+  .cal-dia{height:38px}
   /* 🔴 En pantalla chica la insignia baja a su propio renglon. Con el texto
      encogible comparte linea con ella, y la frase queda leyendose en una
      columna de 240 px: cuatro renglones cortados. Este pseudo-elemento de
@@ -748,6 +794,12 @@ body[data-view="mobile"] .quien .qn{display:none}
 body[data-view="mobile"] .wrap{padding:14px 14px 32px}
 body[data-view="mobile"] .page-head h1{font-size:19px}
 body[data-view="mobile"] .page-head{margin-bottom:14px}
+body[data-view="mobile"] .fechas{position:static}
+body[data-view="mobile"] .fechas-pop{left:0;right:0;width:auto;padding:12px}
+body[data-view="mobile"] .cal-meses{grid-template-columns:1fr}
+body[data-view="mobile"] .cal-mes:first-child{display:none}
+body[data-view="mobile"] .cal-mes:last-child .atras{visibility:visible}
+body[data-view="mobile"] .cal-dia{height:38px}
 body[data-view="mobile"] .what{margin-bottom:14px;flex-wrap:wrap;row-gap:6px}
 body[data-view="mobile"] .what::before{content:'';order:2;flex:0 0 100%;height:0}
 body[data-view="mobile"] .what .badge-w{margin-left:0;order:3}
@@ -844,17 +896,13 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
     <div class="page-head">
       <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
       <div class="head-actions">
-        <div class="fnav">
-          <a href="#" aria-label="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
-          <span class="div"></span>
-          <a href="#">Hoy</a>
-          <span class="div"></span>
-          <a href="#" aria-label="Semana siguiente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-        </div>
-        <div class="modo" role="group" aria-label="Período">
-          <button aria-pressed="false">Día</button>
-          <button aria-pressed="true">Semana</button>
-          <button aria-pressed="false">Mes</button>
+        <div class="fechas">
+          <button class="fechas-btn" aria-haspopup="dialog" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="fechas-pop" role="dialog" aria-label="Elegir período">
+            <div class="atajos"><button aria-pressed="false">Hoy</button><button aria-pressed="true">Esta semana</button><button aria-pressed="false">Este mes</button><button aria-pressed="false">Mes pasado</button><button aria-pressed="false">Últimos 30 días</button><button aria-pressed="false">Este año</button><button aria-pressed="false">Todo</button></div>
+            <div class="cal-meses"><div class="cal-mes"><div class="cal-mes-h"><button class="cal-flecha atras" aria-label="Mes anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><b>Junio 2026</b><button class="cal-flecha adelante" aria-label="Mes siguiente" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="cal-grilla"><span class="dow">L</span><span class="dow">M</span><span class="dow">X</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span><button class="cal-dia">1</button><button class="cal-dia">2</button><button class="cal-dia">3</button><button class="cal-dia">4</button><button class="cal-dia">5</button><button class="cal-dia">6</button><button class="cal-dia">7</button><button class="cal-dia">8</button><button class="cal-dia">9</button><button class="cal-dia">10</button><button class="cal-dia">11</button><button class="cal-dia">12</button><button class="cal-dia">13</button><button class="cal-dia">14</button><button class="cal-dia">15</button><button class="cal-dia">16</button><button class="cal-dia">17</button><button class="cal-dia">18</button><button class="cal-dia">19</button><button class="cal-dia">20</button><button class="cal-dia">21</button><button class="cal-dia">22</button><button class="cal-dia">23</button><button class="cal-dia">24</button><button class="cal-dia">25</button><button class="cal-dia">26</button><button class="cal-dia">27</button><button class="cal-dia">28</button><button class="cal-dia">29</button><button class="cal-dia">30</button></div></div><div class="cal-mes"><div class="cal-mes-h"><button class="cal-flecha atras" aria-label="Mes anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><b>Julio 2026</b><button class="cal-flecha adelante" aria-label="Mes siguiente" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="cal-grilla"><span class="dow">L</span><span class="dow">M</span><span class="dow">X</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span><span></span><span></span><button class="cal-dia">1</button><button class="cal-dia">2</button><button class="cal-dia">3</button><button class="cal-dia">4</button><button class="cal-dia">5</button><button class="cal-dia">6</button><button class="cal-dia">7</button><button class="cal-dia">8</button><button class="cal-dia">9</button><button class="cal-dia">10</button><button class="cal-dia">11</button><button class="cal-dia">12</button><button class="cal-dia">13</button><button class="cal-dia">14</button><button class="cal-dia">15</button><button class="cal-dia">16</button><button class="cal-dia">17</button><button class="cal-dia">18</button><button class="cal-dia">19</button><button class="cal-dia ini">20</button><button class="cal-dia tramo">21</button><button class="cal-dia tramo">22</button><button class="cal-dia hoy tramo">23</button><button class="cal-dia tramo" disabled>24</button><button class="cal-dia tramo" disabled>25</button><button class="cal-dia fin" disabled>26</button><button class="cal-dia" disabled>27</button><button class="cal-dia" disabled>28</button><button class="cal-dia" disabled>29</button><button class="cal-dia" disabled>30</button><button class="cal-dia" disabled>31</button></div></div></div>
+            <div class="cal-pie"><span class="helper">20–26 jul</span><button class="btn-ghost btn-sm">Cancelar</button><button class="btn-primary btn-sm">Aplicar</button></div>
+          </div>
         </div>
       </div>
     </div>
@@ -993,13 +1041,8 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
     <div class="page-head">
       <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
       <div class="head-actions">
-        <div class="fnav">
-          <a href="#" aria-label="Semana anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></a>
-          <span class="div"></span><a href="#" aria-disabled="true">Hoy</a><span class="div"></span>
-          <a href="#" aria-label="Semana siguiente"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></a>
-        </div>
-        <div class="modo" role="group" aria-label="Período">
-          <button aria-pressed="false">Día</button><button aria-pressed="true">Semana</button><button aria-pressed="false">Mes</button>
+        <div class="fechas">
+          <button class="fechas-btn" aria-haspopup="dialog" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
         </div>
       </div>
     </div>
