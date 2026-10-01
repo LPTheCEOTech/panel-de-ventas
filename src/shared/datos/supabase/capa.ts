@@ -2,6 +2,7 @@ import 'server-only'
 
 import type { Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from '../interfaz'
+import { todasLasFilas } from '../tandas'
 import { clienteServidor } from './cliente'
 
 /**
@@ -9,11 +10,10 @@ import { clienteServidor } from './cliente'
  * (snake_case) a los nombres del dominio (camelCase). La traducción vive solo
  * acá: ninguna pantalla sabe cómo se llaman las columnas.
  *
- * 🔴 Ninguna consulta pagina, y es a propósito: el techo natural de esta app es
- * `personas × días del mes`, que con 20 vendedores son 620 filas. Si alguna vez
- * un negocio pasara las 1.000, PostgREST cortaría en silencio — por eso
- * `verificar.mjs` cuenta filas contra un número esperado, que es lo único que
- * delata un corte silencioso.
+ * 🔴 Las lecturas por período van DE A TANDAS (`todasLasFilas`). Antes no
+ * paginaban porque el techo era un mes; con el filtro de fechas un período
+ * puede ser «Este año» o «Todo», y PostgREST corta en 1000 filas sin avisar.
+ * Cada tanda lleva un orden total (`fecha, id`) para no repetir ni saltear.
  */
 const F_SETTER = 'fecha, persona_id, conversaciones, agendas'
 const F_CLOSER = 'fecha, persona_id, llamadas, asistieron, reagendadas, cierres, revenue_cents, cash_cents'
@@ -22,6 +22,12 @@ type FilaSetter = { fecha: string; persona_id: string; conversaciones: number; a
 type FilaCloser = {
   fecha: string; persona_id: string; llamadas: number; asistieron: number
   reagendadas: number; cierres: number; revenue_cents: number; cash_cents: number
+}
+
+type FilaLlamada = {
+  id: string; persona_id: string; fecha: string; asistio: boolean; reagendada: boolean; cerro: boolean
+  revenue_cents: number; cash_cents: number; nota: string | null; activa: boolean
+  lead_nombre: string | null; origen_lead: string | null
 }
 
 const aSetter = (f: FilaSetter): ReporteSetter => ({
@@ -115,21 +121,23 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
     },
 
     async leerReportesSetter(v: Ventana, personaId?: string): Promise<ReporteSetter[]> {
-      let q = sb.from('reportes_setter').select(F_SETTER)
-        .gte('fecha', v.desde).lte('fecha', v.hasta)
-      if (personaId) q = q.eq('persona_id', personaId)
-      const { data, error } = await q.order('fecha')
-      reventar('leerReportesSetter', error)
-      return (data ?? []).map(aSetter)
+      const filas = await todasLasFilas<FilaSetter>('leerReportesSetter', (a, b) => {
+        let q = sb.from('reportes_setter').select(F_SETTER)
+          .gte('fecha', v.desde).lte('fecha', v.hasta)
+        if (personaId) q = q.eq('persona_id', personaId)
+        return q.order('fecha').order('id').range(a, b)
+      })
+      return filas.map(aSetter)
     },
 
     async leerReportesCloser(v: Ventana, personaId?: string): Promise<ReporteCloser[]> {
-      let q = sb.from('reportes_closer').select(F_CLOSER)
-        .gte('fecha', v.desde).lte('fecha', v.hasta)
-      if (personaId) q = q.eq('persona_id', personaId)
-      const { data, error } = await q.order('fecha')
-      reventar('leerReportesCloser', error)
-      return (data ?? []).map(aCloser)
+      const filas = await todasLasFilas<FilaCloser>('leerReportesCloser', (a, b) => {
+        let q = sb.from('reportes_closer').select(F_CLOSER)
+          .gte('fecha', v.desde).lte('fecha', v.hasta)
+        if (personaId) q = q.eq('persona_id', personaId)
+        return q.order('fecha').order('id').range(a, b)
+      })
+      return filas.map(aCloser)
     },
 
     async buscarReporteSetter(fecha: string, personaId: string) {
@@ -186,14 +194,34 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
 
     async sumaGastos(v: Ventana): Promise<number> {
       // 🔴 Suma en JS. Un `.select('sum(...)')` de PostgREST requiere una vista
-      // o RPC; la ventana natural son ≤ 31 filas y traerlas y sumar es más
-      // simple, con la misma restricción de fila (unique fecha) que garantiza
-      // que no hay duplicados. Igual patrón que `leerReportes*`.
-      const { data, error } = await sb
-        .from('gastos').select('monto_cents')
-        .gte('fecha', v.desde).lte('fecha', v.hasta)
-      reventar('sumaGastos', error)
-      return (data ?? []).reduce((s, f) => s + Number(f.monto_cents), 0)
+      // o RPC; es una fila por día (unique fecha), así que «Todo» de tres
+      // años son ~1100 filas: por eso también va de a tandas.
+      const filas = await todasLasFilas<{ monto_cents: number }>('sumaGastos', (a, b) =>
+        sb.from('gastos').select('monto_cents')
+          .gte('fecha', v.desde).lte('fecha', v.hasta)
+          .order('fecha').range(a, b)
+      )
+      return filas.reduce((s, f) => s + Number(f.monto_cents), 0)
+    },
+
+    async primeraFecha(personaId?: string): Promise<string | null> {
+      // El día del primer dato cargado: donde empieza «Todo». Una fila por
+      // tabla, ordenada, en vez de traer el historial para buscar el mínimo.
+      const primera = async (tabla: 'llamadas' | 'reportes_setter' | 'gastos') => {
+        let q = sb.from(tabla).select('fecha')
+        if (tabla === 'llamadas') q = q.eq('activa', true)
+        if (personaId && tabla !== 'gastos') q = q.eq('persona_id', personaId)
+        const { data, error } = await q.order('fecha').limit(1)
+        reventar('primeraFecha', error)
+        return (data?.[0]?.fecha as string | undefined) ?? null
+      }
+      // 🔴 El gasto es del negocio: al miembro no le marca el inicio de «Todo».
+      const fechas = await Promise.all(
+        personaId ? [primera('llamadas'), primera('reportes_setter')]
+          : [primera('llamadas'), primera('reportes_setter'), primera('gastos')]
+      )
+      const validas = fechas.filter((f): f is string => f !== null).sort()
+      return validas[0] ?? null
     },
 
     async guardarGasto(g: Gasto): Promise<void> {
@@ -210,14 +238,15 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
     },
 
     async leerLlamadas(v: Ventana, personaId?: string): Promise<Llamada[]> {
-      let q = sb.from('llamadas')
-        .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre, origen_lead')
-        .eq('activa', true)
-        .gte('fecha', v.desde).lte('fecha', v.hasta)
-      if (personaId) q = q.eq('persona_id', personaId)
-      const { data, error } = await q.order('creado_en')
-      reventar('leerLlamadas', error)
-      return (data ?? []).map((f) => ({
+      const filas = await todasLasFilas<FilaLlamada>('leerLlamadas', (a, b) => {
+        let q = sb.from('llamadas')
+          .select('id, persona_id, fecha, asistio, reagendada, cerro, revenue_cents, cash_cents, nota, activa, lead_nombre, origen_lead')
+          .eq('activa', true)
+          .gte('fecha', v.desde).lte('fecha', v.hasta)
+        if (personaId) q = q.eq('persona_id', personaId)
+        return q.order('creado_en').order('id').range(a, b)
+      })
+      return filas.map((f) => ({
         id: f.id, personaId: f.persona_id, fecha: f.fecha,
         asistio: f.asistio, reagendada: f.reagendada, cerro: f.cerro,
         revenueCents: Number(f.revenue_cents), cashCents: Number(f.cash_cents),

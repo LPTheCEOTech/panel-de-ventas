@@ -47,6 +47,11 @@ export interface CapaDeDatos {
   /** UPSERT por fecha (PK). La misma cara visible que reportes. */
   guardarGasto(g: Gasto): Promise<void>
 
+  /** La fecha del primer dato cargado (llamada activa, reporte de setter o
+   *  gasto), o `null` si no hay nada. Es donde empieza «Todo» en el Panel.
+   *  Con `personaId`, solo lo de esa persona (el gasto no cuenta). */
+  primeraFecha(personaId?: string): Promise<string | null>
+
   /** 🔴 Fase D · una fila POR LLAMADA. Reemplaza al agregado diario del
    *  closer. Solo `activa=true`; el kernel las agrega con `agregarLlamadas()`. */
   leerLlamadas(v: Ventana, personaId?: string): Promise<Llamada[]>

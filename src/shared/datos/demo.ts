@@ -153,6 +153,15 @@ export function capaDemo(vacia = false): CapaDeDatos {
         .filter((g) => dentro(g.fecha, v))
         .reduce((s, g) => s + g.montoCents, 0)
     },
+    async primeraFecha(personaId) {
+      const e = leer(vacia)
+      const fechas = [
+        ...(e.llamadas ?? []).filter((l) => l.activa && (!personaId || l.personaId === personaId)).map((l) => l.fecha),
+        ...e.setter.filter((r) => !personaId || r.personaId === personaId).map((r) => r.fecha),
+        ...(personaId ? [] : (e.gastos ?? []).map((g) => g.fecha)),
+      ].sort()
+      return fechas[0] ?? null
+    },
     async guardarGasto(g) {
       con((e) => {
         if (!e.gastos) e.gastos = []
