@@ -48,16 +48,16 @@ export default function ErrorDePantalla({
 
         <ol style={{ lineHeight: 1.7, paddingLeft: '1.2rem' }}>
           <li>
-            <b>Probá de nuevo.</b> Si fue un corte momentáneo de la base, con esto
+            <b>Prueba de nuevo.</b> Si fue un corte momentáneo de la base, con esto
             alcanza.
           </li>
           <li>
-            <b>Corré otra vez el SQL de instalación completo.</b> En Supabase, SQL
-            Editor, pegá el archivo entero y dale Run. Está hecho para poder
+            <b>Corre otra vez el SQL de instalación completo.</b> En Supabase, SQL
+            Editor, pega el archivo entero y haz clic en Run. Está hecho para poder
             correrse dos veces sin romper nada ni borrar lo que ya cargaste.
           </li>
           <li>
-            <b>Revisá las tres variables de entorno en Vercel</b> y volvé a
+            <b>Revisa las tres variables de entorno en Vercel</b> y vuelve a
             desplegar.
           </li>
         </ol>
@@ -71,7 +71,7 @@ export default function ErrorDePantalla({
 
       {error.digest && (
         <p className="sub" style={{ marginTop: '1rem' }}>
-          Si tenés que pedir ayuda, mandá una foto de esta pantalla. Referencia:{' '}
+          Si tienes que pedir ayuda, envía una foto de esta pantalla. Referencia:{' '}
           <code>{error.digest}</code>
         </p>
       )}

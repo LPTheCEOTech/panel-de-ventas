@@ -51,7 +51,7 @@ export default async function Login({
           <span className={estilos.tile}>{marca.iniciales}</span>
           <span>
             <strong>{marca.nombre}</strong>
-            <span>Entrá con tu correo y contraseña</span>
+            <span>Entra con tu correo y contraseña</span>
           </span>
         </div>
 
@@ -78,14 +78,14 @@ export default async function Login({
         <details className={estilos.olvide}>
           <summary>¿Olvidaste tu contraseña?</summary>
           <p>
-            <b>Si sos parte del equipo:</b> pedísela a quien te dio el acceso al panel.
+            <b>Si eres parte del equipo:</b> pídesela a quien te dio el acceso al panel.
             Te la puede cambiar al instante desde la pantalla de Equipo.
           </p>
           <p>
-            <b>Si vos administrás el panel:</b> entrá a tu proyecto en{' '}
+            <b>Si tú administras el panel:</b> entra a tu proyecto en{' '}
             <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer">supabase.com</a>,
-            abrí <b>Authentication → Users</b>, buscá tu correo, apretá los tres
-            puntitos de la derecha y elegí <b>Reset password</b>.
+            abre <b>Authentication → Users</b>, busca tu correo, haz clic en los tres
+            puntitos de la derecha y elige <b>Reset password</b>.
           </p>
         </details>
       </div>

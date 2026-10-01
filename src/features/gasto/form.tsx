@@ -49,13 +49,13 @@ export function FormGasto({ hoy, simbolo }: { hoy: string; simbolo: string }) {
       })
       if (!r.ok) {
         const d = await r.json().catch(() => null)
-        setError(d?.error ?? 'No se pudo guardar. Probá de nuevo.')
+        setError(d?.error ?? 'No se pudo guardar. Prueba de nuevo.')
         return
       }
       router.push('/panel')
       router.refresh()
     } catch {
-      setError('No se pudo hablar con el servidor. Revisá tu conexión.')
+      setError('No se pudo hablar con el servidor. Revisa tu conexión.')
     } finally {
       setEnviando(false)
     }
@@ -66,7 +66,7 @@ export function FormGasto({ hoy, simbolo }: { hoy: string; simbolo: string }) {
       <div className="what write">
         <IconoLapiz />
         <span>
-          Al cerrar el día, registrá cuánto gastaste en captación. Con esto el panel calcula
+          Al cerrar el día, registra cuánto gastaste en captación. Con esto el panel calcula
           el <b>CAC</b>, el <b>costo por asistida</b> y el <b>AOV</b>.
         </span>
         <span className="badge-w">Se carga a mano</span>
@@ -87,7 +87,7 @@ export function FormGasto({ hoy, simbolo }: { hoy: string; simbolo: string }) {
             <CampoDinero
               ancho="c6" nombre="monto" etiqueta="Gasto del día" valorCents={montoCents}
               onCambio={setMontoCents} simbolo={simbolo}
-              pista="Si gastaste en varias plataformas, sumalas. La nota queda de ayuda-memoria."
+              pista="Si gastaste en varias plataformas, súmalas. La nota queda de ayuda-memoria."
             />
             <div className="field c6">
               <label htmlFor="g-nota">Nota (opcional)</label>
@@ -114,7 +114,7 @@ export function FormGasto({ hoy, simbolo }: { hoy: string; simbolo: string }) {
 
         <div className="lado">
           <div className="card">
-            <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
+            <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribes</p></div></div>
             <div className="calc apilado">
               <Derivado principal etiqueta="Gasto del día" valor={dinero(montoCents, simbolo)} />
               <Derivado etiqueta="Fecha" valor={fechaLarga(fecha)} />
@@ -127,7 +127,7 @@ export function FormGasto({ hoy, simbolo }: { hoy: string; simbolo: string }) {
                 <IconoAviso />
                 <span>
                   <b>Ya cargaste el {fechaLarga(fecha)}</b> — {dinero(existente.montoCents, simbolo)}
-                  {existente.nota ? <> · «{existente.nota}»</> : null}. Si enviás de nuevo, se
+                  {existente.nota ? <> · «{existente.nota}»</> : null}. Si envías de nuevo, se
                   <b> reemplaza</b> lo anterior. No se suma.
                 </span>
               </div>

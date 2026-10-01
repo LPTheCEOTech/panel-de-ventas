@@ -21,7 +21,7 @@ export const MENSAJE_ERROR: Record<CodigoError, string> = {
   // 🔴 Un solo mensaje para "no existe el correo" y "contraseña incorrecta": si
   // fueran distintos, el login sería un detector de qué correos existen.
   credenciales: 'Correo o contraseña incorrectos.',
-  servidor: 'No pudimos comprobar tus datos. Es un problema del servidor, no de tu contraseña. Probá de nuevo en un momento.',
+  servidor: 'No pudimos comprobar tus datos. Es un problema del servidor, no de tu contraseña. Prueba de nuevo en un momento.',
   faltan: 'Faltan el correo o la contraseña.',
 }
 

@@ -49,13 +49,13 @@ export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[];
       })
       if (!r.ok) {
         const d = await r.json().catch(() => null)
-        setError(d?.error ?? 'No se pudo guardar. Probá de nuevo.')
+        setError(d?.error ?? 'No se pudo guardar. Prueba de nuevo.')
         return
       }
       router.push('/panel')
       router.refresh()
     } catch {
-      setError('No se pudo hablar con el servidor. Revisá tu conexión.')
+      setError('No se pudo hablar con el servidor. Revisa tu conexión.')
     } finally {
       setEnviando(false)
     }
@@ -66,7 +66,7 @@ export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[];
       <div className="what write">
         <IconoLapiz />
         <span>
-          Al terminar tu día, registrá tus números. Con esto el panel calcula la{' '}
+          Al terminar tu día, registra tus números. Con esto el panel calcula la{' '}
           <b>tasa de agenda</b> del equipo.
         </span>
         <span className="badge-w">Se carga a mano</span>
@@ -75,7 +75,7 @@ export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[];
       <div className="trabajo">
       <div className="card formcard">
         {/* 🔴 Dos grupos con título, no ocho campos en fila. El formulario
-            pregunta dos cosas distintas —quién sos y qué hiciste— y verlas
+            pregunta dos cosas distintas —quién eres y qué hiciste— y verlas
             separadas es lo que hace que se llene sin releer. */}
         <div className="section-title">Quién y cuándo</div>
         <div className="form-grid">
@@ -117,7 +117,7 @@ export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[];
 
       <div className="lado">
         <div className="card">
-          <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
+          <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribes</p></div></div>
           <div className="calc apilado">
             <Derivado principal etiqueta="Tasa de agenda" valor={porcentaje(t)} />
             <Derivado etiqueta="Agendas" valor={numero(agendas)} />
@@ -131,7 +131,7 @@ export function FormSetter({ personas, hoy, bloqueadoA }: { personas: Persona[];
             <IconoAviso />
             <span>
               <b>{persona?.nombre} ya cargó el {fechaLarga(fecha)}</b> — {numero(existente.conversaciones)} conversaciones
-              y {numero(existente.agendas)} agendas. Si enviás de nuevo, se <b>reemplaza</b> lo
+              y {numero(existente.agendas)} agendas. Si envías de nuevo, se <b>reemplaza</b> lo
               anterior. No se suma.
             </span>
           </div>

@@ -71,7 +71,7 @@ export async function actualizarSesion(request: NextRequest): Promise<NextRespon
   if (!hayCredenciales()) {
     if (esProduccion()) {
       return new NextResponse(
-        'Falta configurar Supabase. La app no puede verificar quién sos, así que no deja entrar a nadie.',
+        'Falta configurar Supabase. La app no puede verificar quién eres, así que no deja entrar a nadie.',
         { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } }
       )
     }

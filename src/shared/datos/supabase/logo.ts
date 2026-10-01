@@ -47,7 +47,7 @@ export async function subirLogo(file: File): Promise<string> {
     // haberlo creado y, si no, la persona necesita saber qué hacer.
     if (/not found|does not exist/i.test(error.message)) {
       throw new Error(
-        'El bucket "logos" no existe. Creálo en Supabase Storage (Public) y volvé a intentar.'
+        'El bucket "logos" no existe. Créalo en Supabase Storage (Public) y vuelve a intentar.'
       )
     }
     throw new Error(error.message)

@@ -52,7 +52,7 @@ export function AvisoActualizacion({
       <span className={estilos.texto}>
         <b>Hay una actualización para tu panel.</b>{' '}
         {titulos.length === 1 ? titulos[0] : `${titulos.length} mejoras nuevas.`}
-        {sinActualizador && ' Para aplicarla tenés que volver a correr el SQL de instalación una vez.'}
+        {sinActualizador && ' Para aplicarla tienes que volver a correr el SQL de instalación una vez.'}
         {estado === 'error' && <span className={estilos.error}> {error}</span>}
       </span>
       {!sinActualizador && (

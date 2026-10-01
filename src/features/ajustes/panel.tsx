@@ -95,7 +95,7 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
         <Fila titulo="Tu nombre" explicacion="Quién está usando el panel.">
           <input value={c.usuarioNombre} maxLength={60} onChange={(e) => set('usuarioNombre', e.target.value)} />
         </Fila>
-        <Fila titulo="Color de tu marca" explicacion="Todo el color del panel sale de acá. Cambiálo y cambia todo.">
+        <Fila titulo="Color de tu marca" explicacion="Todo el color del panel sale de aquí. Cámbialo y cambia todo.">
           <SelectorColor
             valor={c.marca} colorValido={colorValido}
             onCambio={(hex) => set('marca', hex)}
@@ -128,7 +128,7 @@ export function PanelAjustes({ inicial }: { inicial: Configuracion }) {
             <option value={0}>Domingo</option>
           </select>
         </Fila>
-        <Fila titulo="Mostrar el ranking" explicacion="Si lo apagás, el panel no muestra los rankings de closers ni de setters.">
+        <Fila titulo="Mostrar el ranking" explicacion="Si lo apagas, el panel no muestra los rankings de closers ni de setters.">
           <label className="sw">
             <input type="checkbox" checked={c.rankingVisible} onChange={(e) => set('rankingVisible', e.target.checked)} />
             {c.rankingVisible ? 'Visible' : 'Oculto'}
@@ -190,11 +190,11 @@ function MiContrasena() {
 
   return (
     <div className="card" style={{ marginTop: 16 }}>
-      <div className="card-head"><div><h3>Tu contraseña</h3><p>la que usás para entrar acá</p></div></div>
-      <Fila titulo="Nueva contraseña" explicacion="Al menos 8 caracteres. Anotala antes de guardar.">
+      <div className="card-head"><div><h3>Tu contraseña</h3><p>la que usas para entrar aquí</p></div></div>
+      <Fila titulo="Nueva contraseña" explicacion="Al menos 8 caracteres. Anótala antes de guardar.">
         <input type="text" value={clave} maxLength={72} onChange={(e) => { setClave(e.target.value); setEstado('espera') }} />
       </Fila>
-      <Fila titulo="Repetila" explicacion="Para asegurarnos de que no se coló un error de tipeo.">
+      <Fila titulo="Repítela" explicacion="Para asegurarnos de que no se coló un error de tipeo.">
         <input type="text" value={repetir} maxLength={72} onChange={(e) => { setRepetir(e.target.value); setEstado('espera') }} />
       </Fila>
       {problema && <div className="note warn"><IconoAviso /><span>{MENSAJE_CONTRASENA[problema]}</span></div>}

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const capa = datos()
   if (capa.motor !== 'supabase') {
     return NextResponse.json(
-      { error: 'La subida de logo requiere Supabase Storage. Corré contra la base real.' },
+      { error: 'La subida de logo requiere Supabase Storage. Corre contra la base real.' },
       { status: 501 }
     )
   }
@@ -44,13 +44,13 @@ export async function POST(request: NextRequest) {
   }
   if (file.size > MAX_BYTES) {
     return NextResponse.json(
-      { error: `Máximo 256 KB. Bajalo con squoosh.app o similar.` },
+      { error: `Máximo 256 KB. Bájalo con squoosh.app o similar.` },
       { status: 400 }
     )
   }
   if (!TIPOS_OK.has(file.type)) {
     return NextResponse.json(
-      { error: `Formato no soportado (${file.type || 'desconocido'}). Usá PNG, JPG, SVG o WebP.` },
+      { error: `Formato no soportado (${file.type || 'desconocido'}). Usa PNG, JPG, SVG o WebP.` },
       { status: 400 }
     )
   }

@@ -96,7 +96,7 @@ export default async function PanelDeVentas({
         <div className="what read">
           <IconoInfo />
           <span>
-            Todo lo que ves acá <b>se calcula</b> a partir de los reportes de fin de día del
+            Todo lo que ves aquí <b>se calcula</b> a partir de los reportes de fin de día del
             equipo. Ningún número se teclea dos veces.
           </span>
           <span className="badge-w">Solo lectura</span>

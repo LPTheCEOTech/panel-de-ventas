@@ -21,13 +21,13 @@ const dineroCents = z.number().int().min(0).max(1_000_000_000)
 // elegir uno antes de habilitar Guardar, así que llegar acá sin el campo es
 // error del cliente y devolvemos el mensaje que ve el closer.
 const zOrigen = z.enum(['organico', 'anuncios', 'referidos'], {
-  error: 'Elegí de dónde vino el lead',
+  error: 'Elige de dónde vino el lead',
 })
 
 const zNueva = z.object({
   fecha,
   personaId: z.string().min(1).max(64).optional(),
-  leadNombre: z.string().trim().min(2, 'Escribí el nombre del lead').max(80),
+  leadNombre: z.string().trim().min(2, 'Escribe el nombre del lead').max(80),
   origenLead: zOrigen,
   asistio: z.boolean(),
   reagendada: z.boolean(),

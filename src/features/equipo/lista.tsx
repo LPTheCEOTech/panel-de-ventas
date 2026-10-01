@@ -90,7 +90,7 @@ export function ListaEquipo({
     const url = typeof window !== 'undefined' ? window.location.origin : ''
     const texto = entregar.correo
       ? mensajeParaElEquipo(entregar.nombre, url, entregar.correo, entregar.clave)
-      : `${entregar.nombre}, tu nueva contraseña del panel es: ${entregar.clave}\nEntrá en ${url}`
+      : `${entregar.nombre}, tu nueva contraseña del panel es: ${entregar.clave}\nEntra en ${url}`
     navigator.clipboard?.writeText(texto).then(() => setCopiado(true)).catch(() => setCopiado(false))
   }
 
@@ -109,7 +109,7 @@ export function ListaEquipo({
         <div className="empty">
           <div className="tile" style={{ width: 44, height: 44 }}><IconoEquipo size={22} /></div>
           <h3>Todavía no hay nadie</h3>
-          <p>Agregá a tus setters y closers acá abajo. Son los nombres que van a aparecer en los dos formularios y en el ranking.</p>
+          <p>Agrega a tus setters y closers aquí abajo. Son los nombres que van a aparecer en los dos formularios y en el ranking.</p>
         </div>
       ) : (
         personas.map((p) => {
@@ -210,7 +210,7 @@ export function ListaEquipo({
     <div className="lado">
       <div className="card">
         <div className="card-head">
-          <div><h3>Agregar al equipo</h3><p>le creás el acceso y se lo pasás vos</p></div>
+          <div><h3>Agregar al equipo</h3><p>le creas el acceso y se lo pasas tú</p></div>
         </div>
 
         <div className="addrow">
@@ -246,7 +246,7 @@ export function ListaEquipo({
               }}
             />
             <span className="hint">
-              Ya te sugerimos una fácil de dictar. Podés cambiarla.{' '}
+              Ya te sugerimos una fácil de dictar. Puedes cambiarla.{' '}
               <button type="button" className="btn-ghost btn-sm" onClick={() => setClave(sugerirContrasena())}>
                 Sugerir otra
               </button>
@@ -262,7 +262,7 @@ export function ListaEquipo({
 
         {entregar && (
           <div className="note" style={{ display: 'block' }}>
-            <b>Listo. Pasale estos datos a {entregar.nombre}:</b>
+            <b>Listo. Pásale estos datos a {entregar.nombre}:</b>
             <div className="calc apilado" style={{ margin: '10px 0' }}>
               {entregar.correo && (
                 <div className="dv"><span>Correo</span><b className="num">{entregar.correo}</b></div>
@@ -276,7 +276,7 @@ export function ListaEquipo({
               Ya se lo pasé
             </button>
             <span className="hint" style={{ display: 'block', marginTop: 8 }}>
-              Esta contraseña no se vuelve a mostrar. Si la perdés, le ponés una nueva
+              Esta contraseña no se vuelve a mostrar. Si la pierdes, le pones una nueva
               con el botón «Contraseña» de la lista.
             </span>
           </div>
@@ -306,8 +306,8 @@ export function ListaEquipo({
         <div className="note">
           <IconoInfo />
           <span>
-            No se manda ningún correo: le creás el acceso y le pasás los datos vos por
-            donde ya le hablás. Si ya existe una persona con ese nombre, la reutiliza;
+            No se manda ningún correo: le creas el acceso y le pasas los datos tú por
+            donde ya le hablas. Si ya existe una persona con ese nombre, la reutiliza;
             si no, la crea. Dar de baja a alguien <b>no borra su historial</b>: deja de
             aparecer en los formularios, pero sus números siguen contando en las
             semanas que ya trabajó.

@@ -21,7 +21,7 @@ import { clienteServidor } from '@/shared/datos/supabase/cliente'
  * fila en `personas`. Para la suya usa el primer caso.
  */
 const zCambio = z.object({
-  clave: z.string().min(1, 'Ponele una contraseña').max(72),
+  clave: z.string().min(1, 'Ponle una contraseña').max(72),
   personaId: z.string().min(1).max(64).optional(),
 })
 
@@ -40,7 +40,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   const sesion = await sesionActual()
-  if (!sesion) return NextResponse.json({ error: 'Tenés que estar dentro del panel.' }, { status: 401 })
+  if (!sesion) return NextResponse.json({ error: 'Tienes que estar dentro del panel.' }, { status: 401 })
 
   const sb = clienteServidor(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 

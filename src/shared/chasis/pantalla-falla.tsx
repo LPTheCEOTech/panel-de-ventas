@@ -50,22 +50,22 @@ export function PantallaDeFalla({
           <h2 style={{ marginTop: 0 }}>Qué hacer</h2>
           <ol style={{ lineHeight: 1.7, paddingLeft: '1.2rem' }}>
             <li>
-              <b>Recargá la página.</b> Si fue un corte momentáneo de la base, con
+              <b>Recarga la página.</b> Si fue un corte momentáneo de la base, con
               esto alcanza.
             </li>
             <li>
-              <b>Revisá que el SQL de instalación se haya corrido entero.</b> En
-              Supabase, SQL Editor, pegá de nuevo el archivo completo y dale Run:
+              <b>Revisa que el SQL de instalación se haya corrido entero.</b> En
+              Supabase, SQL Editor, pega de nuevo el archivo completo y haz clic en Run:
               está hecho para poder correrse dos veces sin romper nada.
             </li>
             <li>
-              <b>Revisá las tres variables de entorno en Vercel.</b> Que no
+              <b>Revisa las tres variables de entorno en Vercel.</b> Que no
               tengan espacios ni comillas, y que la URL empiece con{' '}
               <code>https://</code> y termine en <code>.supabase.co</code>.
               Después de tocarlas hay que volver a desplegar.
             </li>
             <li>
-              Si sigue igual, <b>mandá una foto de esta pantalla completa</b>. Con
+              Si sigue igual, <b>envía una foto de esta pantalla completa</b>. Con
               el texto de arriba se sabe exactamente qué falta.
             </li>
           </ol>

@@ -70,7 +70,7 @@ export async function aplicarPendientes(): Promise<ResultadoAplicar> {
   if (estado.estado === 'sin-actualizador') {
     return {
       ok: false,
-      error: 'Tu base se instaló con una versión vieja del instalador y no tiene el actualizador. Volvé a correr el SQL de instalación una vez y este botón va a funcionar para siempre.',
+      error: 'Tu base se instaló con una versión vieja del instalador y no tiene el actualizador. Vuelve a correr el SQL de instalación una vez y este botón va a funcionar para siempre.',
     }
   }
 

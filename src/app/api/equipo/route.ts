@@ -27,7 +27,7 @@ const zAlta = z.object({
   nombre: z.string().trim().min(2, 'El nombre necesita al menos 2 letras').max(80),
   rol: z.enum(['setter', 'closer', 'ambos']),
   correo: z.string().trim().email('El correo no parece válido').max(254),
-  clave: z.string().min(1, 'Ponele una contraseña').max(72),
+  clave: z.string().min(1, 'Ponle una contraseña').max(72),
 })
 
 /**
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   if (!hayCredenciales()) {
     return NextResponse.json(
-      { error: 'Agregar al equipo requiere Supabase configurado. Corré contra la base real.' },
+      { error: 'Agregar al equipo requiere Supabase configurado. Corre contra la base real.' },
       { status: 501 }
     )
   }
@@ -87,12 +87,12 @@ export async function POST(request: NextRequest) {
         // terminaba justo acá, en este error, sin salida.
         error:
           `Ya hay alguien con el correo ${correo}. Si es la misma persona: ` +
-          `para cambiarle el rol, tocá su etiqueta (Setter / Closer) en la lista del equipo; ` +
-          `si olvidó su contraseña, usá el botón «Contraseña» de esa misma fila.`,
+          `para cambiarle el rol, toca su etiqueta (Setter / Closer) en la lista del equipo; ` +
+          `si olvidó su contraseña, usa el botón «Contraseña» de esa misma fila.`,
       }, { status: 409 })
     }
     if (/password/i.test(errAuth.message)) {
-      return NextResponse.json({ error: 'Supabase rechazó la contraseña. Probá con una más larga.' }, { status: 400 })
+      return NextResponse.json({ error: 'Supabase rechazó la contraseña. Prueba con una más larga.' }, { status: 400 })
     }
     console.error('[api/equipo POST · createUser]', errAuth)
     return NextResponse.json({ error: errAuth.message }, { status: 500 })
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     if (yaHay) {
       if (yaHay.rol !== rol && yaHay.rol !== 'ambos') {
         return NextResponse.json({
-          error: `Ya hay una persona "${yaHay.nombre}" con rol "${yaHay.rol}". Cambialo a "ambos" en Equipo primero, o usá otro nombre.`,
+          error: `Ya hay una persona "${yaHay.nombre}" con rol "${yaHay.rol}". Cámbialo a "ambos" en Equipo primero, o usa otro nombre.`,
         }, { status: 409 })
       }
       personaId = yaHay.id
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
     await sb.auth.admin.deleteUser(authUserId).catch(() => {})
     console.error('[api/equipo POST · crearUsuario]', e)
     return NextResponse.json({
-      error: 'No pude terminar de darle acceso. Probá de nuevo.',
+      error: 'No pude terminar de darle acceso. Prueba de nuevo.',
     }, { status: 500 })
   }
 

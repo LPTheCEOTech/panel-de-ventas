@@ -18,7 +18,7 @@ export default function Pendiente() {
           </span>
         </div>
         <p style={{ fontSize: 13.5, color: 'var(--muted)', lineHeight: 1.5, marginTop: 0 }}>
-          Pedile a quien administra el panel que te vincule desde <b>Equipo</b>
+          Pídele a quien administra el panel que te vincule desde <b>Equipo</b>
           {' '}→ <b>Invitar por correo</b>. Cuando lo haga, la próxima vez que
           entres vas a ver directamente tu panel.
         </p>

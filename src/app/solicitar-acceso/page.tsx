@@ -11,11 +11,11 @@ export const metadata: Metadata = { title: 'Solicitar acceso' }
 const OTROS: Record<'correo-invalido' | 'limite', { titulo: string; detalle: string }> = {
   'correo-invalido': {
     titulo: 'Ese correo no parece válido',
-    detalle: 'Revisá que tenga arroba y punto, sin espacios. Tiene que ser el mismo con el que te registraste en GitHub.',
+    detalle: 'Revisa que tenga arroba y punto, sin espacios. Tiene que ser el mismo con el que te registraste en GitHub.',
   },
   limite: {
     titulo: 'Demasiados intentos',
-    detalle: 'Ya pediste acceso varias veces. Revisá tu correo (y spam): la invitación seguramente ya está ahí. Si no, esperá una hora y probá de nuevo.',
+    detalle: 'Ya pediste acceso varias veces. Revisa tu correo (y spam): la invitación seguramente ya está ahí. Si no, espera una hora y prueba de nuevo.',
   },
 }
 
@@ -64,11 +64,11 @@ export default async function SolicitarAcceso({
         {!habilitado ? (
           <p className={propios.texto}>{MENSAJE_INVITACION['no-configurado'].detalle}</p>
         ) : exito ? (
-          <p className={propios.texto}>Cuando hayas aceptado la invitación, volvé a la guía y seguí con el paso siguiente. Podés cerrar esta pestaña.</p>
+          <p className={propios.texto}>Cuando hayas aceptado la invitación, vuelve a la guía y sigue con el paso siguiente. Puedes cerrar esta pestaña.</p>
         ) : (
           <>
             <p className={propios.texto}>
-              Escribí el <b>mismo correo con el que creaste tu cuenta de GitHub</b>. Te va a llegar
+              Escribe el <b>mismo correo con el que creaste tu cuenta de GitHub</b>. Te va a llegar
               una invitación para poder instalar tu panel.
             </p>
             <form method="post" action="/api/solicitar-acceso" className={estilos.campos}>

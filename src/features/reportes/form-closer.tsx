@@ -66,13 +66,13 @@ export function FormCloser({
       })
       if (!r.ok) {
         const d = await r.json().catch(() => null)
-        setError(d?.error ?? 'No se pudo guardar. Probá de nuevo.')
+        setError(d?.error ?? 'No se pudo guardar. Prueba de nuevo.')
         return
       }
       router.push('/panel')
       router.refresh()
     } catch {
-      setError('No se pudo hablar con el servidor. Revisá tu conexión.')
+      setError('No se pudo hablar con el servidor. Revisa tu conexión.')
     } finally {
       setEnviando(false)
     }
@@ -83,7 +83,7 @@ export function FormCloser({
       <div className="what write">
         <IconoLapiz />
         <span>
-          Registrá el resultado de tu día de llamadas. Con esto el panel calcula{' '}
+          Registra el resultado de tu día de llamadas. Con esto el panel calcula{' '}
           <b>asistencia</b>, <b>cierre</b> y el <b>dinero</b> de la semana.
         </span>
         <span className="badge-w">Se carga a mano</span>
@@ -92,7 +92,7 @@ export function FormCloser({
       <div className="trabajo">
       <div className="card formcard">
         {/* 🔴 Tres grupos con título, no diez campos en fila. Son tres
-            preguntas distintas —quién sos, cómo te fue en las llamadas y
+            preguntas distintas —quién eres, cómo te fue en las llamadas y
             cuánta plata entró— y el que llena esto lo hace cansado, de noche. */}
         <div className="section-title">Quién y cuándo</div>
         <div className="form-grid">
@@ -145,7 +145,7 @@ export function FormCloser({
 
       <div className="lado">
         <div className="card">
-          <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribís</p></div></div>
+          <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribes</p></div></div>
           <div className="calc apilado">
             <Derivado principal etiqueta="Cobrado" valor={dinero(cashCents, simbolo)} />
             <Derivado etiqueta="Asistencia" valor={porcentajeEntero(tasa(asistieron, llamadas))} />
@@ -161,7 +161,7 @@ export function FormCloser({
             <span>
               <b>{persona?.nombre} ya cargó el {fechaLarga(fecha)}</b> — {numero(existente.llamadas)} llamadas,{' '}
               {numero(existente.cierres)} cierres y {dinero(existente.cashCents, simbolo)} cobrados.
-              Si enviás de nuevo, se <b>reemplaza</b> lo anterior. No se suma.
+              Si envías de nuevo, se <b>reemplaza</b> lo anterior. No se suma.
             </span>
           </div>
           <div className="form-actions">

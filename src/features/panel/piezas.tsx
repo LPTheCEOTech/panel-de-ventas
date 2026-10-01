@@ -321,7 +321,7 @@ export function SinEquipo() {
     <div className="note warn" style={{ marginTop: 0, marginBottom: 16 }}>
       <IconoAviso />
       <span>
-        <b>Todavía no hay nadie en el equipo.</b> Cargá a tus setters y closers en{' '}
+        <b>Todavía no hay nadie en el equipo.</b> Carga a tus setters y closers en{' '}
         <b>Equipo</b> y después van a poder mandar su reporte de fin de día. Hasta
         entonces el panel no tiene de dónde calcular.
       </span>
@@ -336,7 +336,7 @@ export function LlamadaAEquipo() {
         <div className="tile" style={{ width: 44, height: 44 }}><IconoEquipo size={22} /></div>
         <h3>El panel se llena solo</h3>
         <p>
-          En cuanto tu equipo empiece a mandar el reporte de fin de día, acá aparecen las tasas,
+          En cuanto tu equipo empiece a mandar el reporte de fin de día, aquí aparecen las tasas,
           el embudo y el ranking. No hay nada que configurar.
         </p>
         <Link className="btn-primary" href="/equipo">Cargar mi equipo</Link>

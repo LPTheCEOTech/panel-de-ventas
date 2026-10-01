@@ -17,24 +17,24 @@ export const ESTADOS: EstadoInvitacion[] = ['invitado', 'ya-miembro', 'ya-invita
 /** Lo que ve el alumno en la página según cómo salió. */
 export const MENSAJE_INVITACION: Record<EstadoInvitacion, { titulo: string; detalle: string }> = {
   invitado: {
-    titulo: 'Listo, revisá tu correo',
-    detalle: 'GitHub te mandó una invitación. Abrí el mail, apretá «Join» y volvé a la guía para seguir con el paso siguiente. Si no lo ves, mirá en spam.',
+    titulo: 'Listo, revisa tu correo',
+    detalle: 'GitHub te mandó una invitación. Abre el mail, haz clic en «Join» y vuelve a la guía para seguir con el paso siguiente. Si no lo ves, mira en spam.',
   },
   'ya-miembro': {
-    titulo: 'Ya tenés acceso',
-    detalle: 'Este correo ya es miembro. Volvé a la guía y seguí con el paso siguiente.',
+    titulo: 'Ya tienes acceso',
+    detalle: 'Este correo ya es miembro. Vuelve a la guía y sigue con el paso siguiente.',
   },
   'ya-invitado': {
     titulo: 'Ya te habíamos invitado',
-    detalle: 'La invitación ya está en tu correo. Buscá el mail de GitHub (también en spam) y apretá «Join».',
+    detalle: 'La invitación ya está en tu correo. Busca el mail de GitHub (también en spam) y haz clic en «Join».',
   },
   'no-configurado': {
     titulo: 'Este panel no da acceso',
-    detalle: 'Esta función solo está activa en el panel de quien te dio la guía. Volvé a la guía y usá el botón de ahí.',
+    detalle: 'Esta función solo está activa en el panel de quien te dio la guía. Vuelve a la guía y usa el botón de ahí.',
   },
   error: {
     titulo: 'No pudimos invitarte',
-    detalle: 'Es un problema del servidor, no tuyo. Probá de nuevo en un minuto; si sigue, mandale una captura a quien te dio la guía.',
+    detalle: 'Es un problema del servidor, no tuyo. Prueba de nuevo en un minuto; si sigue, envíale una captura a quien te dio la guía.',
   },
 }
 

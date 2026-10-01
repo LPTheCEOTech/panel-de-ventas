@@ -56,7 +56,7 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       reventar('leerConfiguracion', error)
       if (!data) {
         throw new Error(
-          'La tabla `configuracion` está vacía. Corré `npm run instalar` — es el paso que ' +
+          'La tabla `configuracion` está vacía. Corre `npm run instalar` — es el paso que ' +
             'crea el esquema, la configuración y el primer usuario.'
         )
       }

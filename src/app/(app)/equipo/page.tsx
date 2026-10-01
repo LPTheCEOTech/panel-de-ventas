@@ -52,7 +52,7 @@ export default async function Equipo() {
 
       <div className="what write">
         <IconoEquipo size={15} />
-        <span>Los nombres que cargues acá son los que aparecen en los dos formularios y en el ranking.</span>
+        <span>Los nombres que cargues aquí son los que aparecen en los dos formularios y en el ranking.</span>
         <span className="badge-w">Se carga a mano</span>
       </div>
 

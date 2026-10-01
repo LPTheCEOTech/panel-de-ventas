@@ -46,12 +46,12 @@ export function sugerirContrasena(azar: () => number = Math.random): string {
 /** El texto que el admin le manda al vendedor. */
 export function mensajeParaElEquipo(nombre: string, url: string, correo: string, clave: string): string {
   return [
-    `Hola ${nombre}, ya tenés acceso al panel de ventas.`,
+    `Hola ${nombre}, ya tienes acceso al panel de ventas.`,
     '',
-    `Entrá acá: ${url}`,
+    `Entra aquí: ${url}`,
     `Correo: ${correo}`,
     `Contraseña: ${clave}`,
     '',
-    'Cuando entres podés cambiar la contraseña desde Ajustes.',
+    'Cuando entres puedes cambiar la contraseña desde Ajustes.',
   ].join('\n')
 }

@@ -28,8 +28,8 @@ export function datos(): CapaDeDatos {
   if (process.env.NODE_ENV === 'production') {
     throw new Error(
       'Faltan NEXT_PUBLIC_SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY. ' +
-        'Cargalas en las variables de entorno de Vercel y volvé a desplegar SIN caché. ' +
-        'Ojo: copialas con el botón Reveal/Copy — si se pegan los caracteres del ' +
+        'Cárgalas en las variables de entorno de Vercel y vuelve a desplegar SIN caché. ' +
+        'Ojo: cópialas con el botón Reveal/Copy — si se pegan los caracteres del ' +
         'valor enmascarado, la clave queda rota y el login falla con "error de servidor".'
     )
   }

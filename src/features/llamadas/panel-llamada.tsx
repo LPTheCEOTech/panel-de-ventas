@@ -145,7 +145,7 @@ export function PanelLlamada({
       <div className="what write">
         <IconoLapiz />
         <span>
-          Al terminar CADA llamada, registrala acá. El panel calcula
+          Al terminar CADA llamada, regístrala aquí. El panel calcula
           <b> asistencia</b>, <b>cierre</b> y el <b>dinero</b> del día sumando
           las que cargues.
         </span>
@@ -266,7 +266,7 @@ export function PanelLlamada({
           <div className="empty">
             <div className="tile" style={{ width: 44, height: 44 }}><IconoLapiz size={22} /></div>
             <h3>Todavía no cargaste ninguna</h3>
-            <p>Después de cada llamada, marcá los switches y guardá. Van apareciendo acá.</p>
+            <p>Después de cada llamada, marca los switches y guarda. Van apareciendo aquí.</p>
           </div>
         ) : (
           <div className="llamadas-lista">
