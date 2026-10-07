@@ -1,6 +1,7 @@
 import { iniciales as calcularIniciales } from '@/shared/formato'
 import type { Configuracion, Sesion } from '@/shared/tipos'
 import { IconoSalir } from './iconos'
+import { LogoMarca } from './logo-marca'
 import { Nav } from './nav'
 import { ToggleTema } from './toggle-tema'
 
@@ -27,25 +28,7 @@ export function Topbar({ config, sesion }: { config: Configuracion; sesion?: Ses
     <header className="topbar">
       <div className="topbar-in">
       <div className="brand">
-        {/* 🔴 Fase B · si hay logoUrl se muestra el <img>; el <span.brand-tile>
-            queda en el DOM con `hidden` para que el onError del img (bucket
-            caído, URL rota) lo pueda revelar sin re-render y sin console.error.
-            Sin logo, el `hidden` no aplica y sigue todo como estaba. */}
-        {config.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={config.logoUrl}
-            alt={config.nombreNegocio}
-            className="brand-logo"
-            onError={(e) => {
-              const img = e.currentTarget
-              img.hidden = true
-              const tile = img.nextElementSibling
-              if (tile instanceof HTMLElement) tile.hidden = false
-            }}
-          />
-        ) : null}
-        <span className="brand-tile" hidden={!!config.logoUrl}>{config.iniciales}</span>
+        <LogoMarca logoUrl={config.logoUrl} nombre={config.nombreNegocio} iniciales={config.iniciales} />
         <span className="brand-txt">
           <strong>{config.nombreNegocio}</strong>
           <span>Panel de métricas</span>
