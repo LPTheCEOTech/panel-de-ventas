@@ -571,6 +571,9 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .pill.clo{background:var(--m1);color:var(--m7)}
 .pill.amb{background:var(--ambar-bg);color:var(--ambar-ink)}
 .pill.no{background:var(--hueco);color:var(--faint);border:1px solid var(--border)}
+/* Manager (y el dueño visto por un manager): tinta invertida. No es verde —el
+   verde es dinero, acción primaria y «estás acá»— y se da vuelta solo en oscuro. */
+.pill.man{background:var(--ink);color:var(--card)}
 /* 🔴 Sesión 3 · pills de origen del lead en la lista del día */
 .pill.org-organico{background:var(--org-organico-bg);color:var(--org-organico-ink)}
 .pill.org-anuncios{background:var(--org-anuncios-bg);color:var(--org-anuncios-ink)}
@@ -1417,7 +1420,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
 
     <div class="trabajo">
       <div class="card">
-        <div class="card-head"><div><h3>Tu equipo</h3><p>4 activos · 1 de baja</p></div><span class="chip n">esta semana</span></div>
+        <div class="card-head"><div><h3>Tu equipo</h3><p>5 activos · 1 de baja</p></div><span class="chip n">esta semana</span></div>
 
         <div class="entry yo"><span class="av2">AP</span>
           <span class="en"><strong>Ana Pérez</strong><small>Tú · ana@negocio.com</small></span>
@@ -1430,6 +1433,12 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <span class="en"><strong>Sofía Lara</strong><small class="solo-chico">Setter</small></span>
           <span class="pill rol set">Setter</span>
           <span class="hizo num"><b>38</b> agendas</span>
+          <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+
+        <div class="entry"><span class="av2">LH</span>
+          <span class="en"><strong>Lucía Herrera</strong><small class="solo-chico">Manager</small></span>
+          <span class="pill rol man">Manager</span>
+          <span class="hizo num"><b>$9,600</b> · 5 cierres</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">MG</span>

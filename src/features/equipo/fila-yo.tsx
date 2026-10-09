@@ -5,10 +5,21 @@ import { useState } from 'react'
 
 import { IconoAbajo } from '@/shared/chasis/iconos'
 import { iniciales } from '@/shared/formato'
-import type { Persona, Rol } from '@/shared/tipos'
+import type { Persona, Rol, RolEquipo } from '@/shared/tipos'
 
 export const ETIQUETA: Record<Rol, string> = { setter: 'Setter', closer: 'Closer', ambos: 'Setter y closer' }
 export const CLASE: Record<Rol, string> = { setter: 'set', closer: 'clo', ambos: 'amb' }
+/** «Manager» va en la misma pastilla que el rol de venta: un solo lugar para
+ *  decir qué es cada uno en el equipo. */
+const ETIQUETA_EQUIPO: Record<RolEquipo, string> = { ...ETIQUETA, manager: 'Manager' }
+const CLASE_EQUIPO: Record<RolEquipo, string> = { ...CLASE, manager: 'man' }
+
+/** 🔴 El lugar del botón «Contraseña» en una fila que no lo lleva. El renglón
+ *  es flex: sin el hueco, la pastilla y la actividad se corren a la derecha y
+ *  la columna deja de alinear con las otras filas. */
+export function HuecoContrasena() {
+  return <span className="btn-ghost btn-sm" aria-hidden style={{ visibility: 'hidden' }}>Contraseña</span>
+}
 
 /** Los colores de sistema del desplegable: lo dibuja el SO, no nuestro CSS. */
 const OPCION: React.CSSProperties = { color: 'CanvasText', background: 'Canvas' }
@@ -20,6 +31,9 @@ export interface Yo {
   persona: Persona | null
   /** «Tu nombre» de Ajustes si ya no es el de fábrica; si no, vacío. */
   nombreSugerido: string
+  /** Si viene, la fila va QUIETA con esta etiqueta: es el manager, cuyo rol
+   *  y contraseña los cambia el dueño. */
+  fija?: string
 }
 
 /**
@@ -37,32 +51,36 @@ export interface Yo {
  *
  * `sinRol` agrega «Sin rol de venta»: solo lo tiene la fila del dueño, que
  * puede no vender. A los demás se los da de baja con la X.
+ *
+ * `conManager` agrega «Manager»: solo cuando mira el dueño y esa persona
+ * tiene su propio acceso al panel.
  */
 export function PastillaRol({
-  rol, nombre, disabled, sinRol, onCambiar,
+  rol, nombre, disabled, sinRol, conManager, onCambiar,
 }: {
-  rol: Rol | null
+  rol: RolEquipo | null
   nombre: string
   disabled: boolean
   sinRol?: boolean
-  onCambiar: (rol: Rol | null) => void
+  conManager?: boolean
+  onCambiar: (rol: RolEquipo | null) => void
 }) {
   return (
     // 🔴 El <select> va INVISIBLE y encima de toda la pastilla. Antes ocupaba
     // solo el texto: un clic en el chevrón —justo lo que invita a tocar— no
     // abría nada. Lo que se ve es la etiqueta; lo que recibe el clic, todo.
     <span
-      className={`pill rol ${rol ? CLASE[rol] : 'no'}`}
+      className={`pill rol ${rol ? CLASE_EQUIPO[rol] : 'no'}`}
       style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5, cursor: 'pointer' }}
     >
-      {rol ? ETIQUETA[rol] : 'Sin rol de venta'}
+      {rol ? ETIQUETA_EQUIPO[rol] : 'Sin rol de venta'}
       <IconoAbajo />
       <select
         value={rol ?? ''}
         disabled={disabled}
         title={sinRol ? 'Elegir tu rol de venta' : `Cambiarle el rol a ${nombre}`}
         aria-label={sinRol ? 'Tu rol de venta' : `Rol de ${nombre}`}
-        onChange={(e) => onCambiar((e.target.value || null) as Rol | null)}
+        onChange={(e) => onCambiar((e.target.value || null) as RolEquipo | null)}
         style={{
           position: 'absolute', inset: 0, width: '100%', height: '100%',
           opacity: 0, margin: 0, border: 0, cursor: 'pointer',
@@ -76,15 +94,19 @@ export function PastillaRol({
         <option value="setter" style={OPCION}>{ETIQUETA.setter}</option>
         <option value="closer" style={OPCION}>{ETIQUETA.closer}</option>
         <option value="ambos" style={OPCION}>{ETIQUETA.ambos}</option>
+        {conManager && <option value="manager" style={OPCION}>{ETIQUETA_EQUIPO.manager}</option>}
       </select>
     </span>
   )
 }
 
 /**
- * La fila del dueño: siempre primera, aunque todavía no venda. Se arma con la
- * sesión, no con la lista de personas. Sin X (salir del equipo es «Sin rol de
- * venta») y su contraseña se cambia en Ajustes: el botón lleva ahí.
+ * La fila de quien mira: siempre primera, aunque todavía no venda. Se arma con
+ * la sesión, no con la lista de personas. Sin X (salir del equipo es «Sin rol
+ * de venta») y su contraseña se cambia en Ajustes: el botón lleva ahí.
+ *
+ * El manager la ve QUIETA (`yo.fija`): ni rol ni contraseña. Ajustes no es
+ * suyo, y un botón que lleva a una pantalla que lo rebota es peor que nada.
  */
 export function FilaYo({
   yo, hizo, ocupado, onElegir,
@@ -105,15 +127,21 @@ export function FilaYo({
         <strong>{titulo}</strong>
         <small>{nombre ? `Tú · ${yo.correo}` : yo.correo}</small>
       </span>
-      <PastillaRol rol={rol} nombre={titulo} disabled={ocupado} sinRol onCambiar={onElegir} />
+      {yo.fija ? (
+        <span className="pill rol man">{yo.fija}</span>
+      ) : (
+        <PastillaRol rol={rol} nombre={titulo} disabled={ocupado} sinRol onCambiar={(r) => r !== 'manager' && onElegir(r)} />
+      )}
       <span className="hizo num">
         {!rol ? <span className="flojo">no vende</span>
           : hizo ? <><b>{hizo.valor}</b> {hizo.unidad}</>
           : <span className="flojo">sin reportes</span>}
       </span>
-      <Link className="btn-ghost btn-sm" href="/ajustes" title="Tu contraseña se cambia en Ajustes" style={{ textDecoration: 'none' }}>
-        Contraseña
-      </Link>
+      {yo.fija ? <HuecoContrasena /> : (
+        <Link className="btn-ghost btn-sm" href="/ajustes" title="Tu contraseña se cambia en Ajustes" style={{ textDecoration: 'none' }}>
+          Contraseña
+        </Link>
+      )}
       <span className="del-hueco" />
     </div>
   )

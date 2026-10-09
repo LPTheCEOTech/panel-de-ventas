@@ -28,6 +28,20 @@ Tú **NO** cargas reportes en la app. Los cargan los vendedores. Tú sí cargas:
 - **Alguien se va del equipo** → menú Equipo → tacho (la X) al lado del nombre → «Dar de baja». No se borra el historial, solo deja de aparecer en los formularios.
 - **Sube alguien nuevo** → menú Equipo → card «Agregar al equipo» → completas → se le manda invitación por correo.
 - **Cambiar color de marca, moneda, etc.** → menú Ajustes.
+- **Quieres que alguien te ayude a llevar el equipo** → menú Equipo → toca la etiqueta de su rol (Setter / Closer) → elige **Manager**. También puedes elegir Manager al agregarlo.
+
+---
+
+## Para tu manager
+
+Un manager hace **casi todo lo que haces tú**, menos lo delicado:
+
+- **Sí puede:** ver el panel completo (rankings, gasto y CAC incluidos), cargar reportes y llamadas por cualquiera del equipo, cargar el gasto, agregar gente al equipo, cambiarle el rol o la contraseña a los vendedores.
+- **No puede:** entrar a Ajustes, dar de baja a nadie, nombrar otros managers, ni tocarte a ti.
+
+Si también vende, carga lo suyo en «Reporte Setter» o «Post Llamada» como cualquiera. Si no vende, no aparece en los rankings.
+
+Para quitarle el manager: menú Equipo → toca «Manager» en su fila → elige Setter o Closer. Si lo das de baja, también deja de ser manager.
 
 ---
 
@@ -77,7 +91,7 @@ Ve las dos pestañas y usa las dos.
 
 - **Un divisor 0 muestra `—`, nunca `0%`**. Un mes sin cierres no significa 0% de cierre; significa que todavía no hay de qué calcular.
 - **Nadie carga la misma fecha dos veces sin querer**. La restricción vive en la base de datos: un segundo intento con la misma fecha reemplaza el anterior en vez de duplicar.
-- **Los rankings no aparecen para los vendedores** — es data de negocio, no del vendedor. Tú como admin sí los ves.
+- **Los rankings no aparecen para los vendedores** — es data de negocio, no del vendedor. Tú como admin sí los ves, y tu manager también.
 
 ## Preguntas frecuentes
 

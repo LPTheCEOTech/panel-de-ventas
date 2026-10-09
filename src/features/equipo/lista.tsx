@@ -6,22 +6,40 @@ import { useRouter } from 'next/navigation'
 import { IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@/shared/chasis/iconos'
 import { mensajeParaElEquipo, revisarContrasena, sugerirContrasena } from '@/shared/datos/contrasenas'
 import { iniciales } from '@/shared/formato'
-import type { Persona, Rol } from '@/shared/tipos'
-import { CLASE, ETIQUETA, FilaYo, NotaNombre, PastillaRol, type Yo } from './fila-yo'
+import type { Nivel, Persona, RolEquipo } from '@/shared/tipos'
+import { CLASE, ETIQUETA, FilaYo, HuecoContrasena, NotaNombre, PastillaRol, type Yo } from './fila-yo'
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+/** Lo que el servidor decidió sobre cada fila (con `permisos.ts`): la lista
+ *  solo dibuja. */
+export interface FilaEquipo {
+  /** Qué es esa persona en el panel; null si no tiene acceso propio. */
+  quien: Exclude<Nivel, 'sin-acceso'> | null
+  /** Si quien mira le puede cambiar el rol y la contraseña. */
+  tocable: boolean
+  /** Si su pastilla ofrece «Manager». */
+  conManager: boolean
+}
+
+const LIBRE: FilaEquipo = { quien: null, tocable: true, conManager: false }
+
 export function ListaEquipo({
-  personas, resumen, yo,
+  personas, resumen, yo, filas, puedeDarDeBaja, puedeCrearManager,
 }: {
   personas: Persona[]
   resumen: Record<string, { valor: string; unidad: string }>
-  /** El admin que mira. null en modo demo: sin sesión no hay a quién ligar. */
+  /** Quien mira. null en modo demo: sin sesión no hay a quién ligar. */
   yo: Yo | null
+  filas: Record<string, FilaEquipo>
+  /** Dar de baja o reactivar: solo el dueño. */
+  puedeDarDeBaja: boolean
+  /** Ofrecer «Manager» en el alta: solo el dueño. */
+  puedeCrearManager: boolean
 }) {
   const router = useRouter()
   const [nombre, setNombre] = useState('')
-  const [rol, setRol] = useState<Rol>('setter')
+  const [rol, setRol] = useState<RolEquipo>('setter')
   const [correo, setCorreo] = useState('')
   const [clave, setClave] = useState(() => sugerirContrasena())
   const [error, setError] = useState<string | null>(null)
@@ -35,7 +53,7 @@ export function ListaEquipo({
   const [cambiando, setCambiando] = useState<Persona | null>(null)
   const [claveNueva, setClaveNueva] = useState('')
   // El rol que eligió el dueño la primera vez, mientras se le pregunta el nombre.
-  const [sumando, setSumando] = useState<Rol | null>(null)
+  const [sumando, setSumando] = useState<Exclude<RolEquipo, 'manager'> | null>(null)
   const [confirmar, setConfirmar] = useState<string | null>(null)
 
   // La persona del dueño va en su propia fila, arriba: no se repite en la lista.
@@ -93,7 +111,7 @@ export function ListaEquipo({
 
   // 🔴 La primera vez que el dueño elige un rol se le pregunta el nombre; las
   // siguientes, el cambio es directo, como en la pastilla de cualquiera.
-  function elegirMiRol(r: Rol | null) {
+  function elegirMiRol(r: Exclude<RolEquipo, 'manager'> | null) {
     setError(null)
     if (!yo?.persona && r) { setSumando(r); setConfirmar(null); return }
     pedir('/api/equipo/yo', 'POST', { rol: r })
@@ -136,13 +154,19 @@ export function ListaEquipo({
       ) : (
         otras.map((p) => {
           const hizo = resumen[p.id]
+          const f = filas[p.id] ?? LIBRE
+          // 🔴 El dueño y los managers, vistos por un manager: quietos, con su
+          // etiqueta. El dueño que no vende no es «de baja»: es el dueño.
+          const fija = f.quien === 'dueno' ? 'Dueño' : f.quien === 'manager' ? 'Manager' : null
+          const duenoQuieto = !f.tocable && f.quien === 'dueno'
+          const activo = p.activo || duenoQuieto
           return (
           /* 🔴 El renglón es FLEX, no grid.
              Con columnas fijas, la pastilla de "De baja" —que aparece y
              desaparece— corría de lugar todo lo que venía después: la
              actividad y el botón caían en la pista equivocada y sobraba una
              columna vacía al final del renglón. */
-          <div className={`entry${p.activo ? '' : ' off'}`} key={p.id}>
+          <div className={`entry${activo ? '' : ' off'}`} key={p.id}>
             <span className="av2">{iniciales(p.nombre)}</span>
             <span className="en">
               <strong>{p.nombre}</strong>
@@ -150,28 +174,31 @@ export function ListaEquipo({
                   pastilla; en el celular la pastilla no entra y lo dice este
                   renglón, que ahí se enciende. La baja, en cambio, se dice
                   siempre: es lo que explica por qué el renglón está apagado. */}
-              <small className={p.activo ? 'solo-chico' : undefined}>
-                {p.activo ? ETIQUETA[p.rol] : 'ya no está en el equipo'}
+              <small className={activo ? 'solo-chico' : undefined}>
+                {activo ? fija ?? ETIQUETA[p.rol] : 'ya no está en el equipo'}
               </small>
             </span>
-            {/* Los de baja mantienen la pastilla quieta. */}
-            {p.activo ? (
+            {/* Los de baja, y lo que quien mira no puede tocar, van quietos. */}
+            {p.activo && f.tocable ? (
               <PastillaRol
-                rol={p.rol} nombre={p.nombre} disabled={ocupado}
+                rol={f.quien === 'manager' ? 'manager' : p.rol} nombre={p.nombre} disabled={ocupado}
+                conManager={f.conManager}
                 onCambiar={(r) => r && pedir('/api/equipo', 'PATCH', { id: p.id, rol: r })}
               />
             ) : (
-              <span className={`pill rol ${CLASE[p.rol]}`}>{ETIQUETA[p.rol]}</span>
+              <span className={`pill rol ${fija && activo ? 'man' : CLASE[p.rol]}`}>{activo ? fija ?? ETIQUETA[p.rol] : ETIQUETA[p.rol]}</span>
             )}
-            {!p.activo && <span className="pill no">De baja</span>}
+            {!activo && <span className="pill no">De baja</span>}
             {/* 🔴 Lo que hizo es una COLUMNA, no un renglón chico debajo del nombre:
                 es el dato por el que se entra a esta pantalla. */}
             <span className="hizo num">
-              {!p.activo ? '—'
+              {duenoQuieto && !p.activo ? <span className="flojo">no vende</span>
+                : !p.activo ? '—'
                 : hizo ? <><b>{hizo.valor}</b> {hizo.unidad}</>
                 : <span className="flojo">sin reportes</span>}
             </span>
-            {p.activo && (
+            {activo && !f.tocable && <HuecoContrasena />}
+            {p.activo && f.tocable && (
               <button
                 className="btn-ghost btn-sm" disabled={ocupado} type="button"
                 title={`Cambiarle la contraseña a ${p.nombre}`}
@@ -180,14 +207,19 @@ export function ListaEquipo({
                 Contraseña
               </button>
             )}
-            <button
-              className="del" disabled={ocupado}
-              title={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
-              aria-label={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
-              onClick={() => pedir('/api/equipo', 'PATCH', { id: p.id, activo: !p.activo })}
-            >
-              {p.activo ? <IconoEquis /> : <IconoDeshacer />}
-            </button>
+            {/* Dar de baja es del dueño: el manager ve el hueco, no la X. */}
+            {puedeDarDeBaja && f.tocable ? (
+              <button
+                className="del" disabled={ocupado}
+                title={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
+                aria-label={p.activo ? `Dar de baja a ${p.nombre}` : `Reactivar a ${p.nombre}`}
+                onClick={() => pedir('/api/equipo', 'PATCH', { id: p.id, activo: !p.activo })}
+              >
+                {p.activo ? <IconoEquis /> : <IconoDeshacer />}
+              </button>
+            ) : (
+              <span className="del-hueco" />
+            )}
           </div>
           )
         })
@@ -221,11 +253,17 @@ export function ListaEquipo({
           </div>
           <div className="field">
             <label htmlFor="e-rol">Rol</label>
-            <select id="e-rol" value={rol} onChange={(e) => setRol(e.target.value as Rol)}>
+            <select id="e-rol" value={rol} onChange={(e) => setRol(e.target.value as RolEquipo)}>
               <option value="setter">Setter</option>
               <option value="closer">Closer</option>
               <option value="ambos">Setter y closer</option>
+              {puedeCrearManager && <option value="manager">Manager</option>}
             </select>
+            {rol === 'manager' && (
+              <span className="hint">
+                Ve todo el panel y maneja al equipo. No entra a Ajustes ni da de baja a nadie.
+              </span>
+            )}
           </div>
           <div className="field">
             <label htmlFor="e-correo">Correo</label>

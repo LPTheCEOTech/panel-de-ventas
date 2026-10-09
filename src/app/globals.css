@@ -785,6 +785,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .pill.no{background:var(--hueco);color:var(--faint);border:1px solid var(--border)}
 
+/* Manager (y el dueño visto por un manager): tinta invertida. No es verde —el
+   verde es dinero, acción primaria y «estás acá»— y se da vuelta solo en oscuro. */
+.pill.man{background:var(--ink);color:var(--card)}
+
 /* 🔴 Sesión 3 · pills de origen del lead en la lista del día */
 .pill.org-organico{background:var(--org-organico-bg);color:var(--org-organico-ink)}
 

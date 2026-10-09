@@ -1,7 +1,8 @@
 import 'server-only'
 
-import type { Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
+import type { Acceso, Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana } from '@/shared/tipos'
 import { CONFIGURACION_POR_DEFECTO, type CapaDeDatos } from '../interfaz'
+import { esManager, marcaManager } from '../permisos'
 import { todasLasFilas } from '../tandas'
 import { clienteServidor } from './cliente'
 
@@ -339,6 +340,42 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
     async borrarUsuario(authUserId: string): Promise<void> {
       const { error } = await sb.from('usuarios').delete().eq('auth_user_id', authUserId)
       reventar('borrarUsuario', error)
+    },
+
+    async leerAccesos(): Promise<Acceso[]> {
+      const { data, error } = await sb.from('usuarios').select('auth_user_id, persona_id, rol')
+      reventar('leerAccesos', error)
+      const filas = data ?? []
+      if (filas.length === 0) return []
+      // 🔴 `perPage: 1000`: por defecto Auth devuelve de a 50. Un equipo de
+      // alumno no se acerca a 1000; si una cuenta no aparece, va sin marca
+      // (vendedor), que es el lado seguro.
+      const { data: auth, error: errAuth } = await sb.auth.admin.listUsers({ perPage: 1000 })
+      reventar('leerAccesos · listUsers', errAuth)
+      const marcados = new Set(auth.users.filter((u) => esManager(u.app_metadata)).map((u) => u.id))
+      return filas.map((f) => ({
+        authUserId: f.auth_user_id, personaId: f.persona_id ?? null, rol: f.rol as RolUsuario,
+        manager: marcados.has(f.auth_user_id),
+      }))
+    },
+
+    async buscarAcceso(personaId: string): Promise<Acceso | null> {
+      const { data, error } = await sb
+        .from('usuarios').select('auth_user_id, persona_id, rol')
+        .eq('persona_id', personaId).maybeSingle()
+      reventar('buscarAcceso', error)
+      if (!data) return null
+      const { data: auth, error: errAuth } = await sb.auth.admin.getUserById(data.auth_user_id)
+      reventar('buscarAcceso · getUserById', errAuth)
+      return {
+        authUserId: data.auth_user_id, personaId: data.persona_id ?? null, rol: data.rol as RolUsuario,
+        manager: esManager(auth.user?.app_metadata),
+      }
+    },
+
+    async marcarManager(authUserId: string, si: boolean): Promise<void> {
+      const { error } = await sb.auth.admin.updateUserById(authUserId, { app_metadata: marcaManager(si) })
+      reventar('marcarManager', error)
     },
   }
 }

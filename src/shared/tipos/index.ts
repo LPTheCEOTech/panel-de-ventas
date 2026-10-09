@@ -99,7 +99,8 @@ export interface Ventana {
  *  - `admin`: ve todo (panel completo, gasto, ajustes, equipo). El instalador
  *    lo crea con `persona_id = null` — no es un vendedor.
  *  - `miembro`: ligado a una fila de `personas`. Ve solo sus propios reportes,
- *    sin ranking, sin gasto/CAC (datos del negocio), sin ajustes.
+ *    sin ranking, sin gasto/CAC (datos del negocio), sin ajustes. Si su
+ *    cuenta tiene la marca de manager, ve y opera casi todo (ver `Nivel`).
  */
 export type RolUsuario = 'admin' | 'miembro'
 
@@ -110,12 +111,40 @@ export interface Usuario {
   rol: RolUsuario
 }
 
+/**
+ * El acceso de alguien: su fila de `usuarios` más la marca de manager.
+ *
+ * 🔴 La marca NO está en `usuarios` (su CHECK solo acepta admin/miembro y
+ * cambiarlo obligaría a cada alumno a correr SQL): vive en el `app_metadata`
+ * de su cuenta de Auth, que solo escribe el servidor. Un manager es, en la
+ * base, un `miembro` más.
+ */
+export interface Acceso extends Usuario {
+  manager: boolean
+}
+
+/**
+ * Qué puede hacer quien está mirando. Lo decide `nivelDe()` en
+ * `shared/datos/permisos.ts`, y nadie más.
+ *  - `dueno`: todo. Es el `admin` de la base.
+ *  - `manager`: casi todo, menos lo delicado (Ajustes, bajas, nombrar managers,
+ *    tocar al dueño).
+ *  - `vendedor`: solo lo suyo.
+ *  - `sin-acceso`: nada. Cuenta sin fila en `usuarios`, o miembro sin persona.
+ */
+export type Nivel = 'dueno' | 'manager' | 'vendedor' | 'sin-acceso'
+
+/** El rol que se elige en Equipo. `manager` es SOLO de la app: nunca se
+ *  escribe en `personas.rol` (el enum de la base no lo tiene). */
+export type RolEquipo = Rol | 'manager'
+
 /** El usuario actual resuelto desde el proxy o desde el layout. */
 export interface Sesion {
   authUserId: string
   correo: string
   usuario: Usuario
   persona: Persona | null
+  nivel: Nivel
 }
 
 export interface Configuracion {

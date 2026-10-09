@@ -2,8 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { datos } from '@/shared/datos/indice'
-import { soloAdmin } from '@/shared/datos/guardias'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
+import { exigir } from '@/shared/datos/guardias'
 import { decidirAccionYo, mismoNombre } from '@/shared/datos/yo-en-el-equipo'
 
 /**
@@ -23,15 +22,15 @@ const zYo = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  const negado = await soloAdmin()
-  if (negado) return negado
+  const permiso = await exigir('sumarse-al-equipo')
+  if (permiso instanceof NextResponse) return permiso
 
   const p = zYo.safeParse(await request.json().catch(() => null))
   if (!p.success) {
     return NextResponse.json({ error: p.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
   }
 
-  const sesion = await sesionActual()
+  const { sesion } = permiso
   if (!sesion) {
     return NextResponse.json(
       { error: 'Para sumarte a tu equipo necesitas entrar con tu cuenta (Supabase configurado).' },

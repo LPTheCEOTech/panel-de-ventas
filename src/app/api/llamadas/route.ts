@@ -2,7 +2,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { z } from 'zod'
 
 import { datos } from '@/shared/datos/indice'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
+import { exigir, personaPermitida, type Permiso } from '@/shared/datos/guardias'
+import { puede } from '@/shared/datos/permisos'
 
 /**
  * 🔴 Fase D · endpoint de llamadas granulares.
@@ -12,8 +13,8 @@ import { sesionActual } from '@/shared/datos/sesion-usuario'
  * DELETE → baja LÓGICA (activa=false). No hay hard delete.
  *
  * Auth: cualquier usuario logueado con `persona` puede crear/editar/borrar
- * SUS llamadas. Admin puede pasar `personaId` explícito para cargar por otro
- * closer (backfill del primer mes, decisión de C-D).
+ * SUS llamadas. El dueño y el manager pasan `personaId` explícito para cargar
+ * por otro closer (backfill del primer mes, decisión de C-D).
  */
 const fecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'La fecha tiene que ser AAAA-MM-DD')
 const dineroCents = z.number().int().min(0).max(1_000_000_000)
@@ -52,19 +53,20 @@ const zCambios = z.object({
 const zBaja = z.object({ id: z.string().min(1).max(64) })
 
 /**
- * Fase C+D · resuelve el `personaId` efectivo: si sos miembro se usa el de la
- * sesión (nunca el del body); si sos admin (o dev sin sesión) se acepta el
- * del body para poder cargar «como» otro closer. Devuelve string o error.
+ * 🔴 Quien no puede cargar por otros (el vendedor) solo toca SUS llamadas.
+ * La capa no tiene un `buscarLlamada(id)` porque el uso normal es por
+ * ventana; se busca con una ventana amplia filtrada por su persona — una
+ * consulta indexada. null = puede seguir; si no, el 403.
  */
-async function resolverPersonaId(pedido: string | undefined): Promise<string | { error: string; status: number }> {
-  const sesion = await sesionActual()
-  if (sesion?.usuario.rol === 'miembro') {
-    if (!sesion.usuario.personaId) return { error: 'Tu usuario no está vinculado a nadie del equipo.', status: 403 }
-    return sesion.usuario.personaId
+async function soloLasSuyas(permiso: Permiso, id: string): Promise<NextResponse | null> {
+  if (puede(permiso.nivel, 'cargar-por-otros')) return null
+  const propia = permiso.sesion?.usuario.personaId
+  if (!propia) return NextResponse.json({ error: 'Sin persona vinculada.' }, { status: 403 })
+  const halladas = await datos().leerLlamadas({ desde: '2020-01-01', hasta: '2099-12-31' }, propia)
+  if (!halladas.some((l) => l.id === id)) {
+    return NextResponse.json({ error: 'Esa llamada no es tuya.' }, { status: 403 })
   }
-  // admin o dev sin sesión: se necesita `personaId` explícito
-  if (!pedido) return { error: 'Falta personaId. El admin tiene que decir por qué closer carga.', status: 400 }
-  return pedido
+  return null
 }
 
 export async function POST(request: NextRequest) {
@@ -72,8 +74,16 @@ export async function POST(request: NextRequest) {
   if (!p.success) {
     return NextResponse.json({ error: p.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
   }
-  const personaId = await resolverPersonaId(p.data.personaId)
-  if (typeof personaId !== 'string') return NextResponse.json({ error: personaId.error }, { status: personaId.status })
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  // Fase C+D · el vendedor carga como sí mismo (nunca el id del body); el
+  // dueño y el manager tienen que decir por qué closer cargan.
+  const personaId = personaPermitida(permiso, p.data.personaId)
+  if (!personaId) {
+    return puede(permiso.nivel, 'cargar-por-otros')
+      ? NextResponse.json({ error: 'Falta personaId. Hay que decir por qué closer se carga.' }, { status: 400 })
+      : NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  }
 
   try {
     const l = await datos().crearLlamada({
@@ -95,20 +105,11 @@ export async function PATCH(request: NextRequest) {
   const p = zCambios.safeParse(await request.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
 
-  // 🔴 Verificamos que la llamada le pertenece a quien edita (o si es admin
-  // pasa igual). Sin este chequeo un miembro podría PATCH una llamada ajena.
-  const sesion = await sesionActual()
-  if (sesion?.usuario.rol === 'miembro') {
-    // Fase D · leemos la llamada y comparamos personaId. La capa no tiene un
-    // `buscarLlamada(id)` porque el uso normal es por ventana; lo hacemos con
-    // una ventana de 3 años atrás — el costo es una consulta por id (indexed).
-    const propia = sesion.usuario.personaId
-    if (!propia) return NextResponse.json({ error: 'Sin persona vinculada.' }, { status: 403 })
-    const halladas = await datos().leerLlamadas({ desde: '2020-01-01', hasta: '2099-12-31' }, propia)
-    if (!halladas.some((l) => l.id === p.data.id)) {
-      return NextResponse.json({ error: 'Esa llamada no es tuya.' }, { status: 403 })
-    }
-  }
+  // 🔴 Sin este chequeo un vendedor podría editar una llamada ajena.
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const ajena = await soloLasSuyas(permiso, p.data.id)
+  if (ajena) return ajena
 
   const { id, ...cambios } = p.data
   try {
@@ -124,15 +125,10 @@ export async function DELETE(request: NextRequest) {
   const p = zBaja.safeParse(await request.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
 
-  const sesion = await sesionActual()
-  if (sesion?.usuario.rol === 'miembro') {
-    const propia = sesion.usuario.personaId
-    if (!propia) return NextResponse.json({ error: 'Sin persona vinculada.' }, { status: 403 })
-    const halladas = await datos().leerLlamadas({ desde: '2020-01-01', hasta: '2099-12-31' }, propia)
-    if (!halladas.some((l) => l.id === p.data.id)) {
-      return NextResponse.json({ error: 'Esa llamada no es tuya.' }, { status: 403 })
-    }
-  }
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const ajena = await soloLasSuyas(permiso, p.data.id)
+  if (ajena) return ajena
 
   try {
     await datos().bajaLogicaLlamada(p.data.id)

@@ -1,29 +1,29 @@
-import { redirect } from 'next/navigation'
-
 import { agregarLlamadas, rankingClosers, rankingSetters } from '@/shared/calculo/metricas'
 import { hoyEn, ventana } from '@/shared/calculo/periodo'
 import { IconoEquipo } from '@/shared/chasis/iconos'
+import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
 import { CONFIGURACION_POR_DEFECTO } from '@/shared/datos/interfaz'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
+import { nivelDelObjetivo, puede, puedeSerManager, puedeTocar } from '@/shared/datos/permisos'
 import { dinero, numero, plural } from '@/shared/formato'
 import type { Yo } from '@/features/equipo/fila-yo'
-import { ListaEquipo } from '@/features/equipo/lista'
+import { ListaEquipo, type FilaEquipo } from '@/features/equipo/lista'
 
 export default async function Equipo() {
   const capa = datos()
-  // Fase C · Equipo es solo admin: invitar, dar de baja, etc.
-  const sesion = await sesionActual()
-  if (sesion && sesion.usuario.rol !== 'admin') redirect('/panel')
+  // Equipo es del dueño y del manager. Qué puede tocar cada uno se decide
+  // fila por fila, más abajo.
+  const { sesion, nivel } = await exigirPagina('gestionar-equipo')
   const config = await capa.leerConfiguracion()
   const v = ventana('semana', hoyEn(config.zonaHoraria), config.inicioSemana)
 
   // 🔴 Los closers cargan una fila por llamada (Post Llamada), igual que en el
   // Panel. Leer el reporte diario viejo dejaba a todos en «sin reportes».
-  const [personas, setters, llamadas] = await Promise.all([
+  const [personas, setters, llamadas, accesos] = await Promise.all([
     capa.leerPersonas(),
     capa.leerReportesSetter(v),
     capa.leerLlamadas(v),
+    capa.leerAccesos(),
   ])
   const closers = agregarLlamadas(llamadas)
 
@@ -46,12 +46,29 @@ export default async function Equipo() {
     }
   }
 
-  // 🔴 La fila «Tú»: el admin que mira, venda o no. Sale de la sesión, no de
-  // la lista de personas. En modo demo no hay sesión y no hay fila.
+  // 🔴 Lo que se puede hacer con cada fila lo decide el SERVIDOR con
+  // `permisos.ts`; la lista solo dibuja. Así el manager ve quietas las filas
+  // del dueño y de otros managers, y la ruta igual le respondería 403.
+  const porPersona = new Map(accesos.flatMap((a) => (a.personaId ? [[a.personaId, a] as const] : [])))
+  const filas: Record<string, FilaEquipo> = {}
+  for (const p of personas) {
+    const a = porPersona.get(p.id)
+    const objetivo = a ? { ...a, esYo: a.authUserId === sesion?.authUserId } : null
+    filas[p.id] = {
+      quien: nivelDelObjetivo(objetivo),
+      tocable: puedeTocar(nivel, objetivo),
+      conManager: puede(nivel, 'marcar-manager') && puedeSerManager(objetivo),
+    }
+  }
+
+  // 🔴 La fila «Tú»: quien mira, venda o no. Sale de la sesión, no de la lista
+  // de personas. El dueño la edita; el manager la ve quieta (su rol lo cambia
+  // el dueño, y su contraseña también). En modo demo no hay sesión ni fila.
   const yo: Yo | null = sesion ? {
     correo: sesion.correo,
     persona: sesion.persona,
     nombreSugerido: config.usuarioNombre === CONFIGURACION_POR_DEFECTO.usuarioNombre ? '' : config.usuarioNombre,
+    fija: puede(nivel, 'sumarse-al-equipo') ? undefined : 'Manager',
   } : null
 
   return (
@@ -69,7 +86,10 @@ export default async function Equipo() {
         <span className="badge-w">Se carga a mano</span>
       </div>
 
-      <ListaEquipo personas={personas} resumen={resumen} yo={yo} />
+      <ListaEquipo
+        personas={personas} resumen={resumen} yo={yo} filas={filas}
+        puedeDarDeBaja={puede(nivel, 'dar-de-baja')} puedeCrearManager={puede(nivel, 'marcar-manager')}
+      />
     </div>
   )
 }

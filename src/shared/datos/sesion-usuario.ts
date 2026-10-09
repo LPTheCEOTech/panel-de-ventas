@@ -4,6 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 import { datos } from '@/shared/datos/indice'
+import { nivelDe } from '@/shared/datos/permisos'
 import { hayCredenciales } from '@/shared/datos/sesion'
 import type { Sesion } from '@/shared/tipos'
 
@@ -20,7 +21,9 @@ import type { Sesion } from '@/shared/tipos'
  *    `/pendiente`)
  *
  * `getUser()` (no `getSession()`): el segundo confía en la cookie sin verificar
- * la firma contra Auth. Este archivo NO monta un cliente anónimo si no tiene
+ * la firma contra Auth. Y trae el `app_metadata` ACTUAL de la cuenta: quitarle
+ * la marca de manager a alguien vale desde su siguiente pedido, no cuando le
+ * venza el token. Este archivo NO monta un cliente anónimo si no tiene
  * cookies; el que las tiene es Next vía `cookies()`.
  */
 export async function sesionActual(): Promise<Sesion | null> {
@@ -57,6 +60,7 @@ export async function sesionActual(): Promise<Sesion | null> {
     correo: user.email ?? '',
     usuario,
     persona,
+    nivel: nivelDe({ usuario, appMetadata: user.app_metadata }, true),
   }
 }
 

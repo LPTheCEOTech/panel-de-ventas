@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
+import { exigir, personaPermitida } from '@/shared/datos/guardias'
 import { zConsulta, zSetter } from '../esquemas'
 
 /** ¿Ya hay un reporte para esa persona y ese día? Alimenta el aviso de reemplazo. */
@@ -12,7 +12,13 @@ export async function GET(request: NextRequest) {
   })
   if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
 
-  const reporte = await datos().buscarReporteSetter(p.data.fecha, p.data.persona)
+  // 🔴 Antes no tenía barrera: un vendedor podía leer el reporte de otro.
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const persona = personaPermitida(permiso, p.data.persona)
+  if (!persona) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+
+  const reporte = await datos().buscarReporteSetter(p.data.fecha, persona)
   return NextResponse.json({ reporte })
 }
 
@@ -32,18 +38,14 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  // 🔴 Fase C · si es miembro se IGNORA el `personaId` del body y se usa el
-  // de la sesión. Nunca hay que confiar en lo que dice el navegador cuando la
-  // barrera es de autorización — un curl a mano con `personaId` ajeno tiene
-  // que caer del lado seguro.
-  const sesion = await sesionActual()
-  const datosGuardar =
-    sesion?.usuario.rol === 'miembro'
-      ? (sesion.usuario.personaId
-          ? { ...p.data, personaId: sesion.usuario.personaId }
-          : null)
-      : p.data
-  if (!datosGuardar) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  // 🔴 Fase C · el vendedor carga SIEMPRE como sí mismo: se IGNORA el
+  // `personaId` del body (ver `personaPermitida`). El dueño y el manager
+  // pueden cargar por cualquiera.
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const personaId = personaPermitida(permiso, p.data.personaId)
+  if (!personaId) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  const datosGuardar = { ...p.data, personaId }
 
   try {
     // upsert: si el día ya existe se reemplaza. La restricción única de la base

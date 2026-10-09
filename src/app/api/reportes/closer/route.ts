@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
+import { exigir, personaPermitida } from '@/shared/datos/guardias'
 import { zCloser, zConsulta } from '../esquemas'
 
 export async function GET(request: NextRequest) {
@@ -11,7 +11,13 @@ export async function GET(request: NextRequest) {
   })
   if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
 
-  const reporte = await datos().buscarReporteCloser(p.data.fecha, p.data.persona)
+  // 🔴 Antes no tenía barrera: un vendedor podía leer el reporte de otro.
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const persona = personaPermitida(permiso, p.data.persona)
+  if (!persona) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+
+  const reporte = await datos().buscarReporteCloser(p.data.fecha, persona)
   return NextResponse.json({ reporte })
 }
 
@@ -32,14 +38,11 @@ export async function POST(request: NextRequest) {
   }
 
   // 🔴 Fase C · override server-side. Ver `/api/reportes/setter/route.ts`.
-  const sesion = await sesionActual()
-  const datosGuardar =
-    sesion?.usuario.rol === 'miembro'
-      ? (sesion.usuario.personaId
-          ? { ...p.data, personaId: sesion.usuario.personaId }
-          : null)
-      : p.data
-  if (!datosGuardar) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const personaId = personaPermitida(permiso, p.data.personaId)
+  if (!personaId) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  const datosGuardar = { ...p.data, personaId }
 
   try {
     await datos().guardarReporteCloser(datosGuardar)

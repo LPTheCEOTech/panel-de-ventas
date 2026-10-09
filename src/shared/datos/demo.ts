@@ -25,7 +25,8 @@ interface EstadoDemo {
   setter: ReporteSetter[]
   closer: ReporteCloser[]
   gastos: Gasto[]
-  usuarios: Usuario[]
+  /** En la demo la marca de manager vive en la misma fila: no hay Auth. */
+  usuarios: (Usuario & { manager?: boolean })[]
   llamadas: Llamada[]
 }
 
@@ -195,6 +196,19 @@ export function capaDemo(vacia = false): CapaDeDatos {
       con((e) => {
         if (!e.usuarios) e.usuarios = []
         e.usuarios = e.usuarios.filter((u) => u.authUserId !== authUserId)
+      })
+    },
+    async leerAccesos() {
+      return (leer(vacia).usuarios ?? []).map((u) => ({ ...u, manager: !!u.manager }))
+    },
+    async buscarAcceso(personaId) {
+      const u = leer(vacia).usuarios?.find((x) => x.personaId === personaId)
+      return u ? { ...u, manager: !!u.manager } : null
+    },
+    async marcarManager(authUserId, si) {
+      con((e) => {
+        const u = e.usuarios?.find((x) => x.authUserId === authUserId)
+        if (u) u.manager = si
       })
     },
 

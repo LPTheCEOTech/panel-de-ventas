@@ -1,15 +1,12 @@
-import { redirect } from 'next/navigation'
-
 import { IconoEngranaje } from '@/shared/chasis/iconos'
+import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
 import { PanelAjustes } from '@/features/ajustes/panel'
 
 export default async function Ajustes() {
   // 🔴 Fase C · Ajustes toca datos del negocio (nombre, moneda, logo, marca).
-  // Solo admin. Un miembro que llegue por URL directa va a /panel.
-  const sesion = await sesionActual()
-  if (sesion && sesion.usuario.rol !== 'admin') redirect('/panel')
+  // Solo el dueño: ni el manager entra. Quien llegue por URL directa va a /panel.
+  await exigirPagina('ajustes')
   const config = await datos().leerConfiguracion()
   return (
     <div className="hoja">

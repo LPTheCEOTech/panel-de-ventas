@@ -1,11 +1,14 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
-import { soloAdmin } from '@/shared/datos/guardias'
+import { exigir } from '@/shared/datos/guardias'
 import { zConsultaGasto, zGasto } from '../reportes/esquemas'
 
-/** ¿Ya hay un gasto para esa fecha? Alimenta el aviso de reemplazo. */
+/** ¿Ya hay un gasto para esa fecha? Alimenta el aviso de reemplazo.
+ *  🔴 Antes no tenía barrera: un vendedor podía leer el gasto del negocio. */
 export async function GET(request: NextRequest) {
+  const permiso = await exigir('cargar-gasto')
+  if (permiso instanceof NextResponse) return permiso
   const p = zConsultaGasto.safeParse({
     fecha: request.nextUrl.searchParams.get('fecha'),
   })
@@ -16,9 +19,9 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  // Fase C · gasto es del negocio: solo admin.
-  const negado = await soloAdmin()
-  if (negado) return negado
+  // Fase C · gasto es del negocio: el dueño y el manager.
+  const permiso = await exigir('cargar-gasto')
+  if (permiso instanceof NextResponse) return permiso
 
   let cuerpo: unknown
   try {

@@ -6,6 +6,7 @@ import { PantallaDeFalla, motivoDe } from '@/shared/chasis/pantalla-falla'
 import { Topbar } from '@/shared/chasis/topbar'
 import { datos } from '@/shared/datos/indice'
 import { estadoDeLaBase } from '@/shared/datos/migrador'
+import { puede, tieneAcceso } from '@/shared/datos/permisos'
 import { hayCredenciales } from '@/shared/datos/sesion'
 import { sesionActual } from '@/shared/datos/sesion-usuario'
 
@@ -62,7 +63,8 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   // En modo dev/demo (sin credenciales de Supabase) `sesion` es null a
   // propósito y la app corre como si fuera admin — backwards compat con el
   // estado anterior a la Fase C.
-  if (!sesion && hayCredenciales()) redirect('/pendiente')
+  // Lo mismo con un miembro que no está ligado a nadie del equipo.
+  if (hayCredenciales() && !(sesion && tieneAcceso(sesion.nivel))) redirect('/pendiente')
 
   // 🔴 La rampa de la marca va PRIMERO y como <style>, no como estilos en línea.
   // Los siete peldaños los usan 60 reglas del CSS portado; pasarlos por
@@ -71,11 +73,11 @@ export default async function LayoutApp({ children }: { children: React.ReactNod
   // escribir, no se inyecta nada y manda la rampa del mockup.
   const marca = estiloDeMarca(config.marca)
 
-  // 🔴 El aviso de actualización es SOLO para el admin: es el único que puede
-  // aplicarla, y a un vendedor un cartel que no puede resolver solo lo asusta
-  // sin darle nada. En modo dev/demo (`sesion === null`) también se muestra,
-  // igual que el resto de la app, que ahí corre como admin.
-  const esAdmin = !sesion || sesion.usuario.rol === 'admin'
+  // 🔴 El aviso de actualización es SOLO para el dueño: es el único que puede
+  // aplicarla, y a quien no puede resolverlo un cartel lo asusta sin darle
+  // nada. En modo dev/demo (`sesion === null`) también se muestra, igual que
+  // el resto de la app, que ahí corre como dueño.
+  const esAdmin = puede(sesion?.nivel ?? 'dueno', 'actualizar-base')
   const hayQueActualizar = base.estado === 'pendientes' || base.estado === 'sin-actualizador'
 
   return (

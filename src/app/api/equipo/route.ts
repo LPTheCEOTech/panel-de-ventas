@@ -3,10 +3,12 @@ import { z } from 'zod'
 
 import { MENSAJE_CONTRASENA, revisarContrasena } from '@/shared/datos/contrasenas'
 import { datos } from '@/shared/datos/indice'
-import { soloAdmin } from '@/shared/datos/guardias'
+import { exigir } from '@/shared/datos/guardias'
+import { marcaManager, puede, puedeSerManager, puedeTocar, type Objetivo } from '@/shared/datos/permisos'
 import { clienteServidor } from '@/shared/datos/supabase/cliente'
 import { hayCredenciales } from '@/shared/datos/sesion'
 import { mismoNombre } from '@/shared/datos/yo-en-el-equipo'
+import type { Acceso, Rol } from '@/shared/tipos'
 
 /**
  * 🔴 Alta del equipo SIN correo.
@@ -23,10 +25,19 @@ import { mismoNombre } from '@/shared/datos/yo-en-el-equipo'
  *
  * 🔴 El admin único (persona=null) NO se crea desde acá — lo crea el SQL de
  * instalación. Por diseño.
+ *
+ * 🔴 «Manager» es un rol más del select, pero SOLO lo puede elegir el dueño.
+ * En la base es un `miembro` cuya persona es «Setter y closer» (así carga lo
+ * suyo en cualquiera de los dos formularios, si también vende) y cuya cuenta
+ * de Auth lleva la marca. `manager` nunca se escribe en `personas.rol`: el
+ * enum de la base no lo tiene, y agregarlo es el SQL que evitamos.
  */
+const ROLES = ['setter', 'closer', 'ambos', 'manager'] as const
+const ventaDe = (rol: (typeof ROLES)[number]): Rol => (rol === 'manager' ? 'ambos' : rol)
+
 const zAlta = z.object({
   nombre: z.string().trim().min(2, 'El nombre necesita al menos 2 letras').max(80),
-  rol: z.enum(['setter', 'closer', 'ambos']),
+  rol: z.enum(ROLES),
   correo: z.string().trim().email('El correo no parece válido').max(254),
   clave: z.string().min(1, 'Ponle una contraseña').max(72),
 })
@@ -44,20 +55,24 @@ const zAlta = z.object({
 const zBaja = z.object({
   id: z.string().min(1).max(64),
   activo: z.boolean().optional(),
-  rol: z.enum(['setter', 'closer', 'ambos']).optional(),
+  rol: z.enum(ROLES).optional(),
 }).refine((d) => d.activo !== undefined || d.rol !== undefined, {
   message: 'No hay nada que cambiar',
 })
 
 export async function POST(request: NextRequest) {
-  const negado = await soloAdmin()
-  if (negado) return negado
+  const permiso = await exigir('gestionar-equipo')
+  if (permiso instanceof NextResponse) return permiso
 
   const p = zAlta.safeParse(await request.json().catch(() => null))
   if (!p.success) {
     return NextResponse.json({ error: p.error.issues[0]?.message ?? 'Datos inválidos' }, { status: 400 })
   }
   const { nombre, rol, correo, clave } = p.data
+  const esManager = rol === 'manager'
+  if (esManager && !puede(permiso.nivel, 'marcar-manager')) {
+    return NextResponse.json({ error: 'Solo el dueño del panel puede agregar managers.' }, { status: 403 })
+  }
 
   const problema = revisarContrasena(clave)
   if (problema) return NextResponse.json({ error: MENSAJE_CONTRASENA[problema] }, { status: 400 })
@@ -80,15 +95,25 @@ export async function POST(request: NextRequest) {
       error: `«${conEseNombre.nombre}» ya tiene acceso al panel. Si es otra persona, agrégala con otro nombre.`,
     }, { status: 409 })
   }
+  // 🔴 Antes esto se chequeaba DESPUÉS de crear la cuenta: el 409 dejaba el
+  // correo tomado en Auth y el segundo intento decía «ya hay alguien con ese
+  // correo». Un manager reusa la persona y la pasa a «Setter y closer».
+  if (conEseNombre && !esManager && conEseNombre.rol !== rol && conEseNombre.rol !== 'ambos') {
+    return NextResponse.json({
+      error: `Ya hay una persona "${conEseNombre.nombre}" con rol "${conEseNombre.rol}". Cámbialo a "ambos" en Equipo primero, o usa otro nombre.`,
+    }, { status: 409 })
+  }
 
   const sb = clienteServidor(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
   // 1 · el usuario, ya confirmado. `email_confirm: true` es lo que evita que
   // quede esperando un correo de verificación que nunca va a poder llegar.
+  // Un manager nace con la marca: sin una segunda escritura que pueda fallar.
   const { data: creado, error: errAuth } = await sb.auth.admin.createUser({
     email: correo,
     password: clave,
     email_confirm: true,
+    ...(esManager ? { app_metadata: marcaManager(true) } : {}),
   })
   if (errAuth) {
     if (/already been registered|already exists|duplicate/i.test(errAuth.message)) {
@@ -112,24 +137,20 @@ export async function POST(request: NextRequest) {
   const authUserId = creado?.user?.id
   if (!authUserId) return NextResponse.json({ error: 'No se pudo crear el acceso.' }, { status: 500 })
 
-  // 2 · persona: reusar si existe con ese nombre (case-insensitive), si no crear.
-  // Si existe con OTRO rol distinto de 'ambos', avisamos y no tocamos.
+  // 2 · persona: reusar si existe con ese nombre (case-insensitive), si no
+  // crear. El rol ya se validó antes de crear la cuenta.
   let personaId: string
   try {
-    const personas = await capa.leerPersonas()
-    const yaHay = personas.find((x) => mismoNombre(x.nombre, nombre))
-    if (yaHay) {
-      if (yaHay.rol !== rol && yaHay.rol !== 'ambos') {
-        return NextResponse.json({
-          error: `Ya hay una persona "${yaHay.nombre}" con rol "${yaHay.rol}". Cámbialo a "ambos" en Equipo primero, o usa otro nombre.`,
-        }, { status: 409 })
-      }
-      personaId = yaHay.id
+    if (conEseNombre) {
+      personaId = conEseNombre.id
+      if (esManager && conEseNombre.rol !== 'ambos') await capa.cambiarRol(personaId, 'ambos')
     } else {
-      const nueva = await capa.crearPersona(nombre, rol)
+      const nueva = await capa.crearPersona(nombre, ventaDe(rol))
       personaId = nueva.id
     }
   } catch (e) {
+    // Mismo motivo que abajo: sin deshacer, el correo queda tomado en Auth.
+    await sb.auth.admin.deleteUser(authUserId).catch(() => {})
     const msg = e instanceof Error && /duplicate|unique/i.test(e.message)
       ? 'Ya hay alguien con ese nombre en el equipo.'
       : 'No se pudo crear la persona.'
@@ -155,16 +176,72 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ ok: true, nombre, correo, clave, personaId })
 }
 
-/** Alta y baja LÓGICA. No hay DELETE: los reportes que cargó tienen que seguir contando. */
+/** Pasa a alguien a Manager, o devuelve el 409 que explica por qué no. */
+async function hacerManager(id: string, acceso: Acceso | null, objetivo: Objetivo): Promise<NextResponse | null> {
+  const capa = datos()
+  if (!acceso) {
+    return NextResponse.json({
+      error: 'Para ser manager necesita su propio acceso al panel. Créaselo en «Agregar al equipo».',
+    }, { status: 409 })
+  }
+  if (!puedeSerManager(objetivo)) {
+    return NextResponse.json({ error: 'El dueño ya puede hacer todo lo de un manager.' }, { status: 409 })
+  }
+  if (!(await capa.leerPersonas()).find((x) => x.id === id)?.activo) {
+    return NextResponse.json({ error: 'Reactívalo primero.' }, { status: 409 })
+  }
+  // Primero el rol de venta, después la marca: si la marca fallara, queda
+  // como «Setter y closer», que es el lado seguro.
+  await capa.cambiarRol(id, 'ambos')
+  await capa.marcarManager(acceso.authUserId, true)
+  return null
+}
+
+/**
+ * Alta y baja LÓGICA, rol de venta y Manager. No hay DELETE: los reportes que
+ * cargó tienen que seguir contando.
+ *
+ * 🔴 A quién se toca se resuelve ACÁ, con la base, nunca con lo que mande el
+ * navegador. El manager cambia el rol de venta y la contraseña de los
+ * vendedores; dar de baja y hacer o deshacer managers es del dueño.
+ */
 export async function PATCH(request: NextRequest) {
-  const negado = await soloAdmin()
-  if (negado) return negado
+  const permiso = await exigir('gestionar-equipo')
+  if (permiso instanceof NextResponse) return permiso
   const p = zBaja.safeParse(await request.json().catch(() => null))
   if (!p.success) return NextResponse.json({ error: 'Datos inválidos' }, { status: 400 })
+  const { id, activo, rol } = p.data
+  const { nivel, sesion } = permiso
+
   try {
     const capa = datos()
-    if (p.data.rol !== undefined) await capa.cambiarRol(p.data.id, p.data.rol)
-    if (p.data.activo !== undefined) await capa.cambiarActivo(p.data.id, p.data.activo)
+    const acceso = await capa.buscarAcceso(id)
+    const objetivo = acceso ? { ...acceso, esYo: acceso.authUserId === sesion?.authUserId } : null
+    const negado = (error: string) => NextResponse.json({ error }, { status: 403 })
+
+    if (!puedeTocar(nivel, objetivo)) return negado('A esta persona solo la puede cambiar el dueño del panel.')
+    if (activo !== undefined && !puede(nivel, 'dar-de-baja')) {
+      return negado('Dar de baja o reactivar solo lo puede hacer el dueño del panel.')
+    }
+    if ((rol === 'manager' || (rol !== undefined && acceso?.manager)) && !puede(nivel, 'marcar-manager')) {
+      return negado('Solo el dueño del panel puede hacer o deshacer managers.')
+    }
+
+    if (rol === 'manager') {
+      const choca = await hacerManager(id, acceso, objetivo)
+      if (choca) return choca
+    } else if (rol !== undefined) {
+      // Deshacer un manager: primero se le quita el privilegio, después el resto.
+      if (acceso?.manager) await capa.marcarManager(acceso.authUserId, false)
+      await capa.cambiarRol(id, rol)
+    }
+
+    if (activo !== undefined) {
+      // 🔴 La baja de un manager le quita la marca: si se lo reactiva, vuelve
+      // como vendedor y el dueño elige Manager de nuevo si quiere.
+      if (!activo && acceso?.manager) await capa.marcarManager(acceso.authUserId, false)
+      await capa.cambiarActivo(id, activo)
+    }
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('[api/equipo PATCH]', e)

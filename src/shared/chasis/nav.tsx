@@ -3,29 +3,30 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import type { RolUsuario } from '@/shared/tipos'
+import { puede, type Accion } from '@/shared/datos/permisos'
+import type { Nivel } from '@/shared/tipos'
 
-interface Pantalla { href: string; texto: string; soloAdmin?: boolean }
+/** `accion`: el permiso que hace falta para verla. Sin acción, la ven todos. */
+interface Pantalla { href: string; texto: string; accion?: Accion }
 
-/** 🔴 Fase C · Gasto, Equipo y Ajustes son solo-admin. El miembro ve Panel y
- *  los dos reportes (los formularios se filtran solos). */
+/** 🔴 Gasto y Equipo son del dueño y del manager; Ajustes, solo del dueño. El
+ *  vendedor ve Panel y los dos reportes (los formularios se filtran solos). */
 export const PANTALLAS: readonly Pantalla[] = [
   { href: '/panel', texto: 'Panel' },
-  { href: '/gasto', texto: 'Gasto', soloAdmin: true },
+  { href: '/gasto', texto: 'Gasto', accion: 'cargar-gasto' },
   { href: '/reporte-setter', texto: 'Reporte Setter' },
   // 🔴 Fase D · «Reporte Closer» pasa a «Post Llamada» y apunta a /llamada.
   // La ruta /reporte-closer redirige, así que un usuario con el link viejo
   // igual llega bien.
   { href: '/llamada', texto: 'Post Llamada' },
-  { href: '/equipo', texto: 'Equipo', soloAdmin: true },
-  { href: '/ajustes', texto: 'Ajustes', soloAdmin: true },
+  { href: '/equipo', texto: 'Equipo', accion: 'gestionar-equipo' },
+  { href: '/ajustes', texto: 'Ajustes', accion: 'ajustes' },
 ]
 
-export function Nav({ rol }: { rol?: RolUsuario }) {
+export function Nav({ nivel }: { nivel?: Nivel }) {
   const ruta = usePathname()
-  // 🔴 Sin rol (dev/demo sin auth): la app corre como admin y se ven todas.
-  const esMiembro = rol === 'miembro'
-  const visibles = PANTALLAS.filter((p) => !(esMiembro && p.soloAdmin))
+  // 🔴 Sin nivel (dev/demo sin auth): la app corre como dueño y se ven todas.
+  const visibles = PANTALLAS.filter((p) => !p.accion || puede(nivel ?? 'dueno', p.accion))
   return (
     <nav className="nav" aria-label="Secciones">
       {visibles.map((p) => (

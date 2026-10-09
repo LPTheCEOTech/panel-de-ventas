@@ -21,9 +21,10 @@ export function Topbar({ config, sesion }: { config: Configuracion; sesion?: Ses
   // y rol de vendedor). Sin sesión (modo dev/demo sin auth), la app cae al
   // `usuario_nombre`/`usuario_rol` de `configuracion` — backwards compat.
   const nombreQuien = sesion?.persona?.nombre ?? sesion?.correo ?? config.usuarioNombre
-  const rolQuien = sesion
-    ? (sesion.usuario.rol === 'admin' ? 'Admin' : sesion.persona ? etiquetaRol(sesion.persona.rol) : 'Miembro')
-    : config.usuarioRol
+  const rolQuien = !sesion ? config.usuarioRol
+    : sesion.nivel === 'dueno' ? 'Admin'
+      : sesion.nivel === 'manager' ? 'Manager'
+        : sesion.persona ? etiquetaRol(sesion.persona.rol) : 'Miembro'
   return (
     <header className="topbar">
       <div className="topbar-in">
@@ -35,7 +36,7 @@ export function Topbar({ config, sesion }: { config: Configuracion; sesion?: Ses
         </span>
       </div>
 
-      <Nav rol={sesion?.usuario.rol} />
+      <Nav nivel={sesion?.nivel} />
 
       <div className="topbar-right">
         <ToggleTema />

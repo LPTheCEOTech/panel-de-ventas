@@ -5,8 +5,9 @@ import {
 import { hoyEn } from '@/shared/calculo/periodo'
 import { deQueDe, graficoDe, leerPedido, rangoAnterior, resolverRango, tituloDeRango } from '@/shared/calculo/rango'
 import { IconoInfo } from '@/shared/chasis/iconos'
+import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
-import { sesionActual } from '@/shared/datos/sesion-usuario'
+import { puede } from '@/shared/datos/permisos'
 import {
   CashPorDia, Costos, Embudo, LlamadaAEquipo, Plata, RankingClosers, RankingSetters, SinEquipo, Tasas,
 } from '@/features/panel/piezas'
@@ -18,12 +19,12 @@ export default async function PanelDeVentas({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const capa = datos()
-  const [config, sesion] = await Promise.all([capa.leerConfiguracion(), sesionActual()])
-  // 🔴 Fase C · si es miembro, todo se filtra por `personaId` propio. El admin
-  // (o el modo dev sin sesión) sigue viendo todo. El filtro vive server-side,
-  // en el `.eq('persona_id', …)` de la capa: la app usa service_role, RLS no
-  // aplica, así que la barrera tiene que estar acá.
-  const esMiembro = sesion?.usuario.rol === 'miembro'
+  const [config, { sesion, nivel }] = await Promise.all([capa.leerConfiguracion(), exigirPagina()])
+  // 🔴 Fase C · el vendedor ve solo lo suyo: todo se filtra por su persona. El
+  // dueño y el manager (o el modo dev sin sesión) ven todo. El filtro vive
+  // server-side, en el `.eq('persona_id', …)` de la capa: la app usa
+  // service_role, RLS no aplica, así que la barrera tiene que estar acá.
+  const esMiembro = !puede(nivel, 'ver-negocio')
   const filtro = esMiembro ? sesion?.usuario.personaId ?? undefined : undefined
 
   // El período: `?r=` (atajo), `?desde&hasta` (rango libre) o el `?p&f` viejo;

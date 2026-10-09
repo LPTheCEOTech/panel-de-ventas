@@ -4,7 +4,7 @@
  * base, y el día que cambie el motor no se toca ni una pantalla.
  */
 import type {
-  Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana,
+  Acceso, Configuracion, Gasto, Llamada, Persona, ReporteCloser, ReporteSetter, Rol, RolUsuario, Usuario, Ventana,
 } from '@/shared/tipos'
 
 export interface CapaDeDatos {
@@ -73,6 +73,16 @@ export interface CapaDeDatos {
   vincularPersona(authUserId: string, personaId: string | null): Promise<void>
   /** Baja del usuario en `usuarios` (no toca `auth.users`). */
   borrarUsuario(authUserId: string): Promise<void>
+
+  /** 🔴 Todos los accesos con su marca de manager, para dibujar Equipo. La
+   *  marca vive en Auth, no en `usuarios`: se lee con UNA consulta a Auth para
+   *  todo el equipo, nunca una por persona. */
+  leerAccesos(): Promise<Acceso[]>
+  /** El acceso de una persona del equipo, con su marca. Lo usan las rutas para
+   *  saber a quién están tocando. `null` si no tiene acceso propio. */
+  buscarAcceso(personaId: string): Promise<Acceso | null>
+  /** Pone o quita la marca de manager en la cuenta de Auth. Sin SQL. */
+  marcarManager(authUserId: string, si: boolean): Promise<void>
 }
 
 export const CONFIGURACION_POR_DEFECTO: Configuracion = {
