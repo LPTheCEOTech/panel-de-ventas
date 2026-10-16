@@ -6,9 +6,9 @@
 
 ### Al principio (una sola vez)
 
-Ya lo hiciste en la etapa 4 del setup: cambiaste el nombre, el color, la moneda, la zona horaria, el logo y agregaste al equipo con «Agregar e invitar».
+Ya lo hiciste en la etapa 4 del setup: cambiaste el nombre, el color, la moneda, la zona horaria, el logo y agregaste al equipo desde **Equipo → «Agregar al equipo»**.
 
-Cuando los vendedores acepten la invitación por correo y elijan contraseña, empiezan a ver **su propio panel filtrado** (solo lo suyo).
+Cuando tus vendedores entran con el correo y la contraseña que les pasaste, ven **su propio panel filtrado** (solo lo suyo).
 
 ### Cada día
 
@@ -29,7 +29,7 @@ Tú **NO** cargas reportes en la app. Los cargan los vendedores. Tú sí cargas:
 ### Cuando cambia algo
 
 - **Alguien se va del equipo** → menú Equipo → tacho (la X) al lado del nombre → «Dar de baja». No se borra el historial, solo deja de aparecer en los formularios.
-- **Sube alguien nuevo** → menú Equipo → card «Agregar al equipo» → completas → se le manda invitación por correo.
+- **Sube alguien nuevo** → menú Equipo → card «Agregar al equipo» → completas nombre, rol, correo y contraseña → **«Crear acceso»** → tocas **«Copiar mensaje para mandarle»** y se lo pasas por WhatsApp. El panel no manda correos.
 - **Cambiar color de marca, moneda, etc.** → menú Ajustes.
 - **Quieres que alguien te ayude a llevar el equipo** → menú Equipo → toca la etiqueta de su rol (Setter / Closer) → elige **Manager**. También puedes elegir Manager al agregarlo.
 - **Saber quién dejó de cargar** → menú Equipo: debajo de cada nombre dice **«Último reporte: hoy / ayer / hace N días»**. Si **tocas el nombre**, vas al panel de esa persona.
@@ -62,7 +62,7 @@ Para quitarle el manager: menú Equipo → toca «Manager» en su fila → elige
 
 ## Para tus vendedores
 
-Cuando aceptan la invitación por correo y eligen contraseña, entran al panel. **No ven todo lo que tú ves**: solo sus propios números. No ven ajustes, ni equipo, ni gasto.
+Entran con el correo y la contraseña que les pasaste. **No ven todo lo que tú ves**: solo sus propios números. No ven ajustes, ni equipo, ni gasto.
 
 Cada uno tiene que cargar su reporte de fin de día. **Solo una vez por día** (si carga dos veces, se reemplaza el anterior, no se suma).
 
@@ -116,4 +116,4 @@ Ve las dos pestañas y usa las dos.
 | ¿Dónde veo los gastos que ya cargué? | En **Gasto en publicidad**, debajo del formulario: el mes completo con su total. |
 | ¿Qué es AOV y por qué no es lo mismo que ticket promedio? | Ticket promedio = revenue ÷ cierres (lo que se firmó). AOV = cash ÷ cierres (lo que se cobró). Firmar y cobrar no son la misma cosa. |
 | ¿Qué es CAC? | Costo de adquisición: gasto en publicidad del período ÷ cantidad de cierres. Sin gasto cargado, no aparece. |
-| ¿Puedo compartir el link del panel con alguien externo? | No. Cada persona necesita su login. Invítalo desde Equipo. |
+| ¿Puedo compartir el link del panel con alguien externo? | No. Cada persona necesita su login. Créale su acceso desde Equipo. |
