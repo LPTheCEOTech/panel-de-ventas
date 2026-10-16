@@ -277,11 +277,11 @@ test('Fase A · gasto = 0 no rompe: CAC y c-asistida quedan en 0, AOV sigue vivo
   assert.equal(m.aov, ORO.aovSemana)
 })
 
-test('Fase A · el embudo con gasto tiene 7 pasos y el 0 es Gasto sin barra', () => {
+test('Fase A · el embudo con gasto tiene 7 pasos y el 0 es Publicidad sin barra', () => {
   const m = metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO)
   const pasos = embudo(m, ORO.gastoSemana)
   assert.deepEqual(pasos.map((p) => p.nombre),
-    ['Gasto', 'Leads', 'Agendas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
+    ['Publicidad', 'Leads', 'Agendas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
   assert.equal(pasos[0].esGasto, true)
   assert.equal(pasos[0].esDinero, true)
   assert.equal(pasos[0].ancho, 0)   // sin barra: el paso 0 es un número solo

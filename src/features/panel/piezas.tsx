@@ -169,7 +169,7 @@ export function Embudo({
         <div className="fnr spend">
           <span className="fn-n">
             <strong>{gasto.nombre}</strong>
-            <small>costo de captación</small>
+            <small>gasto en anuncios</small>
           </span>
           <span className="fn-track" aria-hidden="true"></span>
           <span className="fn-v num">{dineroCorto(gasto.valor, simbolo)}</span>

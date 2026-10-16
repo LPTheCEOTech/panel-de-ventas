@@ -321,7 +321,9 @@ export function embudo(m: Metricas, gastoCents?: number): PasoEmbudo[] {
   // Sin arg, el kernel devuelve los 6 pasos históricos: el test antiguo sigue
   // verde y el llamador que todavía no sabe de gasto sigue funcionando.
   const gasto: PasoEmbudo[] = gastoCents === undefined ? [] : [
-    { nombre: 'Gasto', valor: gastoCents, ancho: 0, conversion: null, esDinero: true, esGasto: true },
+    // «Publicidad» y no «Gasto en publicidad»: la columna del nombre mide 126 px
+    // y el nombre largo partiría en dos renglones.
+    { nombre: 'Publicidad', valor: gastoCents, ancho: 0, conversion: null, esDinero: true, esGasto: true },
   ]
   return [
     ...gasto,

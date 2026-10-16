@@ -13,7 +13,8 @@ interface Pantalla { href: string; texto: string; accion?: Accion }
  *  vendedor ve Panel y los dos reportes (los formularios se filtran solos). */
 export const PANTALLAS: readonly Pantalla[] = [
   { href: '/panel', texto: 'Panel' },
-  { href: '/gasto', texto: 'Gasto', accion: 'cargar-gasto' },
+  // «Gasto» a secas no decía de qué; la ruta sigue siendo /gasto para no romper links guardados.
+  { href: '/gasto', texto: 'Gasto en publicidad', accion: 'cargar-gasto' },
   { href: '/reporte-setter', texto: 'Reporte Setter' },
   // 🔴 Fase D · «Reporte Closer» pasa a «Post Llamada» y apunta a /llamada.
   // La ruta /reporte-closer redirige, así que un usuario con el link viejo
