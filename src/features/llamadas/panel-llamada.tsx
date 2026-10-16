@@ -305,7 +305,9 @@ export function PanelLlamada({
         nombres={nombres} closers={closers}
         onBorrada={(id) => {
           setLlamadas((xs) => xs.map((l) => (l.id === id ? { ...l, activa: false } : l)))
+          // se saca al instante y se vuelve a pedir: así el «N llamadas» de arriba cuadra
           lista.setFilas((xs) => xs.filter((l) => l.id !== id))
+          lista.recargar()
           router.refresh()
         }}
       />
