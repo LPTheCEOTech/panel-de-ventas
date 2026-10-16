@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { pagina } from '@/shared/calculo/listas'
 import { hoyEn } from '@/shared/calculo/periodo'
+import { resolverRango } from '@/shared/calculo/rango'
 import { IconoAviso } from '@/shared/chasis/iconos'
 import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
@@ -11,7 +13,8 @@ import { FormSetter } from '@/features/reportes/form-setter'
 export default async function ReporteSetter() {
   const capa = datos()
   const [config, { sesion, nivel }] = await Promise.all([capa.leerConfiguracion(), exigirPagina()])
-  const todas = (await capa.leerPersonas()).filter(
+  const equipo = await capa.leerPersonas()
+  const todas = equipo.filter(
     (p) => p.activo && (p.rol === 'setter' || p.rol === 'ambos')
   )
   // 🔴 Fase C · un vendedor solo puede cargar como sí mismo. Si es setter (o
@@ -25,6 +28,19 @@ export default async function ReporteSetter() {
   // vendan: si arrancaba con su nombre y cargaban por otro sin tocarlo, el
   // reporte quedaba a su nombre.
   const bloqueadoA = propia?.id ?? undefined
+
+  // «Reportes cargados» abre en Esta semana. El vendedor ve solo lo suyo y no
+  // tiene filtro de persona; el dueño y el manager filtran entre los setters,
+  // también los de baja (tienen historia).
+  const hoy = hoyEn(config.zonaHoraria)
+  const semana = resolverRango({ atajo: 'semana' }, hoy, config.inicioSemana)
+  const lista = pagina(semana, await capa.leerReportesSetter(semana, propia?.id))
+  const setters = esMiembro ? undefined : equipo
+    .filter((p) => p.rol === 'setter' || p.rol === 'ambos')
+    .map(({ id, nombre, activo }) => ({ id, nombre, activo }))
+  const nombres = Object.fromEntries(
+    equipo.filter((p) => !esMiembro || p.id === propia?.id).map((p) => [p.id, p.nombre])
+  )
 
   return (
     /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
@@ -42,7 +58,10 @@ export default async function ReporteSetter() {
       {personas.length === 0 ? (
         <SinPersonas rol="setters" />
       ) : (
-        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} bloqueadoA={bloqueadoA} />
+        <FormSetter
+          personas={personas} hoy={hoy} bloqueadoA={bloqueadoA}
+          lista={lista} setters={setters} nombres={nombres} inicioSemana={config.inicioSemana}
+        />
       )}
     </div>
   )
