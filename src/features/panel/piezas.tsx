@@ -155,10 +155,10 @@ export function Tasas({ m, deltas }: { m: Metricas; deltas: [number | null, numb
 export function Embudo({
   pasos, simbolo, avisoAgendas, deQue,
 }: { pasos: PasoEmbudo[]; simbolo: string; avisoAgendas: boolean; deQue: string }) {
-  // 🔴 Fase A · el paso Gasto se renderiza AFUERA de `.fn`. Adentro rompería
-  // las reglas `nth-child` que colorean los seis pasos reales del embudo
-  // (Leads → Cash). Y visualmente es honesto: el gasto NO es un conteo del
-  // funnel, es el costo que lo produjo.
+  // 🔴 Fase A · el paso Gasto se renderiza AFUERA de `.fn`: el gasto NO es un
+  // conteo del funnel, es el costo que lo produjo. Los colores salen de la
+  // clase `p-<clave>` de cada paso, no de su posición (con Calificadas el
+  // embudo gana un escalón).
   const gasto = pasos[0]?.esGasto ? pasos[0] : null
   const funnel = gasto ? pasos.slice(1) : pasos
 
@@ -177,7 +177,7 @@ export function Embudo({
       )}
       <div className="fn">
         {funnel.map((p, i) => (
-          <div className="fnr" key={p.nombre}>
+          <div className={`fnr p-${p.clave}`} key={p.clave}>
             <span className="fn-n">
               <strong>{p.nombre}</strong>
               <small>

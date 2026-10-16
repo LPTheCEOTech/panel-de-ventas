@@ -327,14 +327,16 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   line-height:1.02;margin-top:12px;color:var(--m7)}
 .plata-ctx{font-size:12px;color:var(--m7);opacity:.78;margin-top:5px}
 .plata-ctx b{font-weight:700;opacity:1}
-.plata .medidor{margin-top:14px;background:var(--m2)}
+.plata .medidor{margin-top:14px;margin-bottom:18px;background:var(--m2)}
 /* 🔴 Fase A · el pie de .plata subio de 3 a 4 columnas para hacerle lugar a
    AOV al lado de Ticket promedio. Los dos responden preguntas distintas
    (ticket es lo que se firmo, AOV lo que efectivamente entro) y por eso
    conviven. En celular baja a 2×2 en la media query de 600px. */
 .plata-pie{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:auto;
   padding-top:15px;border-top:1px solid var(--m2)}
-.plata .medidor + .plata-pie{margin-top:18px}
+/* el pie se apoya abajo: con la cuarta tasa (calificación) la banda crece y
+   el hueco tiene que quedar arriba del pie, no debajo */
+.plata .medidor + .plata-pie{margin-top:auto}
 .plata-pie > div{display:flex;flex-direction:column;justify-content:flex-end}
 .plata-pie span{display:block;font-size:10px;font-weight:700;text-transform:uppercase;
   letter-spacing:.6px;color:var(--m7);opacity:.6}
@@ -371,15 +373,17 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .fn-n small b{font-weight:700;color:var(--muted)}
 .fn-track{display:block;height:26px;border-radius:8px;background:var(--line);overflow:hidden}
 .fn-track i{display:block;height:100%;border-radius:8px;background:var(--m3);min-width:3px}
-.fnr:nth-child(3) .fn-track i,.fnr:nth-child(4) .fn-track i{background:var(--m4)}
-.fnr:nth-child(5) .fn-track i{background:var(--m5)}
-.fnr:nth-child(6) .fn-track i{background:var(--m6)}
+/* 🔴 El color sale de QUÉ es el paso, no de su posición: con agendas
+   calificadas el embudo gana un escalón y un nth-child(6) pintaría Cierres
+   del verde del Cash. Leads, Agendas y Calificadas (lo del setter) van en m3. */
+.fnr.p-llamadas .fn-track i,.fnr.p-asistieron .fn-track i{background:var(--m4)}
+.fnr.p-cierres .fn-track i{background:var(--m5)}
+.fnr.p-cash .fn-track i{background:var(--m6)}
 .fn-v{text-align:right;font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:-.4px}
-.fnr:nth-child(6) .fn-v{color:var(--m6)}
+.fnr.p-cash .fn-v{color:var(--m6)}
 
 /* 🔴 Fase A · el paso 0 del embudo: el gasto. Se renderiza AFUERA de .fn
-   (arriba de la lista) para no correr las reglas nth-child que colorean los
-   seis pasos de leads→cash. Sin barra rellena: el gasto no es un conteo, no
+   (arriba de la lista). Sin barra rellena: el gasto no es un conteo, no
    comparte escala con los leads. Solo el numero, y una linea de puntos que
    separa el costo del resto del funnel. */
 .fnr.spend{padding:6px 0 12px;margin-bottom:8px;border-bottom:1px dashed var(--line)}
@@ -638,6 +642,10 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .rep-h{padding-top:0;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
   color:var(--faint);border-bottom:1px solid var(--border)}
 .rep-h span:nth-child(n+3),.rep-row > span:nth-child(n+3){text-align:right}
+/* con agendas calificadas (la base aplicó la 009) entra una columna más */
+.rep.con-calif .rep-h,.rep.con-calif .rep-row{
+  grid-template-columns:minmax(104px,1fr) minmax(0,1.5fr) repeat(4,minmax(84px,1fr)) 22px;min-width:660px}
+.rep-row .sin{color:var(--faint)}
 .rep-row{width:100%;background:none;border:0;border-bottom:1px solid var(--line);
   font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
 .rep-row:last-child{border-bottom:0}
@@ -1090,6 +1098,13 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <div class="tasa-b"><span class="tasa-v num">30.4%</span><span class="tasa-c num"><b>104</b> agendas de <b>342</b> leads</span></div>
           <span class="medidor fino"><i style="width:30.4%"></i></span>
         </div>
+        <!-- 009 · solo si el período tiene calificadas cargadas. Las de días sin
+             medir no cuentan: es calificadas ÷ agendas DE LOS DÍAS MEDIDOS. -->
+        <div class="tasa">
+          <div class="tasa-h"><span class="tasa-l">Tasa de calificación</span><span class="delta nil">—</span></div>
+          <div class="tasa-b"><span class="tasa-v num">96.2%</span><span class="tasa-c num"><b>100</b> calificadas de <b>104</b> agendas</span></div>
+          <span class="medidor fino"><i style="width:96.2%"></i></span>
+        </div>
         <div class="tasa">
           <div class="tasa-h"><span class="tasa-l">Tasa de asistencia</span><span class="delta up">▲ +4.0 pts</span></div>
           <div class="tasa-b"><span class="tasa-v num">65.6%</span><span class="tasa-c num"><b>63</b> asistieron de <b>96</b> llamadas</span></div>
@@ -1121,24 +1136,30 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
       <div class="card">
         <div class="card-head"><div><h3>Embudo de la semana</h3><p>de leads a cash collected</p></div></div>
         <!-- 🔴 Fase A · Gasto arriba del embudo, como paso 0. Sin barra rellena
-             (no comparte escala con los leads). Va AFUERA de .fn para no
-             correr las reglas nth-child que colorean los seis pasos reales. -->
+             (no comparte escala con los leads). Va AFUERA de .fn: no es un
+             conteo del funnel, es el costo que lo produjo. -->
         <div class="fnr spend">
           <span class="fn-n"><strong>Publicidad</strong><small>gasto en anuncios</small></span>
           <span class="fn-track" aria-hidden="true"></span>
           <span class="fn-v num">$14.4k</span>
         </div>
         <div class="fn">
-          <div class="fnr"><span class="fn-n"><strong>Leads</strong><small>conversaciones iniciadas</small></span><span class="fn-track"><i style="width:100%"></i></span><span class="fn-v num">342</span></div>
-          <div class="fnr"><span class="fn-n"><strong>Agendas</strong><small>agenda <b>30%</b></small></span><span class="fn-track"><i style="width:30.4%"></i></span><span class="fn-v num">104</span></div>
-          <div class="fnr"><span class="fn-n"><strong>Llamadas</strong><small>de agenda <b>92%</b></small></span><span class="fn-track"><i style="width:28.1%"></i></span><span class="fn-v num">96</span></div>
-          <div class="fnr"><span class="fn-n"><strong>Asistieron</strong><small>asist. <b>66%</b></small></span><span class="fn-track"><i style="width:18.4%"></i></span><span class="fn-v num">63</span></div>
-          <div class="fnr"><span class="fn-n"><strong>Cierres</strong><small>cierre <b>37%</b></small></span><span class="fn-track"><i style="width:6.7%"></i></span><span class="fn-v num">23</span></div>
-          <div class="fnr"><span class="fn-n"><strong>Cash</strong><small>cobro <b>60%</b></small></span><span class="fn-track"><i style="width:4%"></i></span><span class="fn-v num">$41.4k</span></div>
+          <div class="fnr p-leads"><span class="fn-n"><strong>Leads</strong><small>conversaciones iniciadas</small></span><span class="fn-track"><i style="width:100%"></i></span><span class="fn-v num">342</span></div>
+          <div class="fnr p-agendas"><span class="fn-n"><strong>Agendas</strong><small>agenda <b>30%</b></small></span><span class="fn-track"><i style="width:30.4%"></i></span><span class="fn-v num">104</span></div>
+          <!-- 009 · el escalón existe solo si el período midió calificadas. Sin
+               medir, el embudo es el de siempre y Llamadas dice «de agenda». -->
+          <div class="fnr p-calificadas"><span class="fn-n"><strong>Calificadas</strong><small>calif. <b>96%</b></small></span><span class="fn-track"><i style="width:29.2%"></i></span><span class="fn-v num">100</span></div>
+          <div class="fnr p-llamadas"><span class="fn-n"><strong>Llamadas</strong><small>de calif. <b>96%</b></small></span><span class="fn-track"><i style="width:28.1%"></i></span><span class="fn-v num">96</span></div>
+          <div class="fnr p-asistieron"><span class="fn-n"><strong>Asistieron</strong><small>asist. <b>66%</b></small></span><span class="fn-track"><i style="width:18.4%"></i></span><span class="fn-v num">63</span></div>
+          <div class="fnr p-cierres"><span class="fn-n"><strong>Cierres</strong><small>cierre <b>37%</b></small></span><span class="fn-track"><i style="width:6.7%"></i></span><span class="fn-v num">23</span></div>
+          <div class="fnr p-cash"><span class="fn-n"><strong>Cash</strong><small>cobro <b>60%</b></small></span><span class="fn-track"><i style="width:4%"></i></span><span class="fn-v num">$41.4k</span></div>
         </div>
         <div class="note">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
-          <span><b>104 agendas</b> y <b>96 llamadas</b> no tienen por qué coincidir: la agenda la carga el setter y la llamada el closer. La diferencia es la que se cae entre los dos.</span>
+          <span><b>100 calificadas</b> y <b>96 llamadas</b> no tienen por qué coincidir: la calificada la carga el setter y la llamada el closer. La diferencia es la que se cae entre los dos.</span>
+          <!-- 009 · variantes de esta misma nota (mismo .note, otro texto):
+               · sin calificadas en el período: «104 agendas y 96 llamadas no tienen por qué coincidir: la agenda la carga el setter…»
+               · con días sin medir: «Hay días de este período sin agendas calificadas cargadas: por eso las llamadas se comparan con las agendas.» -->
         </div>
       </div>
 
@@ -1174,17 +1195,19 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         </div>
       </div>
       <div class="card">
-        <div class="card-head"><div><h3 class="h3i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="m9 9-3-7M15 9l3-7M12 13v4M10.5 15h3"/></svg> Ranking · Setters</h3><p>por agendas</p></div></div>
+        <div class="card-head"><div><h3 class="h3i"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="15" r="6"/><path d="m9 9-3-7M15 9l3-7M12 13v4M10.5 15h3"/></svg> Ranking · Setters</h3><p>por agendas calificadas</p></div></div>
+        <!-- 009 · con calificadas en el período ordena por ellas; sin, «por
+             agendas» y «32% de agenda · 119 leads» como siempre. -->
         <div class="lb">
           <div class="lbrow" style="--w:100%"><span class="rk g1">1</span><span class="av2">SL</span>
-            <span class="lbn"><strong>Sofía Lara</strong><small class="num">32% de agenda · 119 leads</small></span>
-            <span class="lbv"><b class="num">38</b></span></div>
+            <span class="lbn"><strong>Sofía Lara</strong><small class="num">38 agendas · 97% calificadas</small></span>
+            <span class="lbv"><b class="num">37</b></span></div>
           <div class="lbrow" style="--w:95%"><span class="rk">2</span><span class="av2">MG</span>
-            <span class="lbn"><strong>Mateo Gil</strong><small class="num">30% de agenda · 120 leads</small></span>
-            <span class="lbv"><b class="num">36</b></span></div>
-          <div class="lbrow" style="--w:79%"><span class="rk">3</span><span class="av2">VP</span>
-            <span class="lbn"><strong>Valentina Paz</strong><small class="num">29% de agenda · 103 leads</small></span>
-            <span class="lbv"><b class="num">30</b></span></div>
+            <span class="lbn"><strong>Mateo Gil</strong><small class="num">36 agendas · 97% calificadas</small></span>
+            <span class="lbv"><b class="num">35</b></span></div>
+          <div class="lbrow" style="--w:76%"><span class="rk">3</span><span class="av2">VP</span>
+            <span class="lbn"><strong>Valentina Paz</strong><small class="num">30 agendas · 93% calificadas</small></span>
+            <span class="lbv"><b class="num">28</b></span></div>
         </div>
       </div>
     </div>
@@ -1344,7 +1367,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
     </div>
     <div class="what write">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-      <span>Al terminar tu día, registra tus números. Con esto el panel calcula la <b>tasa de agenda</b> del equipo.</span>
+      <span>Al terminar tu día, registra tus números. Con esto el panel calcula la <b>tasa de agenda</b> y la <b>tasa de calificación</b> del equipo.</span>
       <span class="badge-w">Se carga a mano</span>
     </div>
 
@@ -1358,12 +1381,19 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         </div>
         <div class="section-title">Tu día</div>
         <div class="form-grid">
-          <div class="field c6"><label>Conversaciones iniciadas <span class="req">*</span></label>
+          <!-- 009 · con la base actualizada son tres contadores (c4); sin la
+               columna, los dos de siempre (c6) y el tercero no aparece.
+               Calificadas arranca VACÍO en un reporte nuevo: es obligatorio
+               con agendas > 0 y nunca más que las agendas. -->
+          <div class="field c4"><label>Conversaciones iniciadas <span class="req">*</span></label>
             <div class="step"><button type="button">−</button><input class="num" value="24" inputmode="numeric"><button type="button">＋</button></div>
             <span class="hint">Con cuántas personas empezaste una conversación hoy.</span></div>
-          <div class="field c6"><label>Agendas <span class="req">*</span></label>
+          <div class="field c4"><label>Agendas <span class="req">*</span></label>
             <div class="step"><button type="button">−</button><input class="num" value="8" inputmode="numeric"><button type="button">＋</button></div>
             <span class="hint">Cuántas llamadas quedaron agendadas.</span></div>
+          <div class="field c4"><label>Agendas calificadas <span class="req">*</span></label>
+            <div class="step"><button type="button">−</button><input class="num" value="5" inputmode="numeric"><button type="button">＋</button></div>
+            <span class="hint">De esas agendas, cuántas tienen el dinero para invertir.</span></div>
         </div>
         <div class="form-actions">
           <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
@@ -1376,6 +1406,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <div class="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribes</p></div></div>
           <div class="calc apilado">
             <div class="dv principal"><span>Tasa de agenda</span><b class="num">33.3%</b></div>
+            <div class="dv"><span>Tasa de calificación</span><b class="num">62.5%</b></div>
             <div class="dv"><span>Agendas</span><b class="num">8</b></div>
             <div class="dv"><span>Conversaciones</span><b class="num">24</b></div>
           </div>
@@ -1383,7 +1414,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="card">
           <div class="note warn" style="margin-top:0">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-            <span><b>Sofía Lara ya cargó el 26 de julio</b> — 24 conversaciones y 8 agendas. Si envías de nuevo se <b>reemplaza</b>. No se suma.</span>
+            <span><b>Sofía Lara ya cargó el 26 de julio</b> — 24 conversaciones, 8 agendas y 5 calificadas. Si envías de nuevo se <b>reemplaza</b>. No se suma.</span>
           </div>
           <div class="form-actions"><span class="helper">Así el día no se cuenta dos veces.</span><button class="btn-ghost btn-sm">Traer lo que había</button></div>
         </div>
@@ -1394,13 +1425,15 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
          al formulario para corregirlo. -->
     <div class="card" style="margin-top:16px">
       <div class="card-head"><div><h3>Reportes cargados</h3><p>5 reportes · 34 agendas · toca uno para corregirlo</p></div><div class="head-actions"><label class="persona-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Todo el equipo</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><select aria-label="Ver a"><option selected>Todo el equipo</option></select></label><div class="fechas"><button class="fechas-btn" aria-haspopup="dialog" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div></div></div>
-      <div class="rep">
-        <div class="rep-h"><span>Día</span><span>Setter</span><span>Conversaciones</span><span>Agendas</span><span>Tasa</span><span></span></div>
-        <button class="rep-row" aria-current="true"><span class="rep-f">dom 26 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Sofía Lara</span></span><span class="num">24</span><span class="num">8</span><span class="rep-tasa num">33.3%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-        <button class="rep-row"><span class="rep-f">dom 26 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Mateo Gil</span></span><span class="num">20</span><span class="num">6</span><span class="rep-tasa num">30.0%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-        <button class="rep-row"><span class="rep-f">sáb 25 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Sofía Lara</span></span><span class="num">18</span><span class="num">7</span><span class="rep-tasa num">38.9%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-        <button class="rep-row"><span class="rep-f">sáb 25 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Valentina Paz</span></span><span class="num">22</span><span class="num">6</span><span class="rep-tasa num">27.3%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-        <button class="rep-row"><span class="rep-f">vie 24 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Mateo Gil</span></span><span class="num">25</span><span class="num">7</span><span class="rep-tasa num">28.0%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      <!-- 009 · .con-calif: la columna Calificadas solo con la base actualizada.
+           «—» = ese reporte es de antes y no se midió. -->
+      <div class="rep con-calif">
+        <div class="rep-h"><span>Día</span><span>Setter</span><span>Conversaciones</span><span>Agendas</span><span>Calificadas</span><span>Tasa</span><span></span></div>
+        <button class="rep-row" aria-current="true"><span class="rep-f">dom 26 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Sofía Lara</span></span><span class="num">24</span><span class="num">8</span><span class="num">5</span><span class="rep-tasa num">33.3%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">dom 26 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Mateo Gil</span></span><span class="num">20</span><span class="num">6</span><span class="num">6</span><span class="rep-tasa num">30.0%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">sáb 25 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Sofía Lara</span></span><span class="num">18</span><span class="num">7</span><span class="num">6</span><span class="rep-tasa num">38.9%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">sáb 25 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Valentina Paz</span></span><span class="num">22</span><span class="num">6</span><span class="num sin">—</span><span class="rep-tasa num">27.3%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">vie 24 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Mateo Gil</span></span><span class="num">25</span><span class="num">7</span><span class="num">7</span><span class="rep-tasa num">28.0%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
       </div>
     </div>
    </div>
