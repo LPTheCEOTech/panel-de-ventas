@@ -7,7 +7,7 @@ import { IconoAviso, IconoDeshacer, IconoEquipo, IconoEquis, IconoInfo } from '@
 import { mensajeParaElEquipo, revisarContrasena, sugerirContrasena } from '@/shared/datos/contrasenas'
 import { iniciales } from '@/shared/formato'
 import type { Nivel, Persona, RolEquipo } from '@/shared/tipos'
-import { CLASE, ETIQUETA, FilaYo, HuecoContrasena, NotaNombre, PastillaRol, type Yo } from './fila-yo'
+import { CLASE, ETIQUETA, FilaYo, HuecoContrasena, NombreAlPanel, NotaNombre, PastillaRol, type Yo } from './fila-yo'
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -25,10 +25,14 @@ export interface FilaEquipo {
 const LIBRE: FilaEquipo = { quien: null, tocable: true, conManager: false }
 
 export function ListaEquipo({
-  personas, resumen, yo, filas, puedeDarDeBaja, puedeCrearManager,
+  personas, resumen, yo, filas, ultimos, periodo, puedeDarDeBaja, puedeCrearManager,
 }: {
   personas: Persona[]
   resumen: Record<string, { valor: string; unidad: string }>
+  /** «Último reporte: …» de cada persona activa. */
+  ultimos: Record<string, string>
+  /** De qué días son los números de la columna: «12–18 oct». */
+  periodo: string
   /** Quien mira. null en modo demo: sin sesión no hay a quién ligar. */
   yo: Yo | null
   filas: Record<string, FilaEquipo>
@@ -140,10 +144,15 @@ export function ListaEquipo({
           <h3>Tu equipo</h3>
           <p>{activos} {activos === 1 ? 'activo' : 'activos'}{bajas > 0 && ` · ${bajas} de baja`}</p>
         </div>
-        <span className="chip n">esta semana</span>
+        <span className="chip n">{periodo}</span>
       </div>
 
-      {yo && <FilaYo yo={yo} hizo={yo.persona ? resumen[yo.persona.id] : undefined} ocupado={ocupado} onElegir={elegirMiRol} />}
+      {yo && (
+        <FilaYo
+          yo={yo} hizo={yo.persona ? resumen[yo.persona.id] : undefined}
+          ultimo={yo.persona ? ultimos[yo.persona.id] : undefined} ocupado={ocupado} onElegir={elegirMiRol}
+        />
+      )}
 
       {otras.length === 0 ? (
         <div className="empty">
@@ -169,7 +178,7 @@ export function ListaEquipo({
           <div className={`entry${activo ? '' : ' off'}`} key={p.id}>
             <span className="av2">{iniciales(p.nombre)}</span>
             <span className="en">
-              <strong>{p.nombre}</strong>
+              <strong><NombreAlPanel id={p.id} nombre={p.nombre} /></strong>
               {/* 🔴 El rol se dice UNA vez por vista. En escritorio lo dice la
                   pastilla; en el celular la pastilla no entra y lo dice este
                   renglón, que ahí se enciende. La baja, en cambio, se dice
@@ -177,6 +186,7 @@ export function ListaEquipo({
               <small className={activo ? 'solo-chico' : undefined}>
                 {activo ? fija ?? ETIQUETA[p.rol] : 'ya no está en el equipo'}
               </small>
+              {p.activo && ultimos[p.id] && <small>{ultimos[p.id]}</small>}
             </span>
             {/* Los de baja, y lo que quien mira no puede tocar, van quietos. */}
             {p.activo && f.tocable ? (
@@ -354,3 +364,4 @@ export function ListaEquipo({
     </div>
   )
 }
+

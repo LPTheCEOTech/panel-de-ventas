@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { IconoAbajo } from '@/shared/chasis/iconos'
+import { urlDelPanel } from '@/shared/calculo/rango'
+import { IconoAbajo, IconoSalida } from '@/shared/chasis/iconos'
 import { iniciales } from '@/shared/formato'
 import type { Persona, Rol, RolEquipo } from '@/shared/tipos'
 
@@ -109,10 +110,12 @@ export function PastillaRol({
  * suyo, y un botón que lleva a una pantalla que lo rebota es peor que nada.
  */
 export function FilaYo({
-  yo, hizo, ocupado, onElegir,
+  yo, hizo, ultimo, ocupado, onElegir,
 }: {
   yo: Yo
   hizo: { valor: string; unidad: string } | undefined
+  /** «Último reporte: …», si vende. */
+  ultimo?: string
   ocupado: boolean
   onElegir: (rol: Rol | null) => void
 }) {
@@ -124,8 +127,9 @@ export function FilaYo({
     <div className="entry yo">
       <span className="av2">{iniciales(titulo)}</span>
       <span className="en">
-        <strong>{titulo}</strong>
+        <strong>{rol && yo.persona ? <NombreAlPanel id={yo.persona.id} nombre={titulo} /> : titulo}</strong>
         <small>{nombre ? `Tú · ${yo.correo}` : yo.correo}</small>
+        {rol && ultimo && <small>{ultimo}</small>}
       </span>
       {yo.fija ? (
         <span className="pill rol man">{yo.fija}</span>
@@ -204,5 +208,20 @@ export function NotaNombre({
         Entras con tu misma cuenta. Sigues viendo todo como admin.
       </span>
     </div>
+  )
+}
+
+/**
+ * 🔴 El nombre lleva al Panel filtrado por esa persona. Es lo que se buscaba
+ * en «Contraseña»: «meterme a una persona y ver solo lo suyo». Sirve también
+ * con los de baja: sus números siguen existiendo en los períodos en que
+ * trabajaron.
+ */
+export function NombreAlPanel({ id, nombre }: { id: string; nombre: string }) {
+  return (
+    <Link href={urlDelPanel(null, id)} title={`Ver el panel de ${nombre}`}>
+      <span>{nombre}</span>
+      <IconoSalida />
+    </Link>
   )
 }

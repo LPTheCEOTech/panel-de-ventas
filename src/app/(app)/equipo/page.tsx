@@ -1,5 +1,6 @@
 import { agregarLlamadas, rankingClosers, rankingSetters } from '@/shared/calculo/metricas'
 import { hoyEn, ventana } from '@/shared/calculo/periodo'
+import { etiquetaDeRango, haceCuanto } from '@/shared/calculo/rango'
 import { IconoEquipo } from '@/shared/chasis/iconos'
 import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
@@ -15,7 +16,8 @@ export default async function Equipo() {
   // fila por fila, más abajo.
   const { sesion, nivel } = await exigirPagina('gestionar-equipo')
   const config = await capa.leerConfiguracion()
-  const v = ventana('semana', hoyEn(config.zonaHoraria), config.inicioSemana)
+  const hoy = hoyEn(config.zonaHoraria)
+  const v = ventana('semana', hoy, config.inicioSemana)
 
   // 🔴 Los closers cargan una fila por llamada (Post Llamada), igual que en el
   // Panel. Leer el reporte diario viejo dejaba a todos en «sin reportes».
@@ -26,6 +28,16 @@ export default async function Equipo() {
     capa.leerAccesos(),
   ])
   const closers = agregarLlamadas(llamadas)
+
+  // 🔴 «Último reporte: hace N días» por persona activa: es lo que deja ver
+  // quién dejó de cargar. Sale del último dato de cada una (llamada o reporte
+  // de setter), contado contra el hoy del NEGOCIO. En paralelo: son consultas
+  // chicas, pero en serie se suman.
+  const activas = personas.filter((p) => p.activo)
+  const fechas = await Promise.all(activas.map((p) => capa.ultimaFecha(p.id)))
+  const ultimos: Record<string, string> = Object.fromEntries(activas.map((p, i) => [
+    p.id, fechas[i] ? `Último reporte: ${haceCuanto(fechas[i], hoy)}` : 'Sin reportes todavía',
+  ]))
 
   // Lo que hizo cada uno esta semana, partido en dos: el número que manda y
   // lo que lo acompaña. La columna es angosta y el número tiene que poder
@@ -87,7 +99,9 @@ export default async function Equipo() {
       </div>
 
       <ListaEquipo
-        personas={personas} resumen={resumen} yo={yo} filas={filas}
+        personas={personas} resumen={resumen} yo={yo} filas={filas} ultimos={ultimos}
+        // el chip dice las fechas, no «esta semana»: se leía como el mes
+        periodo={etiquetaDeRango({ ...v, atajo: null }, hoy)}
         puedeDarDeBaja={puede(nivel, 'dar-de-baja')} puedeCrearManager={puede(nivel, 'marcar-manager')}
       />
     </div>
