@@ -15,10 +15,20 @@ const entero = z.number().int().min(0).max(100_000)
 // $10.000.000 en centavos
 const dineroCents = z.number().int().min(0).max(1_000_000_000)
 
+/**
+ * 🔴 `calificadas` es opcional para la API: una base sin la 009 nunca la
+ * manda, y un reporte viejo corregido puede seguir «sin medir». Que sea
+ * obligatoria en un reporte nuevo lo decide el formulario, que sabe si la base
+ * la tiene. Lo que la API sí garantiza: nunca más que las agendas.
+ */
 export const zSetter = z.object({
   fecha, personaId,
   conversaciones: entero,
   agendas: entero,
+  calificadas: entero.nullable().optional(),
+}).refine((r) => r.calificadas == null || r.calificadas <= r.agendas, {
+  message: 'Las agendas calificadas no pueden ser más que las agendas.',
+  path: ['calificadas'],
 })
 
 export const zCloser = z.object({

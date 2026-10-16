@@ -9,7 +9,7 @@
  * cambia, Y cuenta las filas (un corte silencioso de PostgREST a las 1.000
  * filas solo se ve contando).
  */
-import { agregarLlamadas, metricas, metricasConCosto, rankingClosers, rankingSetters, barrasPorDia } from '../src/shared/calculo/metricas.ts'
+import { agregarLlamadas, embudo, metricas, metricasConCosto, midieronCalificadas, rankingClosers, rankingSetters, barrasPorDia } from '../src/shared/calculo/metricas.ts'
 import { ORO, SEMANA_ORO } from '../src/shared/datos/semilla.ts'
 import { dinero, porcentaje, porcentajeEntero } from '../src/shared/formato/index.ts'
 import { conectar } from './comun.mjs'
@@ -25,8 +25,10 @@ function comprobar(que, obtenido, esperado) {
 }
 
 const { data: personasCrudas, error: e1 } = await sb.from('personas').select('id, nombre, rol, activo, orden')
+// 🔴 Con `*`: `calificadas` existe solo si la base aplicó la 009. Pedirla por
+// nombre haría fallar el verificador entero en una base sin actualizar.
 const { data: sCrudos, error: e2 } = await sb.from('reportes_setter')
-  .select('fecha, persona_id, conversaciones, agendas').gte('fecha', V.desde).lte('fecha', V.hasta)
+  .select('*').gte('fecha', V.desde).lte('fecha', V.hasta)
 // 🔴 Fase D · leemos `llamadas` (una fila por llamada) en vez de
 // `reportes_closer`. Solo activa=true. El puente `agregarLlamadas()` las
 // convierte al shape que espera el kernel.
@@ -46,7 +48,11 @@ for (const e of [e1, e2, e3]) {
 }
 
 const personas = personasCrudas.map((p) => ({ ...p }))
-const setters = sCrudos.map((r) => ({ fecha: r.fecha, personaId: r.persona_id, conversaciones: r.conversaciones, agendas: r.agendas }))
+const tieneColumna = sCrudos.length > 0 && 'calificadas' in sCrudos[0]
+const setters = sCrudos.map((r) => ({
+  fecha: r.fecha, personaId: r.persona_id, conversaciones: r.conversaciones, agendas: r.agendas,
+  calificadas: typeof r.calificadas === 'number' ? r.calificadas : null,
+}))
 // Fase D · llamadas crudas → shape del kernel → agregar por (fecha, persona)
 const llamadas = llCrudas.map((l) => ({
   id: l.id, personaId: l.persona_id, fecha: l.fecha,
@@ -84,12 +90,35 @@ rankingClosers(personas.map((p) => ({ ...p, id: p.id })), closers).forEach((f, i
   comprobar(`${i + 1}. ${o.nombre}`, `${f.persona.nombre} ${dinero(f.valor)}`, `${o.nombre} ${dinero(o.cash)}`)
 })
 
-console.log('\n── Ranking de setters ──\n')
+// Con la semana medida, el ranking ordena por calificadas; sin medir, por
+// agendas. Las agendas de cada uno se comprueban en los dos casos.
+const porCalificadas = midieronCalificadas(setters)
+console.log(`\n── Ranking de setters (por ${porCalificadas ? 'calificadas' : 'agendas'}) ──\n`)
 rankingSetters(personas.map((p) => ({ ...p, id: p.id })), setters).forEach((f, i) => {
   const o = ORO.setters[i]
   if (!o) { fallos.push(`setter de más en el puesto ${i + 1}`); return }
-  comprobar(`${i + 1}. ${o.nombre}`, `${f.persona.nombre} ${f.valor}`, `${o.nombre} ${o.agendas}`)
+  const agendas = f.detalle.agendas ?? f.valor
+  comprobar(`${i + 1}. ${o.nombre}`, `${f.persona.nombre} ${agendas}`, `${o.nombre} ${o.agendas}`)
+  if (porCalificadas) {
+    comprobar(`   calificadas · % calif.`, `${f.valor} · ${porcentajeEntero(f.detalle.tasa)}`, `${o.calificadas} · ${o.tasaCalificacion}`)
+  }
 })
+
+// ── 009 · agendas calificadas ─────────────────────────────────
+console.log('\n── Agendas calificadas (009) ──\n')
+if (!tieneColumna) {
+  console.log('⚠️  la base no tiene la columna `calificadas`: falta apretar «Actualizar ahora» en el panel')
+  fallos.push('calificadas: la base no tiene la columna (falta la actualización 009)')
+} else if (!porCalificadas) {
+  console.log('⚠️  la columna existe, pero la semana de oro no tiene calificadas cargadas')
+  fallos.push('calificadas: la semana de oro no tiene calificadas cargadas')
+} else {
+  comprobar('calificadas', m.calificadas, ORO.calificadas)
+  comprobar('tasa de calificación', porcentaje(m.tasaCalificacion), ORO.tasaCalificacion)
+  comprobar('llamadas «de calif.»', porcentajeEntero(m.llamadasSobreCalificadas), ORO.llamadasSobreCalificadas)
+  comprobar('escalón Calificadas en el embudo', embudo(m).map((p) => p.nombre).join(' › '),
+    'Leads › Agendas › Calificadas › Llamadas › Asistieron › Cierres › Cash')
+}
 
 console.log('\n── Cash por día ──\n')
 const barras = barrasPorDia(V, closers)

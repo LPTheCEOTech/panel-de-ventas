@@ -16,10 +16,21 @@ import { clienteServidor } from './cliente'
  * puede ser «Este año» o «Todo», y PostgREST corta en 1000 filas sin avisar.
  * Cada tanda lleva un orden total (`fecha, id`) para no repetir ni saltear.
  */
-const F_SETTER = 'fecha, persona_id, conversaciones, agendas'
+/**
+ * 🔴 `reportes_setter` se lee con `*` y NO por nombre de columna. `calificadas`
+ * llega con la actualización 009, y cada alumno la aplica cuando aprieta el
+ * botón: pedir por nombre una columna que su base todavía no tiene es un 400
+ * de PostgREST que tira el panel entero. Con `*`, la base vieja simplemente no
+ * la trae (mismo truco que `logo_url` en `leerConfiguracion`).
+ */
+const F_SETTER = '*'
 const F_CLOSER = 'fecha, persona_id, llamadas, asistieron, reagendadas, cierres, revenue_cents, cash_cents'
 
-type FilaSetter = { fecha: string; persona_id: string; conversaciones: number; agendas: number }
+type FilaSetter = {
+  fecha: string; persona_id: string; conversaciones: number; agendas: number
+  /** Ausente si la base no aplicó la 009; `null` si ese día no se midió. */
+  calificadas?: number | null
+}
 type FilaCloser = {
   fecha: string; persona_id: string; llamadas: number; asistieron: number
   reagendadas: number; cierres: number; revenue_cents: number; cash_cents: number
@@ -33,8 +44,12 @@ type FilaLlamada = {
 
 const aSetter = (f: FilaSetter): ReporteSetter => ({
   fecha: f.fecha, personaId: f.persona_id,
-  conversaciones: f.conversaciones, agendas: f.agendas, calificadas: null,
+  conversaciones: f.conversaciones, agendas: f.agendas,
+  calificadas: typeof f.calificadas === 'number' ? f.calificadas : null,
 })
+
+/** PostgREST: «Could not find the 'x' column of 'y' in the schema cache». */
+const COLUMNA_INEXISTENTE = 'PGRST204'
 
 const aCloser = (f: FilaCloser): ReporteCloser => ({
   fecha: f.fecha, personaId: f.persona_id,
@@ -161,15 +176,31 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       // `onConflict` nombra la restricción única: si el día ya existe, se
       // REEMPLAZA. Un insert sin esto duplicaría el día y el panel sumaría dos
       // veces sin que nadie lo note.
-      const { error } = await sb.from('reportes_setter').upsert(
-        {
-          fecha: r.fecha, persona_id: r.personaId,
-          conversaciones: r.conversaciones, agendas: r.agendas,
-          actualizado_en: new Date().toISOString(),
-        },
-        { onConflict: 'fecha,persona_id' }
-      )
+      //
+      // 🔴 `calificadas` viaja SOLO si es un número. Mandar `null` en un upsert
+      // borraría un valor ya medido, y mandar la clave a una base sin la 009
+      // es un error. Si igual la rechaza (alguien la mandó por API contra una
+      // base vieja), se guarda el resto: no hay dónde ponerla.
+      const fila = {
+        fecha: r.fecha, persona_id: r.personaId,
+        conversaciones: r.conversaciones, agendas: r.agendas,
+        actualizado_en: new Date().toISOString(),
+      }
+      const subir = (f: typeof fila & { calificadas?: number }) =>
+        sb.from('reportes_setter').upsert(f, { onConflict: 'fecha,persona_id' })
+      let { error } = await subir(typeof r.calificadas === 'number' ? { ...fila, calificadas: r.calificadas } : fila)
+      if (error?.code === COLUMNA_INEXISTENTE && typeof r.calificadas === 'number') {
+        console.warn('[datos] guardarReporteSetter: la base no tiene `calificadas` (falta la 009); se guarda sin ella')
+        ;({ error } = await subir(fila))
+      }
       reventar('guardarReporteSetter', error)
+    },
+
+    async tieneCalificadas(): Promise<boolean> {
+      // Una consulta mínima a la columna. Si falla por lo que sea, `false`:
+      // el lado seguro es no mostrar un campo que quizás no se pueda guardar.
+      const { error } = await sb.from('reportes_setter').select('calificadas').limit(1)
+      return !error
     },
 
     async guardarReporteCloser(r: ReporteCloser): Promise<void> {

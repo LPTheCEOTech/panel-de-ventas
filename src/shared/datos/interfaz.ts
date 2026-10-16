@@ -39,6 +39,9 @@ export interface CapaDeDatos {
    *  base es la que hace imposible el doble conteo; esto es su cara visible. */
   guardarReporteSetter(r: ReporteSetter): Promise<void>
   guardarReporteCloser(r: ReporteCloser): Promise<void>
+  /** Si la base ya tiene la columna `calificadas` (actualización 009). Decide
+   *  si Reporte Setter muestra el campo: sin la columna no hay dónde guardarlo. */
+  tieneCalificadas(): Promise<boolean>
 
   /** El gasto de un día, o `null` si no se cargó. */
   buscarGasto(fecha: string): Promise<Gasto | null>

@@ -80,15 +80,19 @@ const idDe = (demoId) => {
   return id
 }
 
+// 🔴 `calificadas` va solo si la base aplicó la 009: mandar la columna a una
+// base que no la tiene hace fallar el upsert entero.
+const { error: sinCalificadas } = await sb.from('reportes_setter').select('calificadas').limit(1)
 const { error: errS } = await sb.from('reportes_setter').upsert(
   REPORTES_SETTER_DEMO.map((r) => ({
     fecha: r.fecha, persona_id: idDe(r.personaId),
     conversaciones: r.conversaciones, agendas: r.agendas, es_demo: true,
+    ...(sinCalificadas ? {} : { calificadas: r.calificadas }),
   })),
   { onConflict: 'fecha,persona_id' }
 )
 if (errS) morir(`reportes_setter: ${errS.message}`)
-console.log(`✅ reportes_setter: ${REPORTES_SETTER_DEMO.length}`)
+console.log(`✅ reportes_setter: ${REPORTES_SETTER_DEMO.length}${sinCalificadas ? ' (sin calificadas: la base no aplicó la 009)' : ''}`)
 
 // 🔴 Fase D · `reportes_closer` queda como LEGACY (agregado diario). El
 // modelo activo es `llamadas` (una fila por llamada). Se cargan las dos por

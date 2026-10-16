@@ -70,7 +70,12 @@ function leer(vacia: boolean): EstadoDemo {
   const f = archivo(vacia)
   if (existsSync(f)) {
     try {
-      return JSON.parse(readFileSync(f, 'utf8')) as EstadoDemo
+      const e = JSON.parse(readFileSync(f, 'utf8')) as EstadoDemo
+      // 🔴 Un archivo escrito antes de la 009 trae los reportes sin
+      // `calificadas`: se leen como «no se midió», igual que una fila vieja de
+      // la base. (Borrar el archivo vuelve a la semilla, que sí las trae.)
+      e.setter = e.setter.map((r) => ({ ...r, calificadas: r.calificadas ?? null }))
+      return e
     } catch {
       // un archivo a medio escribir no puede dejar la app sin arrancar
     }
@@ -141,7 +146,14 @@ export function capaDemo(vacia = false): CapaDeDatos {
     async buscarReporteCloser(fecha, personaId) {
       return leer(vacia).closer.find((r) => r.fecha === fecha && r.personaId === personaId) ?? null
     },
-    async guardarReporteSetter(r) { con((e) => upsert(e.setter, r)) },
+    async guardarReporteSetter(r) {
+      con((e) => {
+        // igual que la capa real: un `null` no borra un valor ya medido
+        const antes = e.setter.find((x) => x.fecha === r.fecha && x.personaId === r.personaId)
+        upsert(e.setter, { ...r, calificadas: r.calificadas ?? antes?.calificadas ?? null })
+      })
+    },
+    async tieneCalificadas() { return true },
     async guardarReporteCloser(r) { con((e) => upsert(e.closer, r)) },
 
     async buscarGasto(fecha) {
