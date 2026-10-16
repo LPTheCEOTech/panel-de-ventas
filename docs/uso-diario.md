@@ -14,14 +14,17 @@ Cuando los vendedores acepten la invitación por correo y elijan contraseña, em
 
 Tú **NO** cargas reportes en la app. Los cargan los vendedores. Tú sí cargas:
 
-**Gasto diario** (menú «Gasto»):
-- Cuánto gastaste hoy en publicidad / captación / lo que sea.
+**Gasto en publicidad** (menú «Gasto en publicidad»):
+- Cuánto gastaste hoy en anuncios.
 - Un solo gasto por día. Si gastaste en varias plataformas, súmalos (la nota queda como ayuda-memoria).
 - Sin esto, el CAC (Costo de adquisición) y el Costo por asistida no se pueden calcular.
+- **Debajo del formulario ves todos los gastos del mes**, con el total. Con las flechas **‹ ›** cambias de mes. Si te equivocaste en uno, **tócalo**: sube al formulario, lo corriges y tocas **«Reemplazar»**.
 
 **Mirar el panel** (menú «Panel»):
-- Eliges día / semana / mes arriba a la derecha.
+- Eliges el período con el botón de fechas, arriba a la derecha (Este mes, Mes pasado, Todo, o el rango que quieras).
 - Ves cash cobrado, tasas, CAC, AOV, embudo, gráfico por día, y rankings de setters y closers.
+- **Ver a una sola persona**: al lado del botón de fechas está **«Todo el equipo»**. Tócalo y elige a alguien: el panel muestra solo lo suyo, como lo vería esa persona (sin gasto ni rankings, porque eso es de todo el negocio). Para volver, elige «Todo el equipo».
+- **Día por día**: abajo de todo hay una fila por día con agendas, llamadas, asistieron, cierres y cash. **Toca un día** para ver cada llamada: quién la hizo, con qué lead y cuánto entró. Respeta el período y la persona que elegiste arriba.
 
 ### Cuando cambia algo
 
@@ -29,6 +32,13 @@ Tú **NO** cargas reportes en la app. Los cargan los vendedores. Tú sí cargas:
 - **Sube alguien nuevo** → menú Equipo → card «Agregar al equipo» → completas → se le manda invitación por correo.
 - **Cambiar color de marca, moneda, etc.** → menú Ajustes.
 - **Quieres que alguien te ayude a llevar el equipo** → menú Equipo → toca la etiqueta de su rol (Setter / Closer) → elige **Manager**. También puedes elegir Manager al agregarlo.
+- **Saber quién dejó de cargar** → menú Equipo: debajo de cada nombre dice **«Último reporte: hoy / ayer / hace N días»**. Si **tocas el nombre**, vas al panel de esa persona.
+
+### Si cargas por tu equipo
+
+En **Post Llamada** y en **Reporte Setter**, el campo de la persona **arranca vacío**: elige siempre a quién le estás cargando antes de guardar. Así nada queda a tu nombre por error.
+
+En Post Llamada, la lista de abajo dice **de quién es cada llamada**. Si cambias la **Fecha**, ves las llamadas de ese día. Y si escribes un lead que ya tiene llamada ese día, te avisa para que no la cargues dos veces.
 
 ---
 
@@ -75,11 +85,10 @@ Al terminar **CADA** llamada:
 5. **Dinero** (solo si Cerró está prendido):
    - **Revenue contratado**: lo que firmó en total (aunque lo pague en cuotas).
    - **Cash collected**: lo que realmente entró hoy.
-6. Si NO cerró pero **cobraste una cuota de una venta anterior**: marca el checkbox **«Cobro de venta anterior»** y aparece solo el Cash.
-7. **Nota** (opcional): «cierra el viernes, mandar contrato».
-8. **«Guardar llamada»**.
+6. **Nota** (opcional): «cierra el viernes, mandar contrato».
+7. **«Guardar llamada»**.
 
-La llamada aparece abajo en la lista del día. Si te equivocaste, la borras con la X (no se pierde el historial).
+La llamada aparece abajo en la lista del día. Si te equivocaste, la borras con la X (no se pierde el historial). Para ver las llamadas de otro día, cambia la **Fecha**.
 
 ### Si hace las dos cosas (Setter y closer)
 
@@ -97,8 +106,9 @@ Ve las dos pestañas y usa las dos.
 
 | Pregunta | Respuesta |
 |---|---|
-| ¿Puedo editar una llamada vieja? | Sí en la lista del día actual. Para editar de otro día, todavía no — próxima versión. |
-| ¿Puedo ver el reporte de un cerrador específico? | Tú como admin ves el ranking en el panel principal. Detalle por persona: por ahora no. |
+| ¿Puedo corregir una llamada vieja? | En Post Llamada cambia la **Fecha** a ese día: aparecen sus llamadas. Bórrala con la X y vuelve a cargarla bien. |
+| ¿Puedo ver el reporte de un closer específico? | Sí. En el Panel toca **«Todo el equipo»** y elige a la persona, o toca su nombre en **Equipo**. Abajo, en **Día por día**, ves cada día y cada llamada. |
+| ¿Dónde veo los gastos que ya cargué? | En **Gasto en publicidad**, debajo del formulario: el mes completo con su total. |
 | ¿Qué es AOV y por qué no es lo mismo que ticket promedio? | Ticket promedio = revenue ÷ cierres (lo que se firmó). AOV = cash ÷ cierres (lo que se cobró). Firmar y cobrar no son la misma cosa. |
 | ¿Qué es CAC? | Costo de adquisición: gasto en publicidad del período ÷ cantidad de cierres. Sin gasto cargado, no aparece. |
 | ¿Puedo compartir el link del panel con alguien externo? | No. Cada persona necesita su login. Invítalo desde Equipo. |
