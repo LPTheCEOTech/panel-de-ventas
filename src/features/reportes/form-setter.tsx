@@ -12,14 +12,15 @@ import { Derivado, Stepper } from './piezas'
 interface Existente { conversaciones: number; agendas: number }
 
 export function FormSetter({
-  personas, hoy, bloqueadoA, inicial,
-}: { personas: Persona[]; hoy: string; bloqueadoA?: string; inicial?: string }) {
+  personas, hoy, bloqueadoA,
+}: { personas: Persona[]; hoy: string; bloqueadoA?: string }) {
   const router = useRouter()
   const [fecha, setFecha] = useState(hoy)
   // 🔴 Fase C · si el server nos manda `bloqueadoA` es porque el que carga es
   // un miembro y solo puede reportar como sí mismo. El estado arranca con esa
   // persona y no puede cambiar; el <select> se reemplaza por una confirmación.
-  const [personaId, setPersonaId] = useState(bloqueadoA ?? inicial ?? personas[0]?.id ?? '')
+  // El dueño y el manager arrancan sin nadie: «Enviar» no se habilita hasta elegir.
+  const [personaId, setPersonaId] = useState(bloqueadoA ?? '')
   const [conversaciones, setConversaciones] = useState(0)
   const [agendas, setAgendas] = useState(0)
   const [existente, setExistente] = useState<Existente | null>(null)
@@ -91,6 +92,7 @@ export function FormSetter({
               <div className="confirma-persona"><b>{persona?.nombre}</b></div>
             ) : (
               <select id="f-setter" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
+                <option value="" disabled>Elige quién reporta</option>
                 {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
               </select>
             )}

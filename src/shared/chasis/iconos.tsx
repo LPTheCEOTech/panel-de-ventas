@@ -39,3 +39,6 @@ export const IconoIzquierda = svg(<path d="m15 18-6-6 6-6" />, 14)
 export const IconoDerecha = svg(<path d="m9 18 6-6-6-6" />, 14)
 /** El chevrón de «esto se despliega». Chico: va DENTRO de una pastilla. */
 export const IconoAbajo = svg(<path d="m6 9 6 6 6-6" />, 12)
+export const IconoPersona = svg(<><circle cx="12" cy="8" r="4" /><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1" /></>, 14)
+/** Sale de la pantalla: el nombre en Equipo que lleva al Panel filtrado. */
+export const IconoSalida = svg(<path d="M7 17 17 7M8 7h9v9" />, 12)

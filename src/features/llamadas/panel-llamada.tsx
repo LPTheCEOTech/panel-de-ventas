@@ -1,50 +1,49 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+import { leadRepetido } from '@/shared/calculo/leads'
 import { tasa } from '@/shared/calculo/metricas'
-import { IconoAviso, IconoEquis, IconoLapiz } from '@/shared/chasis/iconos'
+import { esFecha, haceCuanto } from '@/shared/calculo/rango'
+import { IconoAviso, IconoLapiz } from '@/shared/chasis/iconos'
 import { dinero, fechaLarga, porcentajeEntero } from '@/shared/formato'
 import type { Llamada, OrigenLead, Persona } from '@/shared/tipos'
 import { CampoDinero } from '@/features/reportes/piezas'
+import { ListaDelDia } from './lista-del-dia'
+import { etiquetaOrigen } from './piezas'
 
 /**
  * 🔴 Fase D · pantalla `/llamada`: formulario chico arriba + lista del día
- * abajo con contador vivo al pie.
+ * abajo con contador vivo al costado.
  *
  * El closer, al terminar una llamada, marca los tres switches, elige el
  * origen del lead, tipea el revenue y el cash, y guarda. Aparece en la
  * lista. Puede borrar (baja lógica) y el contador y el panel se
  * recalculan al instante.
  *
- * `bloqueadoA`: si es miembro, el server ya sabe quién carga y le manda su
- * personaId. Admin puede recibir un `<select>` (o cargar sin bloquear).
+ * 🔴 La lista y el contador SIGUEN al campo Fecha. Antes la pantalla traía
+ * solo las de hoy: al elegir ayer quedaba todo en cero y parecía que las
+ * llamadas se habían perdido. Ahora cambiar la fecha pide ese día.
+ *
+ * `bloqueadoA`: si es vendedor, el server ya sabe quién carga y le manda su
+ * personaId. El dueño y el manager reciben el `<select>`, vacío.
+ * `nombres`: solo para quien carga por otros; con eso cada fila dice de quién es.
  */
 const ORIGENES: readonly OrigenLead[] = ['organico', 'anuncios', 'referidos'] as const
 
-/** 🔴 Sesión 3 · el enum de BD/Zod vive en minúscula sin tildes; los labels
- *  bonitos se resuelven acá. Es la única fuente para los tres textos. */
-export function etiquetaOrigen(v: OrigenLead | ''): string {
-  if (v === 'organico') return 'Orgánico'
-  if (v === 'anuncios') return 'Anuncios'
-  if (v === 'referidos') return 'Referidos'
-  return ''
-}
-
 export function PanelLlamada({
-  personas, hoy, simbolo, iniciales, bloqueadoA, inicial,
+  personas, hoy, simbolo, iniciales, bloqueadoA, nombres,
 }: {
   personas: Persona[]
   hoy: string
   simbolo: string
   iniciales: Llamada[]
   bloqueadoA?: string
-  /** El admin que también vende: arranca elegido, pero puede cambiarlo. */
-  inicial?: string
+  nombres?: Record<string, string>
 }) {
   const router = useRouter()
-  const [personaId, setPersonaId] = useState(bloqueadoA ?? inicial ?? personas[0]?.id ?? '')
+  const [personaId, setPersonaId] = useState(bloqueadoA ?? '')
   const [fecha, setFecha] = useState(hoy)
   const [leadNombre, setLeadNombre] = useState('')
   // 🔴 Sesión 3 · sin default. Arranca vacío para forzar elección activa;
@@ -57,11 +56,15 @@ export function PanelLlamada({
   const [cashCents, setCash] = useState(0)
   const [nota, setNota] = useState('')
   const [guardando, setGuardando] = useState(false)
+  const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [llamadas, setLlamadas] = useState<Llamada[]>(iniciales)
-  const [confirmarBorrado, setConfirmarBorrado] = useState<string | null>(null)
+  // 🔴 Cada cambio de fecha numera su pedido: si se elige el 13 y enseguida
+  // el 12, la respuesta del 13 puede llegar después y pisar la del 12.
+  const pedido = useRef(0)
 
   const persona = personas.find((p) => p.id === personaId)
+  const esHoy = fecha === hoy
 
   // 🔴 Sesión 3 · Plata pegada a «Cerró». Sin la excepción del cobro anterior.
   const mostrarRevenue = cerro
@@ -69,6 +72,11 @@ export function PanelLlamada({
 
   const avisos: string[] = []
   if (cerro && !asistio) avisos.push('Marcaste cerró sin marcar asistió. ¿Cerraste por mensaje después?')
+
+  // Compara contra la lista que está en pantalla: para el dueño y el manager
+  // es todo el equipo; para el vendedor, lo suyo (el caso real: el manager ya
+  // se la cargó a él).
+  const repetida = leadRepetido(leadNombre, llamadas, fecha)
 
   const contador = useMemo(() => {
     let n = 0, a = 0, c = 0, rev = 0, cash = 0
@@ -82,6 +90,29 @@ export function PanelLlamada({
     }
     return { n, a, c, rev, cash, cierre: tasa(c, a) }
   }, [llamadas, fecha])
+
+  async function cambiarFecha(f: string) {
+    setFecha(f)
+    // mientras se teclea, el input de fecha pasa por valores vacíos
+    if (!esFecha(f)) return
+    const n = ++pedido.current
+    setCargando(true); setError(null)
+    try {
+      const r = await fetch(`/api/llamadas?fecha=${f}`)
+      const d = await r.json().catch(() => null)
+      if (n !== pedido.current) return
+      if (!r.ok) {
+        setLlamadas([])
+        setError(d?.error ?? 'No se pudieron leer las llamadas de ese día.')
+        return
+      }
+      setLlamadas(d.llamadas as Llamada[])
+    } catch {
+      if (n === pedido.current) setError('No se pudo hablar con el servidor.')
+    } finally {
+      if (n === pedido.current) setCargando(false)
+    }
+  }
 
   async function guardar() {
     setGuardando(true); setError(null)
@@ -105,7 +136,8 @@ export function PanelLlamada({
       if (!r.ok) { setError(d?.error ?? 'No se pudo guardar.'); return }
       setLlamadas((xs) => [...xs, d.llamada as Llamada])
       // limpia el formulario para la siguiente. `origenLead` vuelve a ''
-      // — es una elección por-llamada, no se autoretiene.
+      // — es una elección por-llamada, no se autoretiene. El closer SÍ se
+      // queda: se cargan varias seguidas del mismo.
       setLeadNombre('')
       setOrigenLead('')
       setAsistio(true); setReagendada(false); setCerro(false)
@@ -117,30 +149,6 @@ export function PanelLlamada({
       setGuardando(false)
     }
   }
-
-  async function borrar(id: string) {
-    setGuardando(true); setError(null)
-    try {
-      const r = await fetch('/api/llamadas', {
-        method: 'DELETE', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ id }),
-      })
-      if (!r.ok) {
-        const d = await r.json().catch(() => null)
-        setError(d?.error ?? 'No se pudo borrar.')
-        return
-      }
-      setLlamadas((xs) => xs.map((l) => (l.id === id ? { ...l, activa: false } : l)))
-      setConfirmarBorrado(null)
-      router.refresh()
-    } catch {
-      setError('No se pudo hablar con el servidor.')
-    } finally {
-      setGuardando(false)
-    }
-  }
-
-  const delDia = llamadas.filter((l) => l.activa && l.fecha === fecha)
 
   return (
     <>
@@ -159,15 +167,16 @@ export function PanelLlamada({
           <div className="section-title">Quién y cuándo</div>
           <div className="form-grid">
             <div className="field c4">
-              <label>Fecha <span className="req">*</span></label>
-              <input type="date" value={fecha} max={hoy} onChange={(e) => setFecha(e.target.value)} />
+              <label htmlFor="ll-fecha">Fecha <span className="req">*</span></label>
+              <input id="ll-fecha" type="date" value={fecha} max={hoy} onChange={(e) => cambiarFecha(e.target.value)} />
             </div>
             <div className="field c8">
-              <label>Closer <span className="req">*</span></label>
+              <label htmlFor="ll-closer">Closer <span className="req">*</span></label>
               {bloqueadoA ? (
                 <div className="confirma-persona"><b>{persona?.nombre}</b></div>
               ) : (
-                <select value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
+                <select id="ll-closer" value={personaId} onChange={(e) => setPersonaId(e.target.value)}>
+                  <option value="" disabled>Elige quién hizo la llamada</option>
                   {personas.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
                 </select>
               )}
@@ -185,6 +194,16 @@ export function PanelLlamada({
               />
             </div>
           </div>
+          {repetida && (
+            <div className="note warn">
+              <IconoAviso />
+              <span>
+                <b>{repetida.leadNombre} ya tiene una llamada cargada el {fechaLarga(fecha)}</b>
+                {nombres ? ` (${nombres[repetida.personaId] ?? 'otro closer'})` : ' a tu nombre'}.
+                Si es la misma, no la cargues de nuevo.
+              </span>
+            </div>
+          )}
 
           {/* 🔴 Sesión 3 · origen del lead. Obligatorio SIN default; el
               botón Guardar está disabled hasta que se elija una opción. */}
@@ -228,8 +247,8 @@ export function PanelLlamada({
 
           <div className="form-grid">
             <div className="field c12 full">
-              <label>Nota (opcional)</label>
-              <input type="text" value={nota} maxLength={500} placeholder="p. ej. cierra el viernes, mandar contrato"
+              <label htmlFor="ll-nota">Nota (opcional)</label>
+              <input id="ll-nota" type="text" value={nota} maxLength={500} placeholder="p. ej. cierra el viernes, mandar contrato"
                 onChange={(e) => setNota(e.target.value)} />
             </div>
           </div>
@@ -249,7 +268,12 @@ export function PanelLlamada({
 
         <div className="lado">
           <div className="card">
-            <div className="card-head"><div><h3>Hoy</h3><p>{fechaLarga(fecha)}</p></div></div>
+            <div className="card-head">
+              <div>
+                <h3>{esHoy ? 'Hoy' : fechaLarga(fecha)}</h3>
+                <p>{esHoy ? fechaLarga(fecha) : haceCuanto(fecha, hoy)}</p>
+              </div>
+            </div>
             <div className="calc apilado">
               <div className="dv principal"><span>Cash del día</span><b className="num">{dinero(contador.cash, simbolo)}</b></div>
               <div className="dv"><span>Llamadas</span><b className="num">{contador.n}</b></div>
@@ -262,56 +286,14 @@ export function PanelLlamada({
         </div>
       </div>
 
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="card-head"><div><h3>Llamadas del día</h3><p>{delDia.length} cargadas</p></div></div>
-        {delDia.length === 0 ? (
-          <div className="empty">
-            <div className="tile" style={{ width: 44, height: 44 }}><IconoLapiz size={22} /></div>
-            <h3>Todavía no cargaste ninguna</h3>
-            <p>Después de cada llamada, marca los switches y guarda. Van apareciendo aquí.</p>
-          </div>
-        ) : (
-          <div className="llamadas-lista">
-            {delDia.map((l, i) => (
-              <div className="llamada-row" key={l.id}>
-                <span className="ll-n">#{i + 1}</span>
-                <span className="ll-lead">{l.leadNombre || '(sin nombre)'}</span>
-                <div className="ll-badges">
-                  <span className={`pill ${l.asistio ? 'set' : 'no'}`}>{l.asistio ? 'asistió' : 'no asistió'}</span>
-                  {l.reagendada && <span className="pill clo">reagendada</span>}
-                  {l.origenLead && (
-                    <span className={`pill org-${l.origenLead}`}>{etiquetaOrigen(l.origenLead).toLowerCase()}</span>
-                  )}
-                  {l.cerro && <span className="pill amb">cerró</span>}
-                </div>
-                <span className="ll-cash num">{l.cashCents > 0 ? dinero(l.cashCents, simbolo) : '—'}</span>
-                <button
-                  className="del" disabled={guardando}
-                  title="Borrar (baja lógica)" aria-label="Borrar"
-                  onClick={() => setConfirmarBorrado(l.id)}
-                >
-                  <IconoEquis />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {confirmarBorrado && (
-          <div className="note warn" style={{ marginTop: 12 }}>
-            <IconoAviso />
-            <span>
-              ¿Borrar esta llamada? Se marca inactiva pero queda en el histórico.
-              <button type="button" className="btn-ghost btn-sm" style={{ marginLeft: 10 }} onClick={() => borrar(confirmarBorrado)} disabled={guardando}>
-                Sí, borrar
-              </button>
-              <button type="button" className="btn-ghost btn-sm" onClick={() => setConfirmarBorrado(null)} disabled={guardando}>
-                Cancelar
-              </button>
-            </span>
-          </div>
-        )}
-      </div>
+      <ListaDelDia
+        llamadas={llamadas} fecha={fecha} esHoy={esHoy} cargando={cargando}
+        simbolo={simbolo} nombres={nombres}
+        onBorrada={(id) => {
+          setLlamadas((xs) => xs.map((l) => (l.id === id ? { ...l, activa: false } : l)))
+          router.refresh()
+        }}
+      />
     </>
   )
 }

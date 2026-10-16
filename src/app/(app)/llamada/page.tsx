@@ -19,7 +19,8 @@ export default async function LlamadaPage() {
   const hoy = hoyEn(config.zonaHoraria)
   const v = ventana('dia', hoy, config.inicioSemana)
 
-  const todas = (await capa.leerPersonas()).filter(
+  const equipo = await capa.leerPersonas()
+  const todas = equipo.filter(
     (p) => p.activo && (p.rol === 'closer' || p.rol === 'ambos')
   )
 
@@ -30,9 +31,16 @@ export default async function LlamadaPage() {
   if (esMiembro && !propia) redirect('/panel')
 
   const personas = esMiembro && propia ? [propia] : todas
+  // 🔴 El dueño y el manager arrancan con el select VACÍO, aunque también
+  // vendan: si arrancaba con su nombre y cargaban por otro sin tocarlo, la
+  // llamada quedaba a su nombre.
   const bloqueadoA = propia?.id ?? undefined
-  // El dueño o el manager que también vende arranca elegido; puede seguir cargando por otros.
-  const inicial = !esMiembro && personas.some((p) => p.id === sesion?.persona?.id) ? sesion?.persona?.id : undefined
+
+  // De quién es cada llamada de la lista. Solo lo ve quien carga por otros
+  // (al vendedor le sobra: siempre es él), y sale de TODAS las personas: una
+  // llamada de alguien dado de baja tiene que seguir diciendo de quién es.
+  const nombres = esMiembro ? undefined
+    : Object.fromEntries(equipo.map((p) => [p.id, p.nombre]))
 
   // Fase D · las llamadas del día para el (miembro) o para todos (admin).
   // La lista arranca poblada — así el contador vivo tiene con qué contar
@@ -72,7 +80,7 @@ export default async function LlamadaPage() {
           simbolo={config.simbolo}
           iniciales={iniciales}
           bloqueadoA={bloqueadoA}
-          inicial={inicial}
+          nombres={nombres}
         />
       )}
     </div>

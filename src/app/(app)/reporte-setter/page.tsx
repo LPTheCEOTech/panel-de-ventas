@@ -21,9 +21,10 @@ export default async function ReporteSetter() {
   const propia = esMiembro ? todas.find((p) => p.id === sesion?.usuario.personaId) ?? null : null
   if (esMiembro && !propia) redirect('/panel')
   const personas = esMiembro && propia ? [propia] : todas
+  // 🔴 El dueño y el manager arrancan con el select VACÍO, aunque también
+  // vendan: si arrancaba con su nombre y cargaban por otro sin tocarlo, el
+  // reporte quedaba a su nombre.
   const bloqueadoA = propia?.id ?? undefined
-  // El dueño o el manager que también vende arranca elegido; puede seguir cargando por otros.
-  const inicial = !esMiembro && personas.some((p) => p.id === sesion?.persona?.id) ? sesion?.persona?.id : undefined
 
   return (
     /* 🔴 `.hoja` cierra la pagina en 1080 px. Un formulario de cuatro campos
@@ -41,7 +42,7 @@ export default async function ReporteSetter() {
       {personas.length === 0 ? (
         <SinPersonas rol="setters" />
       ) : (
-        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} bloqueadoA={bloqueadoA} inicial={inicial} />
+        <FormSetter personas={personas} hoy={hoyEn(config.zonaHoraria)} bloqueadoA={bloqueadoA} />
       )}
     </div>
   )
