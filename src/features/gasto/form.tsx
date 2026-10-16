@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-import { sumarMeses } from '@/shared/calculo/rango'
 import { IconoAviso, IconoLapiz } from '@/shared/chasis/iconos'
 import { dinero, fechaLarga } from '@/shared/formato'
 import type { Gasto } from '@/shared/tipos'
+import { useLista, type Pagina } from '@/features/filtros/use-lista'
 import { CampoDinero, Derivado } from '@/features/reportes/piezas'
 import { HistorialGastos } from './historial'
 
@@ -21,15 +21,16 @@ interface ExistenteGasto { montoCents: number; nota?: string | null }
  *
  * 🔴 Al guardar se QUEDA en la pantalla (antes saltaba al Panel): el que carga
  * quiere ver que quedó bien en la lista. El formulario vuelve a hoy, vacío, y
- * la lista muestra el mes del día guardado.
+ * la lista se vuelve a pedir con el período que tenga elegido.
  */
 export function FormGasto({
-  hoy, simbolo, iniciales,
+  hoy, simbolo, lista: primera, inicioSemana,
 }: {
   hoy: string
   simbolo: string
-  /** Los gastos del mes en curso: la lista arranca poblada desde el servidor. */
-  iniciales: Gasto[]
+  /** La primera página del historial (Este mes): llega con la pantalla. */
+  lista: Pagina<Gasto>
+  inicioSemana: 0 | 1
 }) {
   const router = useRouter()
   const [fecha, setFecha] = useState(hoy)
@@ -39,13 +40,7 @@ export function FormGasto({
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [guardado, setGuardado] = useState<string | null>(null)
-  const mesActual = hoy.slice(0, 7)
-  const [mes, setMes] = useState(mesActual)
-  const [gastos, setGastos] = useState<Gasto[]>(iniciales)
-  const [cargandoMes, setCargandoMes] = useState(false)
-  // 🔴 Cada pedido de mes se numera: con dos flechas seguidas, la respuesta
-  // del primero puede llegar después y pisar la del segundo.
-  const pedido = useRef(0)
+  const lista = useLista<Gasto>('/api/gasto', 'gastos', primera)
   const formulario = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -57,23 +52,6 @@ export function FormGasto({
       .catch(() => { if (vigente) setExistente(null) })
     return () => { vigente = false }
   }, [fecha])
-
-  async function verMes(m: string) {
-    setMes(m)
-    const n = ++pedido.current
-    setCargandoMes(true)
-    try {
-      const r = await fetch(`/api/gasto?mes=${m}`)
-      const d = await r.json().catch(() => null)
-      if (n !== pedido.current) return
-      setGastos(r.ok ? (d.gastos as Gasto[]) : [])
-      if (!r.ok) setError(d?.error ?? 'No se pudieron leer los gastos de ese mes.')
-    } catch {
-      if (n === pedido.current) setError('No se pudo hablar con el servidor. Revisa tu conexión.')
-    } finally {
-      if (n === pedido.current) setCargandoMes(false)
-    }
-  }
 
   /** Tocar un renglón sube ese día al formulario para corregirlo. */
   function elegir(g: Gasto) {
@@ -101,7 +79,7 @@ export function FormGasto({
       }
       setGuardado(`Guardado: ${fechaLarga(fecha)}, ${dinero(montoCents, simbolo)}.`)
       setFecha(hoy); setMontoCents(0); setNota('')
-      verMes(fecha.slice(0, 7))
+      lista.recargar()
       router.refresh()
     } catch {
       setError('No se pudo hablar con el servidor. Revisa tu conexión.')
@@ -200,10 +178,8 @@ export function FormGasto({
       </div>
 
       <HistorialGastos
-        mes={mes} mesActual={mesActual} gastos={gastos} cargando={cargandoMes}
-        simbolo={simbolo} enFormulario={fecha}
-        onMes={(d) => verMes(sumarMeses(mes, d))}
-        onElegir={elegir}
+        lista={lista} hoy={hoy} inicioSemana={inicioSemana}
+        simbolo={simbolo} enFormulario={fecha} onElegir={elegir}
       />
     </>
   )

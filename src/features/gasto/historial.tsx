@@ -1,59 +1,48 @@
-import { diaDeLista, nombreDelMes } from '@/shared/calculo/rango'
-import { IconoDerecha, IconoIzquierda, IconoLapiz } from '@/shared/chasis/iconos'
-import { dinero } from '@/shared/formato'
+'use client'
+
+import { diaDeLista } from '@/shared/calculo/rango'
+import { IconoAviso, IconoInfo, IconoLapiz } from '@/shared/chasis/iconos'
+import { dinero, numero } from '@/shared/formato'
 import type { Gasto } from '@/shared/tipos'
+import { BarraFiltros } from '@/features/filtros/barra-filtros'
+import type { Lista } from '@/features/filtros/use-lista'
 
 /**
- * Los gastos cargados, un mes a la vez. Lo pidió el dueño: «solo me deja
- * poner los gastos, no veo lo que puse para ver si está correcto».
+ * Los gastos cargados, con el mismo filtro de fechas del Panel. Lo pidió el
+ * dueño: «solo me deja poner los gastos, no veo lo que puse para ver si está
+ * correcto». Sin filtro de persona: el gasto es del negocio, no de nadie.
  *
- * Solo dibuja: el mes, la lista y los pedidos los maneja el formulario, que es
- * quien sabe cuándo se guardó algo y tiene que volver a pedir el mes.
+ * Tocar un renglón sube ese día al formulario para corregirlo.
  */
 export function HistorialGastos({
-  mes, mesActual, gastos, cargando, simbolo, enFormulario, onMes, onElegir,
+  lista, hoy, inicioSemana, simbolo, enFormulario, onElegir,
 }: {
-  /** `AAAA-MM` que se está mirando. */
-  mes: string
-  /** El mes en curso: la flecha de adelante se apaga ahí (no hay gastos de mañana). */
-  mesActual: string
-  gastos: Gasto[]
-  cargando: boolean
+  lista: Lista<Gasto>
+  hoy: string
+  inicioSemana: 0 | 1
   simbolo: string
   /** La fecha que está en el formulario: su renglón se marca. */
   enFormulario: string
-  onMes: (delta: -1 | 1) => void
   onElegir: (g: Gasto) => void
 }) {
-  const nombre = nombreDelMes(mes)
-  const total = gastos.reduce((s, g) => s + g.montoCents, 0)
+  const filas = lista.filas
+  const total = filas.reduce((s, g) => s + g.montoCents, 0)
 
   return (
     <div className="card" style={{ marginTop: 16 }}>
       <div className="card-head">
-        <div><h3>Gastos cargados</h3><p>{cargando ? 'cargando…' : 'toca un día para corregirlo'}</p></div>
-        <div className="mes-nav">
-          <button type="button" className="cal-flecha" aria-label="Mes anterior" onClick={() => onMes(-1)}>
-            <IconoIzquierda />
-          </button>
-          <b>{nombre}</b>
-          <button
-            type="button" className="cal-flecha" aria-label="Mes siguiente"
-            disabled={mes >= mesActual} onClick={() => onMes(1)}
-          >
-            <IconoDerecha />
-          </button>
-        </div>
+        <div><h3>Gastos cargados</h3><p>{lista.cargando ? 'cargando…' : 'toca un día para corregirlo'}</p></div>
+        <BarraFiltros lista={lista} hoy={hoy} inicioSemana={inicioSemana} />
       </div>
 
-      {gastos.length === 0 ? (
+      {filas.length === 0 ? (
         <div className="gastos-vacio">
-          {cargando ? 'Buscando los gastos…' : `No hay gastos cargados en ${nombre.toLowerCase()}.`}
+          {lista.cargando ? 'Buscando los gastos…' : 'No hay gastos cargados en este período.'}
         </div>
       ) : (
         <>
           <div className="gastos-lista">
-            {gastos.map((g) => (
+            {filas.map((g) => (
               <button
                 key={g.fecha} type="button" className="gasto-row"
                 aria-current={g.fecha === enFormulario || undefined}
@@ -67,11 +56,22 @@ export function HistorialGastos({
             ))}
           </div>
           <div className="gastos-total">
-            <span>Total de {nombre.split(' ')[0].toLowerCase()}</span>
+            <span>Total del período</span>
             <b className="num">{dinero(total, simbolo)}</b>
           </div>
         </>
       )}
+
+      {lista.total > filas.length && (
+        <div className="note">
+          <IconoInfo />
+          <span>
+            Se muestran los <b>{numero(filas.length)}</b> más recientes de {numero(lista.total)}: el
+            total es de esos. Elige un período más corto para ver el resto.
+          </span>
+        </div>
+      )}
+      {lista.error && <div className="note warn"><IconoAviso /><span>{lista.error}</span></div>}
     </div>
   )
 }

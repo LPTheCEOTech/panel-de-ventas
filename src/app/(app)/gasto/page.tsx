@@ -1,4 +1,6 @@
-import { hoyEn, ventana } from '@/shared/calculo/periodo'
+import { pagina } from '@/shared/calculo/listas'
+import { hoyEn } from '@/shared/calculo/periodo'
+import { resolverRango } from '@/shared/calculo/rango'
 import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
 import { FormGasto } from '@/features/gasto/form'
@@ -10,8 +12,9 @@ export default async function Gasto() {
   const capa = datos()
   const config = await capa.leerConfiguracion()
   const hoy = hoyEn(config.zonaHoraria)
-  // El historial arranca en el mes en curso; los otros meses los pide el cliente.
-  const delMes = await capa.leerGastos(ventana('mes', hoy))
+  // El historial abre en «Este mes»; los otros períodos los pide su filtro.
+  const mes = resolverRango({ atajo: 'mes' }, hoy, config.inicioSemana)
+  const lista = pagina(mes, await capa.leerGastos(mes))
 
   return (
     /* .hoja cierra en 1080 igual que setter/closer: es un formulario, no un tablero. */
@@ -25,7 +28,7 @@ export default async function Gasto() {
         </div>
       </div>
 
-      <FormGasto hoy={hoy} simbolo={config.simbolo} iniciales={delMes} />
+      <FormGasto hoy={hoy} simbolo={config.simbolo} lista={lista} inicioSemana={config.inicioSemana} />
     </div>
   )
 }
