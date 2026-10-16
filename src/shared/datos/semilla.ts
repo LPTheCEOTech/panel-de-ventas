@@ -34,11 +34,17 @@ export const PERSONAS_DEMO: Persona[] = [
   { id: 'demo-carlos',    nombre: 'Carlos Méndez', rol: 'closer', activo: true, orden: 6 },
 ]
 
-/** [conversaciones por día, agendas por día] — la suma es el total de la semana. */
-const SETTERS: Record<string, [number[], number[]]> = {
-  'demo-sofia':     [[20, 19, 18, 17, 16, 15, 14], [7, 6, 6, 5, 5, 5, 4]], // 119 / 38
-  'demo-mateo':     [[18, 18, 18, 17, 17, 16, 16], [6, 6, 5, 5, 5, 5, 4]], // 120 / 36
-  'demo-valentina': [[16, 16, 15, 15, 14, 14, 13], [5, 5, 5, 4, 4, 4, 3]], // 103 / 30
+/**
+ * [conversaciones, agendas, calificadas] por día — la suma es el total de la semana.
+ *
+ * 🔴 Las calificadas (37 + 35 + 28 = 100) cumplen tres cosas a la vez: cada día
+ * ≤ sus agendas, ≥ las 96 llamadas de la semana (si no, «de calif.» pasaría
+ * de 100%), y el ranking por calificadas queda en el mismo orden que por agendas.
+ */
+const SETTERS: Record<string, [number[], number[], number[]]> = {
+  'demo-sofia':     [[20, 19, 18, 17, 16, 15, 14], [7, 6, 6, 5, 5, 5, 4], [7, 6, 6, 5, 5, 4, 4]], // 119 / 38 / 37
+  'demo-mateo':     [[18, 18, 18, 17, 17, 16, 16], [6, 6, 5, 5, 5, 5, 4], [6, 5, 5, 5, 5, 5, 4]], // 120 / 36 / 35
+  'demo-valentina': [[16, 16, 15, 15, 14, 14, 13], [5, 5, 5, 4, 4, 4, 3], [5, 4, 5, 4, 4, 3, 3]], // 103 / 30 / 28
 }
 
 /** [llamadas, asistieron, reagendadas, cierres, cash en DÓLARES] por día. */
@@ -74,12 +80,13 @@ const CLOSERS: Record<string, [number[], number[], number[], number[], number[]]
 const TICKET_CENTS = 300_000
 
 export const REPORTES_SETTER_DEMO: ReporteSetter[] = Object.entries(SETTERS).flatMap(
-  ([personaId, [convs, agendas]]) =>
+  ([personaId, [convs, agendas, calificadas]]) =>
     SEMANA_ORO.map((fecha, i) => ({
       fecha,
       personaId,
       conversaciones: convs[i],
       agendas: agendas[i],
+      calificadas: calificadas[i],
     }))
 )
 
@@ -243,10 +250,12 @@ export const ORO = {
     { nombre: 'Diego Torres',  cash: 14_400_00, cierres: 8,  tasaCierre: '35%' },
     { nombre: 'Carlos Méndez', cash: 7_200_00,  cierres: 4,  tasaCierre: '29%' },
   ],
+  // Agendas calificadas (009). 100 ÷ 104 = 96.15% · 96 llamadas ÷ 100 = 96%.
+  calificadas: 100, tasaCalificacion: '96.2%', llamadasSobreCalificadas: '96%',
   setters: [
-    { nombre: 'Sofía Lara',    agendas: 38, leads: 119, tasaAgenda: '32%' },
-    { nombre: 'Mateo Gil',     agendas: 36, leads: 120, tasaAgenda: '30%' },
-    { nombre: 'Valentina Paz', agendas: 30, leads: 103, tasaAgenda: '29%' },
+    { nombre: 'Sofía Lara',    agendas: 38, leads: 119, tasaAgenda: '32%', calificadas: 37, tasaCalificacion: '97%' },
+    { nombre: 'Mateo Gil',     agendas: 36, leads: 120, tasaAgenda: '30%', calificadas: 35, tasaCalificacion: '97%' },
+    { nombre: 'Valentina Paz', agendas: 30, leads: 103, tasaAgenda: '29%', calificadas: 28, tasaCalificacion: '93%' },
   ],
   cashPorDia: [5_200_00, 7_200_00, 6_300_00, 8_700_00, 6_600_00, 4_500_00, 2_900_00],
   // Fase A · gasto y derivados. En centavos, como todo el resto de la plata.

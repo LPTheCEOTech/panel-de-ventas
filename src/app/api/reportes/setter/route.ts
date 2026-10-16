@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   if (permiso instanceof NextResponse) return permiso
   const personaId = personaPermitida(permiso, p.data.personaId)
   if (!personaId) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
-  const datosGuardar = { ...p.data, personaId }
+  const datosGuardar = { ...p.data, personaId, calificadas: null }
 
   try {
     // upsert: si el día ya existe se reemplaza. La restricción única de la base

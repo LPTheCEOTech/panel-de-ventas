@@ -21,6 +21,10 @@ export function tasa(numerador: number, divisor: number): Tasa {
 export interface Totales {
   leads: number
   agendas: number
+  /** Suma de las calificadas MEDIDAS. Un día sin medir no suma (ni resta). */
+  calificadas: number
+  /** Las agendas de los días que sí midieron calificadas: el divisor honesto. */
+  agendasMedidas: number
   llamadas: number
   asistieron: number
   reagendadas: number
@@ -35,6 +39,18 @@ export interface Metricas extends Totales {
   tasaCierre: Tasa
   /** Llamadas ÷ agendas. El mockup lo muestra en el embudo como "de agenda". */
   llamadasSobreAgendas: Tasa
+  /** Calificadas ÷ agendas de los días medidos. `null` si no se midió nada. */
+  tasaCalificacion: Tasa
+  /**
+   * Llamadas ÷ calificadas («de calif.»). 🔴 Solo con cobertura completa: con
+   * medio período medido, las llamadas de TODO el período contra las
+   * calificadas de la mitad darían 200 o 400%. Si no, `null`.
+   */
+  llamadasSobreCalificadas: Tasa
+  /** Hay al menos un reporte con calificadas en el período. Gobierna si se ve lo nuevo. */
+  midioCalificadas: boolean
+  /** Todas las agendas del período tienen su día medido. */
+  coberturaCompleta: boolean
   porcentajeCobro: Tasa
   /** En centavos, o `null` si no hubo cierres. */
   ticketPromedioCents: number | null
@@ -59,7 +75,7 @@ export interface MetricasConCosto extends Metricas {
 }
 
 const CERO: Totales = {
-  leads: 0, agendas: 0, llamadas: 0, asistieron: 0,
+  leads: 0, agendas: 0, calificadas: 0, agendasMedidas: 0, llamadas: 0, asistieron: 0,
   reagendadas: 0, cierres: 0, revenueCents: 0, cashCents: 0,
 }
 
@@ -71,6 +87,10 @@ export function totales(
   for (const r of setters) {
     t.leads += r.conversaciones
     t.agendas += r.agendas
+    if (medido(r)) {
+      t.calificadas += r.calificadas
+      t.agendasMedidas += r.agendas
+    }
   }
   for (const r of closers) {
     t.llamadas += r.llamadas
@@ -83,17 +103,37 @@ export function totales(
   return t
 }
 
+/**
+ * 🔴 `typeof`, no `!== null`: un reporte guardado antes de que existiera el
+ * campo (el archivo de la demo, una fila vieja) trae `undefined`, y también
+ * es «no se midió».
+ */
+export function medido(r: ReporteSetter): r is ReporteSetter & { calificadas: number } {
+  return typeof r.calificadas === 'number'
+}
+
+/** Si algún reporte del período midió calificadas. Decide si el panel muestra lo nuevo. */
+export function midieronCalificadas(setters: readonly ReporteSetter[]): boolean {
+  return setters.some(medido)
+}
+
 export function metricas(
   setters: readonly ReporteSetter[],
   closers: readonly ReporteCloser[]
 ): Metricas {
   const t = totales(setters, closers)
+  const midio = midieronCalificadas(setters)
+  const completa = midio && t.agendasMedidas === t.agendas
   return {
     ...t,
     tasaAgenda: tasa(t.agendas, t.leads),
     tasaAsistencia: tasa(t.asistieron, t.llamadas),
     tasaCierre: tasa(t.cierres, t.asistieron),
     llamadasSobreAgendas: tasa(t.llamadas, t.agendas),
+    tasaCalificacion: midio ? tasa(t.calificadas, t.agendasMedidas) : null,
+    llamadasSobreCalificadas: completa ? tasa(t.llamadas, t.calificadas) : null,
+    midioCalificadas: midio,
+    coberturaCompleta: completa,
     porcentajeCobro: tasa(t.cashCents, t.revenueCents),
     ticketPromedioCents: t.cierres > 0 ? Math.round(t.revenueCents / t.cierres) : null,
   }
@@ -116,7 +156,7 @@ export interface FilaRanking {
   persona: Persona
   valor: number
   /** Lo de abajo del nombre. Se arma en el componente, no acá. */
-  detalle: { cierres?: number; tasa: Tasa; leads?: number }
+  detalle: { cierres?: number; tasa: Tasa; leads?: number; agendas?: number }
 }
 
 /** Closers ordenados por cash collected. Todos los que tuvieron actividad. */
@@ -146,11 +186,19 @@ export function rankingClosers(
   return filas.sort((a, b) => b.valor - a.valor || a.persona.nombre.localeCompare(b.persona.nombre))
 }
 
-/** Setters ordenados por agendas. */
+/**
+ * Setters ordenados por agendas — o por CALIFICADAS, si el período midió algo.
+ *
+ * 🔴 Con calificadas, el valor es la suma de las medidas y el detalle lleva las
+ * agendas y el % calificado de cada uno (sobre SUS agendas medidas). Un día sin
+ * medir suma 0 al orden: en la práctica todo el equipo empieza a cargar el
+ * mismo día, el de la actualización. `detalle.agendas` presente = modo calificadas.
+ */
 export function rankingSetters(
   personas: readonly Persona[],
   reportes: readonly ReporteSetter[]
 ): FilaRanking[] {
+  const porCalificadas = midieronCalificadas(reportes)
   const porPersona = new Map<string, ReporteSetter[]>()
   for (const r of reportes) {
     const lista = porPersona.get(r.personaId)
@@ -162,11 +210,17 @@ export function rankingSetters(
     const persona = personas.find((p) => p.id === id)
     if (!persona) continue
     const t = totales(rs, [])
-    filas.push({
-      persona,
-      valor: t.agendas,
-      detalle: { tasa: tasa(t.agendas, t.leads), leads: t.leads },
-    })
+    filas.push(porCalificadas
+      ? {
+          persona,
+          valor: t.calificadas,
+          detalle: { tasa: tasa(t.calificadas, t.agendasMedidas), leads: t.leads, agendas: t.agendas },
+        }
+      : {
+          persona,
+          valor: t.agendas,
+          detalle: { tasa: tasa(t.agendas, t.leads), leads: t.leads },
+        })
   }
   return filas.sort((a, b) => b.valor - a.valor || a.persona.nombre.localeCompare(b.persona.nombre))
 }
@@ -286,7 +340,12 @@ function escalar(crudas: { clave: string; etiqueta: string; cashCents: number }[
 
 // ---------------------------------------------------------------- embudo
 
+/** De qué es el paso. El CSS colorea por esta clave, no por posición. */
+export type ClavePaso =
+  | 'gasto' | 'leads' | 'agendas' | 'calificadas' | 'llamadas' | 'asistieron' | 'cierres' | 'cash'
+
 export interface PasoEmbudo {
+  clave: ClavePaso
   nombre: string
   valor: number
   /** Ancho de la barra, 0-100, relativo al primer paso. */
@@ -323,16 +382,26 @@ export function embudo(m: Metricas, gastoCents?: number): PasoEmbudo[] {
   const gasto: PasoEmbudo[] = gastoCents === undefined ? [] : [
     // «Publicidad» y no «Gasto en publicidad»: la columna del nombre mide 126 px
     // y el nombre largo partiría en dos renglones.
-    { nombre: 'Publicidad', valor: gastoCents, ancho: 0, conversion: null, esDinero: true, esGasto: true },
+    { clave: 'gasto', nombre: 'Publicidad', valor: gastoCents, ancho: 0, conversion: null, esDinero: true, esGasto: true },
   ]
+  // 🔴 El escalón Calificadas solo existe si el período midió algo: sin medir,
+  // el embudo es EXACTAMENTE el de antes. Y Llamadas se compara contra las
+  // calificadas solo con cobertura completa (ver `llamadasSobreCalificadas`).
+  const calificadas: PasoEmbudo[] = m.midioCalificadas
+    ? [{ clave: 'calificadas', nombre: 'Calificadas', valor: m.calificadas, ancho: ancho(m.calificadas), conversion: { etiqueta: 'calif.', tasa: m.tasaCalificacion } }]
+    : []
+  const deLlamadas = m.coberturaCompleta
+    ? { etiqueta: 'de calif.', tasa: m.llamadasSobreCalificadas }
+    : { etiqueta: 'de agenda', tasa: m.llamadasSobreAgendas }
   return [
     ...gasto,
-    { nombre: 'Leads', valor: m.leads, ancho: base > 0 ? 100 : 4, conversion: { etiqueta: '', tasa: base > 0 ? 1 : null } },
-    { nombre: 'Agendas', valor: m.agendas, ancho: ancho(m.agendas), conversion: { etiqueta: 'agenda', tasa: m.tasaAgenda } },
-    { nombre: 'Llamadas', valor: m.llamadas, ancho: ancho(m.llamadas), conversion: { etiqueta: 'de agenda', tasa: m.llamadasSobreAgendas } },
-    { nombre: 'Asistieron', valor: m.asistieron, ancho: ancho(m.asistieron), conversion: { etiqueta: 'asist.', tasa: m.tasaAsistencia } },
-    { nombre: 'Cierres', valor: m.cierres, ancho: ancho(m.cierres), conversion: { etiqueta: 'cierre', tasa: m.tasaCierre } },
-    { nombre: 'Cash', valor: m.cashCents, ancho: Math.max(4, anchoCash), conversion: { etiqueta: 'cobro', tasa: m.porcentajeCobro }, esDinero: true },
+    { clave: 'leads', nombre: 'Leads', valor: m.leads, ancho: base > 0 ? 100 : 4, conversion: { etiqueta: '', tasa: base > 0 ? 1 : null } },
+    { clave: 'agendas', nombre: 'Agendas', valor: m.agendas, ancho: ancho(m.agendas), conversion: { etiqueta: 'agenda', tasa: m.tasaAgenda } },
+    ...calificadas,
+    { clave: 'llamadas', nombre: 'Llamadas', valor: m.llamadas, ancho: ancho(m.llamadas), conversion: deLlamadas },
+    { clave: 'asistieron', nombre: 'Asistieron', valor: m.asistieron, ancho: ancho(m.asistieron), conversion: { etiqueta: 'asist.', tasa: m.tasaAsistencia } },
+    { clave: 'cierres', nombre: 'Cierres', valor: m.cierres, ancho: ancho(m.cierres), conversion: { etiqueta: 'cierre', tasa: m.tasaCierre } },
+    { clave: 'cash', nombre: 'Cash', valor: m.cashCents, ancho: Math.max(4, anchoCash), conversion: { etiqueta: 'cobro', tasa: m.porcentajeCobro }, esDinero: true },
   ]
 }
 

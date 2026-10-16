@@ -11,11 +11,14 @@ import {
 import { dineroCorto, dinero, porcentaje, porcentajeEntero, puntos, EL_GUION, iniciales, tituloDeVentana } from '../formato'
 import {
   agregarLlamadas, aov, barrasPorDia, barrasPorSemana, cac, costoPorLlamadaAsistida,
-  delta, embudo, metricas, metricasConCosto, rankingClosers, rankingSetters, tasa,
+  delta, embudo, medido, metricas, metricasConCosto, rankingClosers, rankingSetters, tasa,
 } from './metricas'
 import { diasDe, ventana, ventanaAnterior } from './periodo'
 
 const V = { desde: SEMANA_ORO[0], hasta: SEMANA_ORO[6] }
+
+/** La semana de oro como se veía antes de la 009: ningún día midió calificadas. */
+const SIN_MEDIR = REPORTES_SETTER_DEMO.map((r) => ({ ...r, calificadas: null }))
 
 test('la semilla tiene exactamente 42 filas', () => {
   assert.equal(REPORTES_SETTER_DEMO.length + REPORTES_CLOSER_DEMO.length, ORO.filas)
@@ -70,8 +73,8 @@ test('el ranking de closers da el orden y los montos del mockup', () => {
   })
 })
 
-test('el ranking de setters da el orden, las agendas y los leads del mockup', () => {
-  const filas = rankingSetters(PERSONAS_DEMO, REPORTES_SETTER_DEMO)
+test('sin calificadas, el ranking de setters da el orden, las agendas y los leads del mockup', () => {
+  const filas = rankingSetters(PERSONAS_DEMO, SIN_MEDIR)
   assert.equal(filas.length, 3)
   filas.forEach((f, i) => {
     assert.equal(f.persona.nombre, ORO.setters[i].nombre)
@@ -112,8 +115,8 @@ test('en modo Mes las barras se agrupan por semana, no una por día', () => {
   assert.equal(conPlata[0].altura, 100)
 })
 
-test('el embudo tiene los 6 pasos del mockup, en orden', () => {
-  const pasos = embudo(metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO))
+test('sin calificadas, el embudo tiene los 6 pasos del mockup, en orden', () => {
+  const pasos = embudo(metricas(SIN_MEDIR, REPORTES_CLOSER_DEMO))
   assert.deepEqual(pasos.map((p) => p.nombre), ['Leads','Agendas','Llamadas','Asistieron','Cierres','Cash'])
   assert.equal(pasos[0].ancho, 100)
   assert.equal(pasos[5].valor, ORO.cash)
@@ -278,7 +281,7 @@ test('Fase A · gasto = 0 no rompe: CAC y c-asistida quedan en 0, AOV sigue vivo
 })
 
 test('Fase A · el embudo con gasto tiene 7 pasos y el 0 es Publicidad sin barra', () => {
-  const m = metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO)
+  const m = metricas(SIN_MEDIR, REPORTES_CLOSER_DEMO)
   const pasos = embudo(m, ORO.gastoSemana)
   assert.deepEqual(pasos.map((p) => p.nombre),
     ['Publicidad', 'Leads', 'Agendas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
@@ -289,4 +292,96 @@ test('Fase A · el embudo con gasto tiene 7 pasos y el 0 es Publicidad sin barra
   // el resto queda igual: la escala sigue siendo Leads = 100
   assert.equal(pasos[1].nombre, 'Leads')
   assert.equal(pasos[1].ancho, 100)
+})
+
+// ---------------------------------------------------------------- 009 · calificadas
+
+test('009 · 🔴 sin ningún día medido, el panel es EXACTAMENTE el de antes', () => {
+  const antes = metricas(SIN_MEDIR, REPORTES_CLOSER_DEMO)
+  assert.equal(antes.midioCalificadas, false)
+  assert.equal(antes.coberturaCompleta, false)
+  assert.equal(antes.tasaCalificacion, null)
+  assert.equal(antes.llamadasSobreCalificadas, null)
+  assert.equal(antes.calificadas, 0)
+  // lo de siempre no se movió
+  assert.equal(porcentaje(antes.tasaAgenda), ORO.tasaAgenda)
+  assert.equal(porcentajeEntero(antes.llamadasSobreAgendas), ORO.llamadasSobreAgendas)
+  const llamadas = embudo(antes).find((p) => p.nombre === 'Llamadas')
+  assert.deepEqual(llamadas?.conversion, { etiqueta: 'de agenda', tasa: antes.llamadasSobreAgendas })
+  assert.ok(rankingSetters(PERSONAS_DEMO, SIN_MEDIR).every((f) => f.detalle.agendas === undefined))
+})
+
+test('009 · la semana de oro medida entera da los números de oro', () => {
+  const m = metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO)
+  assert.equal(m.midioCalificadas, true)
+  assert.equal(m.coberturaCompleta, true)
+  assert.equal(m.calificadas, ORO.calificadas)
+  assert.equal(m.agendasMedidas, ORO.agendas)
+  assert.equal(porcentaje(m.tasaCalificacion), ORO.tasaCalificacion)
+  assert.equal(porcentajeEntero(m.llamadasSobreCalificadas), ORO.llamadasSobreCalificadas)
+  // 🔴 Leandro: asistencia, cierre y cobro NO cambian
+  assert.equal(porcentaje(m.tasaAsistencia), ORO.tasaAsistencia)
+  assert.equal(porcentaje(m.tasaCierre), ORO.tasaCierre)
+  assert.equal(porcentajeEntero(m.porcentajeCobro), ORO.cobro)
+})
+
+test('009 · el embudo suma el escalón Calificadas y Llamadas pasa a «de calif.»', () => {
+  const pasos = embudo(metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO), ORO.gastoSemana)
+  assert.deepEqual(pasos.map((p) => p.nombre),
+    ['Publicidad', 'Leads', 'Agendas', 'Calificadas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
+  assert.deepEqual(pasos.map((p) => p.clave),
+    ['gasto', 'leads', 'agendas', 'calificadas', 'llamadas', 'asistieron', 'cierres', 'cash'])
+  const calif = pasos[3]
+  assert.equal(calif.valor, 100)
+  assert.equal(calif.conversion?.etiqueta, 'calif.')
+  assert.equal(porcentajeEntero(calif.conversion?.tasa ?? null), '96%')
+  const llamadas = pasos[4]
+  assert.equal(llamadas.conversion?.etiqueta, 'de calif.')
+  assert.equal(porcentajeEntero(llamadas.conversion?.tasa ?? null), ORO.llamadasSobreCalificadas)
+})
+
+test('009 · el ranking de setters pasa a ordenar por calificadas', () => {
+  const filas = rankingSetters(PERSONAS_DEMO, REPORTES_SETTER_DEMO)
+  assert.equal(filas.length, 3)
+  filas.forEach((f, i) => {
+    assert.equal(f.persona.nombre, ORO.setters[i].nombre)
+    assert.equal(f.valor, ORO.setters[i].calificadas)
+    assert.equal(f.detalle.agendas, ORO.setters[i].agendas)
+    assert.equal(f.detalle.leads, ORO.setters[i].leads)
+    assert.equal(porcentajeEntero(f.detalle.tasa), ORO.setters[i].tasaCalificacion)
+  })
+})
+
+test('009 · 🔴 con medio período medido, la tasa sale de lo medido y Llamadas sigue «de agenda»', () => {
+  // la semana se midió del jueves en adelante: lunes a miércoles quedan sin medir
+  const mezcla = REPORTES_SETTER_DEMO.map((r) => (r.fecha < '2026-07-23' ? { ...r, calificadas: null } : r))
+  const m = metricas(mezcla, REPORTES_CLOSER_DEMO)
+  // jue-dom: agendas 5+5+5+4 · 5+5+5+4 · 4+4+4+3 = 53; calificadas 5+5+4+4 · 5+5+5+4 · 4+4+3+3 = 51
+  assert.equal(m.midioCalificadas, true)
+  assert.equal(m.coberturaCompleta, false)
+  assert.equal(m.agendas, ORO.agendas) // las agendas totales no se tocan
+  assert.equal(m.agendasMedidas, 53)
+  assert.equal(m.calificadas, 51)
+  assert.equal(porcentaje(m.tasaCalificacion), '96.2%') // 51 ÷ 53, NO 51 ÷ 104
+  assert.equal(m.llamadasSobreCalificadas, null) // 96 ÷ 51 daría 188%
+  const pasos = embudo(m)
+  assert.deepEqual(pasos.map((p) => p.nombre), ['Leads', 'Agendas', 'Calificadas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
+  assert.deepEqual(pasos[3].conversion, { etiqueta: 'de agenda', tasa: m.llamadasSobreAgendas })
+})
+
+test('009 · 🔴 divisores 0 y reportes viejos sin el campo', () => {
+  // un día medido sin agendas: se midió, pero no hay de qué sacar porcentaje
+  const cero = metricas([{ fecha: '2026-10-16', personaId: 'x', conversaciones: 4, agendas: 0, calificadas: 0 }], [])
+  assert.equal(cero.midioCalificadas, true)
+  assert.equal(cero.tasaCalificacion, null)
+  assert.equal(cero.llamadasSobreCalificadas, null)
+  assert.equal(porcentaje(cero.tasaCalificacion), EL_GUION)
+  // un reporte guardado antes de que existiera el campo trae `undefined`: tampoco se midió
+  const viejo = { fecha: '2026-10-16', personaId: 'x', conversaciones: 4, agendas: 2 } as unknown as Parameters<typeof medido>[0]
+  assert.equal(medido(viejo), false)
+  assert.equal(metricas([viejo], []).midioCalificadas, false)
+  // nada de nada
+  const vacio = metricas([], [])
+  assert.equal(vacio.midioCalificadas, false)
+  assert.equal(vacio.tasaCalificacion, null)
 })

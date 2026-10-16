@@ -16,6 +16,13 @@ export interface ReporteSetter {
   personaId: string
   conversaciones: number
   agendas: number
+  /**
+   * Cuántas de esas agendas fueron calificadas (las que se quedan en el
+   * calendario). 🔴 `null` = ese día NO se midió: un reporte de antes de la
+   * actualización 009, o una base que todavía no la aplicó. Nunca 0 por
+   * defecto: un 0 diría «agendó 8 y ninguna servía» y tiraría la tasa al piso.
+   */
+  calificadas: number | null
 }
 
 /** Un reporte de fin de día de un closer. Uno por persona y por fecha. */

@@ -33,7 +33,7 @@ type FilaLlamada = {
 
 const aSetter = (f: FilaSetter): ReporteSetter => ({
   fecha: f.fecha, personaId: f.persona_id,
-  conversaciones: f.conversaciones, agendas: f.agendas,
+  conversaciones: f.conversaciones, agendas: f.agendas, calificadas: null,
 })
 
 const aCloser = (f: FilaCloser): ReporteCloser => ({
