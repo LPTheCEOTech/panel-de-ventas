@@ -746,6 +746,20 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .ll-quien span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
+/* 🔴 Con un periodo de varios dias, la lista se parte por dia: el encabezado
+   dice el dia, cuantas llamadas y cuanto entro. Es el «recuento del dia a dia»
+   que el manager armaba a mano. */
+.ll-dia{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:14px 4px 6px;border-bottom:1px solid var(--border)}
+
+.ll-dia:first-child{padding-top:2px}
+
+.ll-dia b{font-family:var(--display);font-size:13px;font-weight:800;letter-spacing:-.2px}
+
+.ll-dia span{font-size:11.5px;color:var(--faint)}
+
+.ll-dia span b{font-family:var(--body);font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:0}
+
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 
@@ -818,12 +832,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .form-actions .helper.ok{color:var(--m6);font-weight:600}
 
 /* ---------- gastos cargados ---------- */
-/* Un mes a la vez, con las mismas flechas del calendario. Cada renglon es un
+/* El periodo lo elige el mismo filtro de fechas del Panel. Cada renglon es un
    boton: tocarlo sube ese dia al formulario para corregirlo. */
-.mes-nav{display:inline-flex;align-items:center;gap:2px}
-
-.mes-nav b{font-family:var(--display);font-size:13px;font-weight:700;min-width:124px;text-align:center}
-
 .gastos-lista{display:flex;flex-direction:column}
 
 .gasto-row{display:grid;grid-template-columns:120px minmax(0,1fr) 110px 22px;align-items:center;
@@ -857,6 +867,41 @@ button,input,select,textarea{font:inherit;color:inherit}
 .gastos-total b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px}
 
 .gastos-vacio{padding:18px 8px;font-size:12.5px;color:var(--faint);text-align:center}
+
+/* ---------- reportes cargados (setter) ---------- */
+/* Un renglon por setter y por dia. Como en el gasto, cada renglon es un
+   boton: tocarlo sube ese reporte al formulario para corregirlo. */
+.rep{overflow-x:auto}
+
+.rep-h,.rep-row{display:grid;
+  grid-template-columns:minmax(104px,1fr) minmax(0,1.5fr) repeat(3,minmax(84px,1fr)) 22px;
+  align-items:center;gap:12px;min-width:560px;padding:10px 8px}
+
+.rep-h{padding-top:0;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--faint);border-bottom:1px solid var(--border)}
+
+.rep-h span:nth-child(n+3),.rep-row > span:nth-child(n+3){text-align:right}
+
+.rep-row{width:100%;background:none;border:0;border-bottom:1px solid var(--line);
+  font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
+
+.rep-row:last-child{border-bottom:0}
+
+.rep-row:hover{background:var(--hueco)}
+
+.rep-row:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+
+.rep-row[aria-current="true"]{background:var(--m1)}
+
+.rep-row svg{justify-self:end;color:var(--faint)}
+
+.rep-row:hover svg{color:var(--m6)}
+
+.rep-row .ll-quien svg{justify-self:auto}
+
+.rep-f{font-weight:600}
+
+.rep-tasa{font-family:var(--display);font-weight:800}
 
 /* ---------- equipo ---------- */
 /* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es

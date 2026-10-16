@@ -549,6 +549,15 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   color:var(--muted)}
 .ll-quien svg{color:var(--faint);flex-shrink:0}
 .ll-quien span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 🔴 Con un periodo de varios dias, la lista se parte por dia: el encabezado
+   dice el dia, cuantas llamadas y cuanto entro. Es el «recuento del dia a dia»
+   que el manager armaba a mano. */
+.ll-dia{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  padding:14px 4px 6px;border-bottom:1px solid var(--border)}
+.ll-dia:first-child{padding-top:2px}
+.ll-dia b{font-family:var(--display);font-size:13px;font-weight:800;letter-spacing:-.2px}
+.ll-dia span{font-size:11.5px;color:var(--faint)}
+.ll-dia span b{font-family:var(--body);font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:0}
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 .step button{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;height:38px;
@@ -597,10 +606,8 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .form-actions .helper.ok{color:var(--m6);font-weight:600}
 
 /* ---------- gastos cargados ---------- */
-/* Un mes a la vez, con las mismas flechas del calendario. Cada renglon es un
+/* El periodo lo elige el mismo filtro de fechas del Panel. Cada renglon es un
    boton: tocarlo sube ese dia al formulario para corregirlo. */
-.mes-nav{display:inline-flex;align-items:center;gap:2px}
-.mes-nav b{font-family:var(--display);font-size:13px;font-weight:700;min-width:124px;text-align:center}
 .gastos-lista{display:flex;flex-direction:column}
 .gasto-row{display:grid;grid-template-columns:120px minmax(0,1fr) 110px 22px;align-items:center;
   gap:12px;width:100%;padding:10px 8px;background:none;border:0;border-bottom:1px solid var(--line);
@@ -620,6 +627,28 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   color:var(--faint)}
 .gastos-total b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px}
 .gastos-vacio{padding:18px 8px;font-size:12.5px;color:var(--faint);text-align:center}
+
+/* ---------- reportes cargados (setter) ---------- */
+/* Un renglon por setter y por dia. Como en el gasto, cada renglon es un
+   boton: tocarlo sube ese reporte al formulario para corregirlo. */
+.rep{overflow-x:auto}
+.rep-h,.rep-row{display:grid;
+  grid-template-columns:minmax(104px,1fr) minmax(0,1.5fr) repeat(3,minmax(84px,1fr)) 22px;
+  align-items:center;gap:12px;min-width:560px;padding:10px 8px}
+.rep-h{padding-top:0;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--faint);border-bottom:1px solid var(--border)}
+.rep-h span:nth-child(n+3),.rep-row > span:nth-child(n+3){text-align:right}
+.rep-row{width:100%;background:none;border:0;border-bottom:1px solid var(--line);
+  font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
+.rep-row:last-child{border-bottom:0}
+.rep-row:hover{background:var(--hueco)}
+.rep-row:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+.rep-row[aria-current="true"]{background:var(--m1)}
+.rep-row svg{justify-self:end;color:var(--faint)}
+.rep-row:hover svg{color:var(--m6)}
+.rep-row .ll-quien svg{justify-self:auto}
+.rep-f{font-weight:600}
+.rep-tasa{font-family:var(--display);font-weight:800}
 
 /* ---------- equipo ---------- */
 /* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es
@@ -1024,7 +1053,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="fechas">
           <button class="fechas-btn" aria-haspopup="dialog" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
           <div class="fechas-pop" role="dialog" aria-label="Elegir período">
-            <div class="atajos"><button aria-pressed="false">Hoy</button><button aria-pressed="true">Esta semana</button><button aria-pressed="false">Este mes</button><button aria-pressed="false">Mes pasado</button><button aria-pressed="false">Últimos 30 días</button><button aria-pressed="false">Este año</button><button aria-pressed="false">Todo</button></div>
+            <div class="atajos"><button aria-pressed="false">Hoy</button><button aria-pressed="false">Ayer</button><button aria-pressed="true">Esta semana</button><button aria-pressed="false">Este mes</button><button aria-pressed="false">Mes pasado</button><button aria-pressed="false">Últimos 30 días</button><button aria-pressed="false">Este año</button><button aria-pressed="false">Todo</button></div>
             <div class="cal-meses"><div class="cal-mes"><div class="cal-mes-h"><button class="cal-flecha atras" aria-label="Mes anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><b>Junio 2026</b><button class="cal-flecha adelante" aria-label="Mes siguiente" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="cal-grilla"><span class="dow">L</span><span class="dow">M</span><span class="dow">X</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span><button class="cal-dia">1</button><button class="cal-dia">2</button><button class="cal-dia">3</button><button class="cal-dia">4</button><button class="cal-dia">5</button><button class="cal-dia">6</button><button class="cal-dia">7</button><button class="cal-dia">8</button><button class="cal-dia">9</button><button class="cal-dia">10</button><button class="cal-dia">11</button><button class="cal-dia">12</button><button class="cal-dia">13</button><button class="cal-dia">14</button><button class="cal-dia">15</button><button class="cal-dia">16</button><button class="cal-dia">17</button><button class="cal-dia">18</button><button class="cal-dia">19</button><button class="cal-dia">20</button><button class="cal-dia">21</button><button class="cal-dia">22</button><button class="cal-dia">23</button><button class="cal-dia">24</button><button class="cal-dia">25</button><button class="cal-dia">26</button><button class="cal-dia">27</button><button class="cal-dia">28</button><button class="cal-dia">29</button><button class="cal-dia">30</button></div></div><div class="cal-mes"><div class="cal-mes-h"><button class="cal-flecha atras" aria-label="Mes anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><b>Julio 2026</b><button class="cal-flecha adelante" aria-label="Mes siguiente" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div><div class="cal-grilla"><span class="dow">L</span><span class="dow">M</span><span class="dow">X</span><span class="dow">J</span><span class="dow">V</span><span class="dow">S</span><span class="dow">D</span><span></span><span></span><button class="cal-dia">1</button><button class="cal-dia">2</button><button class="cal-dia">3</button><button class="cal-dia">4</button><button class="cal-dia">5</button><button class="cal-dia">6</button><button class="cal-dia">7</button><button class="cal-dia">8</button><button class="cal-dia">9</button><button class="cal-dia">10</button><button class="cal-dia">11</button><button class="cal-dia">12</button><button class="cal-dia">13</button><button class="cal-dia">14</button><button class="cal-dia">15</button><button class="cal-dia">16</button><button class="cal-dia">17</button><button class="cal-dia">18</button><button class="cal-dia">19</button><button class="cal-dia ini">20</button><button class="cal-dia tramo">21</button><button class="cal-dia tramo">22</button><button class="cal-dia hoy tramo">23</button><button class="cal-dia tramo" disabled>24</button><button class="cal-dia tramo" disabled>25</button><button class="cal-dia fin" disabled>26</button><button class="cal-dia" disabled>27</button><button class="cal-dia" disabled>28</button><button class="cal-dia" disabled>29</button><button class="cal-dia" disabled>30</button><button class="cal-dia" disabled>31</button></div></div></div>
             <div class="cal-pie"><span class="helper">20–26 jul</span><button class="btn-ghost btn-sm">Cancelar</button><button class="btn-primary btn-sm">Aplicar</button></div>
           </div>
@@ -1295,14 +1324,14 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
     <!-- 🔴 Historial: un mes a la vez. Tocar un día lo sube al formulario. -->
     <div class="card" style="margin-top:16px">
       <div class="card-head"><div><h3>Gastos cargados</h3><p>toca un día para corregirlo</p></div>
-        <div class="mes-nav"><button class="cal-flecha" aria-label="Mes anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><b>Julio 2026</b><button class="cal-flecha" aria-label="Mes siguiente" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div></div>
+        <div class="head-actions"><div class="fechas"><button class="fechas-btn" aria-haspopup="dialog" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Mes pasado</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div></div></div>
       <div class="gastos-lista">
         <button class="gasto-row" aria-current="true"><span class="gr-f">dom 26 jul</span><span class="gr-nota">$5k Meta, $12k Google</span><span class="gr-monto num">$220</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
         <button class="gasto-row"><span class="gr-f">sáb 25 jul</span><span class="gr-nota">Meta</span><span class="gr-monto num">$180</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
         <button class="gasto-row"><span class="gr-f">vie 24 jul</span><span class="gr-nota"></span><span class="gr-monto num">$210</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
         <button class="gasto-row"><span class="gr-f">jue 23 jul</span><span class="gr-nota">Meta + Google</span><span class="gr-monto num">$260</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
       </div>
-      <div class="gastos-total"><span>Total de julio</span><b class="num">$870</b></div>
+      <div class="gastos-total"><span>Total del período</span><b class="num">$870</b></div>
     </div>
    </div>
   </section>
@@ -1358,6 +1387,20 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           </div>
           <div class="form-actions"><span class="helper">Así el día no se cuenta dos veces.</span><button class="btn-ghost btn-sm">Traer lo que había</button></div>
         </div>
+      </div>
+    </div>
+
+    <!-- 🔴 Lo que se cargó, con los mismos filtros del Panel. Tocar uno lo sube
+         al formulario para corregirlo. -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><div><h3>Reportes cargados</h3><p>5 reportes · 34 agendas · toca uno para corregirlo</p></div><div class="head-actions"><label class="persona-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Todo el equipo</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><select aria-label="Ver a"><option selected>Todo el equipo</option></select></label><div class="fechas"><button class="fechas-btn" aria-haspopup="dialog" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div></div></div>
+      <div class="rep">
+        <div class="rep-h"><span>Día</span><span>Setter</span><span>Conversaciones</span><span>Agendas</span><span>Tasa</span><span></span></div>
+        <button class="rep-row" aria-current="true"><span class="rep-f">dom 26 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Sofía Lara</span></span><span class="num">24</span><span class="num">8</span><span class="rep-tasa num">33.3%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">dom 26 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Mateo Gil</span></span><span class="num">20</span><span class="num">6</span><span class="rep-tasa num">30.0%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">sáb 25 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Sofía Lara</span></span><span class="num">18</span><span class="num">7</span><span class="rep-tasa num">38.9%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">sáb 25 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Valentina Paz</span></span><span class="num">22</span><span class="num">6</span><span class="rep-tasa num">27.3%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="rep-row"><span class="rep-f">vie 24 jul</span><span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Mateo Gil</span></span><span class="num">25</span><span class="num">7</span><span class="rep-tasa num">28.0%</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
       </div>
     </div>
    </div>
@@ -1508,9 +1551,12 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
       </div>
     </div>
 
+    <!-- 🔴 La lista tiene SUS filtros (persona + fechas), los mismos del Panel. No
+         sigue al campo Fecha del formulario. Con varios días, se parte por día. -->
     <div class="card" style="margin-top:16px">
-      <div class="card-head"><div><h3>Llamadas del día</h3><p>4 cargadas</p></div></div>
+      <div class="card-head"><div><h3>Llamadas cargadas</h3><p>6 llamadas · $4,500 cobrados</p></div><div class="head-actions"><label class="persona-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Todo el equipo</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg><select aria-label="Ver a"><option selected>Todo el equipo</option></select></label><div class="fechas"><button class="fechas-btn" aria-haspopup="dialog" aria-expanded="false"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button></div></div></div>
       <div class="llamadas-lista">
+        <div class="ll-dia"><b>dom 26 jul</b><span><b>4</b> llamadas · <b>$3,500</b></span></div>
         <div class="llamada-row con-quien">
           <span class="ll-n">#1</span>
           <span class="ll-lead">Sofía Ramírez</span>
@@ -1556,6 +1602,23 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
             <span class="pill amb">cerró</span>
           </div>
           <span class="ll-cash num">$2,000</span>
+          <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="ll-dia"><b>sáb 25 jul</b><span><b>2</b> llamadas · <b>$1,000</b></span></div>
+        <div class="llamada-row con-quien">
+          <span class="ll-n">#1</span>
+          <span class="ll-lead">Lucas Herrera</span>
+          <span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Diego Torres</span></span>
+          <div class="ll-badges"><span class="pill set">asistió</span><span class="pill org-anuncios">anuncios</span><span class="pill amb">cerró</span></div>
+          <span class="ll-cash num">$1,000</span>
+          <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+        <div class="llamada-row con-quien">
+          <span class="ll-n">#2</span>
+          <span class="ll-lead">Paula Díaz</span>
+          <span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Andrea Ríos</span></span>
+          <div class="ll-badges"><span class="pill no">no asistió</span><span class="pill org-referidos">referidos</span></div>
+          <span class="ll-cash num">—</span>
           <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
       </div>
