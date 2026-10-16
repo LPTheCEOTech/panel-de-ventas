@@ -8,25 +8,26 @@ Tu Vercel apunta directo al repo de Leandro (`LPTheCEOTech/panel-de-ventas`). Cu
 
 **No forkeaste, no clonaste, no tienes tu propia copia del código.** Todo bien: es exactamente el diseño.
 
-## La única excepción: migraciones SQL
+## Cuando una mejora necesita cambiar la base de datos
 
-De vez en cuando (cada varios meses, en la práctica), una mejora trae un cambio en la base de datos: una tabla nueva, una columna nueva. A esos cambios los llamamos **migraciones**. Cada migración es un archivo con nombre numerado en `supabase/migraciones/`.
+De vez en cuando una mejora necesita algo nuevo en tu base de datos (por ejemplo, un campo más). **No copias nada ni entras a Supabase.** Te enteras porque, al entrar al panel, ves una barra arriba:
 
-Cuando eso pasa, Leandro te avisa. Y **el proceso es igual al setup inicial**, pero en versión chica:
+> **Hay una actualización para tu panel.** … **[Actualizar ahora]**
 
-1. Abre el archivo nuevo desde el repo público de Leandro (por ejemplo, `supabase/migraciones/008_lo_que_sea.sql`).
-2. Botón **«Copy raw file»** en GitHub.
-3. Supabase → SQL Editor → New query → pegas → Run.
-4. Listo. Los datos que ya tenías se preservan.
+1. Toca **«Actualizar ahora»**.
+2. Espera unos segundos: aparece **«Listo. Tu panel ya está actualizado.»** y la barra se va.
+3. Listo. Los datos que ya tenías se preservan, y si lo tocas dos veces no pasa nada.
 
-**Cómo enterarte de que hay una migración**: Leandro te avisa por el canal que use (WhatsApp, mail). También puedes hacer clic en el botón **Watch → Custom → Releases** en el repo de Leandro y te llega mail cuando publica versiones.
+Solo el admin ve la barra (tu manager y tus vendedores no). Mientras no la toques, el panel sigue funcionando igual que antes: lo único que no ves es la mejora nueva.
+
+**Si la barra dice que escribas a soporte**: tu panel se instaló antes de que existiera el botón. Escríbele a Leandro: te manda un paso corto (se hace una sola vez) y desde ahí el botón funciona siempre.
 
 ## ¿Y si un update rompe algo?
 
 Casi nunca pasa (Leandro publica cosas probadas), pero por si acaso:
 
 - **Vercel guarda todos los deployments anteriores.** Si algo se rompe visualmente, ve a tu proyecto en Vercel → **Deployments** → el deployment de antes → tres puntitos → **«Promote to Production»**. Vuelves a la versión que funcionaba en un click. Los datos no se tocan.
-- **Si el problema es una migración SQL nueva que rompió algo**, envíale un mensaje a Leandro. No te pongas a revertir SQL a mano — más fácil que él te guíe.
+- **Si algo falló al tocar «Actualizar ahora»**, la barra muestra el motivo. Mándale una captura a Leandro: no intentes arreglarlo a mano en Supabase.
 
 ## ¿Qué pasa si quiero modificar el código?
 

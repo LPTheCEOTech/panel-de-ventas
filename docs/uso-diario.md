@@ -23,8 +23,15 @@ Tú **NO** cargas reportes en la app. Los cargan los vendedores. Tú sí cargas:
 **Mirar el panel** (menú «Panel»):
 - Eliges el período con el botón de fechas, arriba a la derecha (Hoy, Ayer, Este mes, Mes pasado, Todo, o el rango que quieras).
 - Ves cash cobrado, tasas, CAC, AOV, embudo, gráfico por día, y rankings de setters y closers.
+- **Tasa de calificación**: de las agendas, cuántas tenían el dinero (las que se quedan en el calendario). Aparece debajo de la tasa de agenda en cuanto tus setters cargan sus **agendas calificadas**. Con eso el embudo suma el paso **Calificadas**, las llamadas se comparan contra ellas y el ranking de setters se ordena por calificadas.
 - **Ver a una sola persona**: al lado del botón de fechas está **«Todo el equipo»**. Tócalo y elige a alguien: el panel muestra solo lo suyo, como lo vería esa persona (sin gasto ni rankings, porque eso es de todo el negocio). Para volver, elige «Todo el equipo».
 - **Día por día**: abajo de todo hay una fila por día con agendas, llamadas, asistieron, cierres y cash. **Toca un día** para ver cada llamada: quién la hizo, con qué lead y cuánto entró. Respeta el período y la persona que elegiste arriba.
+
+### Si aparece una barra arriba del panel
+
+**«Hay una actualización para tu panel»** quiere decir que salió una mejora que necesita un cambio en tu base de datos. Toca **«Actualizar ahora»**: en unos segundos dice **«Listo»** y la barra desaparece. Tus datos no se tocan, y si lo tocas dos veces no pasa nada. Solo tú ves esa barra.
+
+Mientras no la toques, el panel sigue funcionando igual que antes: lo único que no ves es la mejora nueva. Si la barra dice que **escribas a soporte**, escríbenos: te mandamos un paso corto y queda lista.
 
 ### Cuando cambia algo
 
@@ -74,7 +81,8 @@ Al final del día:
 2. **Fecha**: hoy (viene por default).
 3. **Conversaciones iniciadas**: con cuántas personas empezaste a hablar hoy.
 4. **Agendas**: cuántas llamadas quedaron agendadas.
-5. **«Enviar reporte»**. Aparece abajo, en «Reportes cargados».
+5. **Agendas calificadas**: de esas agendas, cuántas tienen el dinero para invertir. Nunca más que las agendas. Si no ves este campo, es que el panel todavía no tiene la actualización: avísale a tu admin.
+6. **«Enviar reporte»**. Aparece abajo, en «Reportes cargados».
 
 ### Si es Closer
 
@@ -115,5 +123,6 @@ Ve las dos pestañas y usa las dos.
 | ¿Puedo ver el reporte de un closer específico? | Sí. En el Panel toca **«Todo el equipo»** y elige a la persona, o toca su nombre en **Equipo**. Abajo, en **Día por día**, ves cada día y cada llamada. |
 | ¿Dónde veo los gastos que ya cargué? | En **Gasto en publicidad**, debajo del formulario: el mes completo con su total. |
 | ¿Qué es AOV y por qué no es lo mismo que ticket promedio? | Ticket promedio = revenue ÷ cierres (lo que se firmó). AOV = cash ÷ cierres (lo que se cobró). Firmar y cobrar no son la misma cosa. |
+| ¿Qué es la tasa de calificación? | Agendas calificadas ÷ agendas. Las agendas que no califican se sacan del calendario, por eso las llamadas se comparan con las calificadas. Los días de antes de la actualización no tienen el dato: en la lista se ven con «—» y no cuentan para la tasa. |
 | ¿Qué es CAC? | Costo de adquisición: gasto en publicidad del período ÷ cantidad de cierres. Sin gasto cargado, no aparece. |
 | ¿Puedo compartir el link del panel con alguien externo? | No. Cada persona necesita su login. Créale su acceso desde Equipo. |
