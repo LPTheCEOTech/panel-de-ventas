@@ -5,11 +5,12 @@ import { datos } from '@/shared/datos/indice'
 import { exigir, personaPermitida, type Permiso } from '@/shared/datos/guardias'
 import { puede } from '@/shared/datos/permisos'
 import { zConsultaLlamadas } from '../reportes/esquemas'
+import { leerFiltro, masNuevasPrimero, rangoDelFiltro, TOPE_LISTA } from '../reportes/filtro'
 
 /**
  * 🔴 Fase D · endpoint de llamadas granulares.
  *
- * GET    → las llamadas de un día (ver abajo quién recibe qué).
+ * GET    → las de un día o las de un período (ver abajo quién recibe qué).
  * POST   → crea una llamada (personaId sale de la sesión si es miembro).
  * PATCH  → edita una llamada existente.
  * DELETE → baja LÓGICA (activa=false). No hay hard delete.
@@ -72,8 +73,12 @@ async function soloLasSuyas(permiso: Permiso, id: string): Promise<NextResponse 
 }
 
 /**
- * Las llamadas de UN día. La usan Post Llamada (al cambiar la fecha) y el Día
- * por día del Panel (al abrir un día).
+ * Leer llamadas, en dos formas:
+ *  - `?fecha=` → las de UN día. La usan el formulario de Post Llamada (card
+ *    lateral y aviso de lead) y el Día por día del Panel (al abrir un día).
+ *  - el filtro de la lista (`r` | `desde&hasta`, más `persona`) → las de un
+ *    período, de la más nueva a la más vieja, con tope. Responde el rango
+ *    resuelto para que el botón de fechas diga lo que se está viendo.
  *
  * 🔴 La barrera es la misma de siempre: el dueño y el manager piden a quien
  * quieran (o a todo el equipo, sin `persona`); el vendedor recibe SIEMPRE lo
@@ -81,22 +86,31 @@ async function soloLasSuyas(permiso: Permiso, id: string): Promise<NextResponse 
  */
 export async function GET(request: NextRequest) {
   const sp = request.nextUrl.searchParams
-  const p = zConsultaLlamadas.safeParse({
-    fecha: sp.get('fecha'),
-    persona: sp.get('persona') || undefined,
-  })
-  if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+  const dia = sp.has('fecha')
+    ? zConsultaLlamadas.safeParse({ fecha: sp.get('fecha'), persona: sp.get('persona') || undefined })
+    : null
+  const filtro = dia ? null : leerFiltro(sp)
+  if ((dia && !dia.success) || (!dia && !filtro)) {
+    return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+  }
 
   const permiso = await exigir()
   if (permiso instanceof NextResponse) return permiso
-  const persona = puede(permiso.nivel, 'ver-negocio') ? p.data.persona : permiso.sesion?.usuario.personaId
-  if (!puede(permiso.nivel, 'ver-negocio') && !persona) {
+  const veTodo = puede(permiso.nivel, 'ver-negocio')
+  const pedida = dia?.success ? dia.data.persona : filtro?.persona
+  const persona = veTodo ? pedida : permiso.sesion?.usuario.personaId ?? undefined
+  if (!veTodo && !persona) {
     return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
   }
 
   try {
-    const llamadas = await datos().leerLlamadas({ desde: p.data.fecha, hasta: p.data.fecha }, persona ?? undefined)
-    return NextResponse.json({ llamadas })
+    if (dia?.success) {
+      const llamadas = await datos().leerLlamadas({ desde: dia.data.fecha, hasta: dia.data.fecha }, persona)
+      return NextResponse.json({ llamadas })
+    }
+    const rango = await rangoDelFiltro(filtro!, 'semana', persona)
+    const todas = masNuevasPrimero(await datos().leerLlamadas(rango, persona))
+    return NextResponse.json({ rango, llamadas: todas.slice(0, TOPE_LISTA), total: todas.length })
   } catch (e) {
     console.error('[api/llamadas GET]', e)
     return NextResponse.json({ error: 'No se pudieron leer las llamadas' }, { status: 500 })

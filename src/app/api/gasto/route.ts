@@ -2,13 +2,14 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
 import { exigir } from '@/shared/datos/guardias'
-import { ventana } from '@/shared/calculo/periodo'
-import { zConsultaGasto, zConsultaGastoMes, zGasto } from '../reportes/esquemas'
+import { zConsultaGasto, zGasto } from '../reportes/esquemas'
+import { leerFiltro, rangoDelFiltro, TOPE_LISTA } from '../reportes/filtro'
 
 /**
  * Dos preguntas en la misma ruta:
  *  - `?fecha=` → ¿ya hay un gasto ese día? Alimenta el aviso de reemplazo.
- *  - `?mes=AAAA-MM` → los gastos de ese mes, para el historial.
+ *  - el filtro de la lista (`r` | `desde&hasta`) → los gastos de un período,
+ *    del más nuevo al más viejo, con el rango resuelto. Es el historial.
  * 🔴 Antes no tenía barrera: un vendedor podía leer el gasto del negocio.
  */
 export async function GET(request: NextRequest) {
@@ -16,11 +17,17 @@ export async function GET(request: NextRequest) {
   if (permiso instanceof NextResponse) return permiso
   const sp = request.nextUrl.searchParams
 
-  if (sp.has('mes')) {
-    const p = zConsultaGastoMes.safeParse({ mes: sp.get('mes') })
-    if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
-    const gastos = await datos().leerGastos(ventana('mes', `${p.data.mes}-01`))
-    return NextResponse.json({ gastos })
+  if (!sp.has('fecha')) {
+    const filtro = leerFiltro(sp)
+    if (!filtro) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+    try {
+      const rango = await rangoDelFiltro(filtro, 'mes')
+      const gastos = await datos().leerGastos(rango)
+      return NextResponse.json({ rango, gastos: gastos.slice(0, TOPE_LISTA), total: gastos.length })
+    } catch (e) {
+      console.error('[api/gasto GET]', e)
+      return NextResponse.json({ error: 'No se pudieron leer los gastos' }, { status: 500 })
+    }
   }
 
   const p = zConsultaGasto.safeParse({ fecha: sp.get('fecha') })

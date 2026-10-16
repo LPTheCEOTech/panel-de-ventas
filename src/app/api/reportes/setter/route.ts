@@ -2,24 +2,50 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
 import { exigir, personaPermitida } from '@/shared/datos/guardias'
+import { puede } from '@/shared/datos/permisos'
 import { zConsulta, zSetter } from '../esquemas'
+import { leerFiltro, masNuevasPrimero, rangoDelFiltro, TOPE_LISTA } from '../filtro'
 
-/** ¿Ya hay un reporte para esa persona y ese día? Alimenta el aviso de reemplazo. */
+/**
+ * Dos preguntas en la misma ruta:
+ *  - `?fecha=&persona=` → ¿ya hay un reporte de esa persona ese día? Alimenta
+ *    el aviso de reemplazo.
+ *  - el filtro de la lista (`r` | `desde&hasta`, más `persona`) → los reportes
+ *    de un período, del más nuevo al más viejo, con el rango resuelto.
+ * 🔴 Antes no tenía barrera: un vendedor podía leer el reporte de otro. El
+ * vendedor recibe SIEMPRE lo suyo.
+ */
 export async function GET(request: NextRequest) {
-  const p = zConsulta.safeParse({
-    fecha: request.nextUrl.searchParams.get('fecha'),
-    persona: request.nextUrl.searchParams.get('persona'),
-  })
-  if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+  const sp = request.nextUrl.searchParams
+  const uno = sp.has('fecha') ? zConsulta.safeParse({ fecha: sp.get('fecha'), persona: sp.get('persona') }) : null
+  const filtro = uno ? null : leerFiltro(sp)
+  if ((uno && !uno.success) || (!uno && !filtro)) {
+    return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+  }
 
-  // 🔴 Antes no tenía barrera: un vendedor podía leer el reporte de otro.
   const permiso = await exigir()
   if (permiso instanceof NextResponse) return permiso
-  const persona = personaPermitida(permiso, p.data.persona)
-  if (!persona) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
 
-  const reporte = await datos().buscarReporteSetter(p.data.fecha, persona)
-  return NextResponse.json({ reporte })
+  if (uno?.success) {
+    const persona = personaPermitida(permiso, uno.data.persona)
+    if (!persona) return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+    const reporte = await datos().buscarReporteSetter(uno.data.fecha, persona)
+    return NextResponse.json({ reporte })
+  }
+
+  const veTodo = puede(permiso.nivel, 'ver-negocio')
+  const persona = veTodo ? filtro!.persona : permiso.sesion?.usuario.personaId ?? undefined
+  if (!veTodo && !persona) {
+    return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  }
+  try {
+    const rango = await rangoDelFiltro(filtro!, 'semana', persona)
+    const todos = masNuevasPrimero(await datos().leerReportesSetter(rango, persona))
+    return NextResponse.json({ rango, reportes: todos.slice(0, TOPE_LISTA), total: todos.length })
+  } catch (e) {
+    console.error('[api/reportes/setter GET]', e)
+    return NextResponse.json({ error: 'No se pudieron leer los reportes' }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {

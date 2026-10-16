@@ -10,11 +10,13 @@ import type { Periodo, Ventana } from '@/shared/tipos'
 
 import { diaDeLaSemana, sumarDias, ventana, ventanaAnterior } from './periodo'
 
-export type Atajo = 'hoy' | 'semana' | 'mes' | 'mes-pasado' | '30-dias' | 'año' | 'todo'
+export type Atajo = 'hoy' | 'ayer' | 'semana' | 'mes' | 'mes-pasado' | '30-dias' | 'año' | 'todo'
 
 /** En el orden en que se muestran. */
 export const ATAJOS: readonly { valor: Atajo; texto: string }[] = [
   { valor: 'hoy', texto: 'Hoy' },
+  // lo primero que se busca a la mañana: cómo cerró el día anterior
+  { valor: 'ayer', texto: 'Ayer' },
   { valor: 'semana', texto: 'Esta semana' },
   { valor: 'mes', texto: 'Este mes' },
   { valor: 'mes-pasado', texto: 'Mes pasado' },
@@ -88,10 +90,11 @@ function uno(sp: Parametros, clave: string): string | undefined {
 /**
  * Qué pide la URL. Precedencia: `?r=` (atajo) → `?desde&hasta` (rango libre)
  * → `?p&f` (el formato viejo, para que los links guardados sigan andando) →
- * el mes en curso. Lo malformado cae al defecto: un parámetro raro nunca
+ * `porDefecto` (el Panel abre en el mes; las listas de las pantallas de carga,
+ * en la semana). Lo malformado cae al defecto: un parámetro raro nunca
  * revienta la página.
  */
-export function leerPedido(sp: Parametros, inicioSemana: 0 | 1): Pedido {
+export function leerPedido(sp: Parametros, inicioSemana: 0 | 1, porDefecto: Atajo = ATAJO_POR_DEFECTO): Pedido {
   const r = uno(sp, 'r')
   if (ATAJOS.some((a) => a.valor === r)) return { atajo: r as Atajo }
 
@@ -109,7 +112,7 @@ export function leerPedido(sp: Parametros, inicioSemana: 0 | 1): Pedido {
     return { atajo: ({ dia: 'hoy', semana: 'semana', mes: 'mes' } as const)[p] }
   }
 
-  return { atajo: ATAJO_POR_DEFECTO }
+  return { atajo: porDefecto }
 }
 
 /**
@@ -120,6 +123,7 @@ export function leerPedido(sp: Parametros, inicioSemana: 0 | 1): Pedido {
 export function ventanaDeAtajo(atajo: Atajo, hoy: string, inicioSemana: 0 | 1, primera: string | null = null): Ventana {
   switch (atajo) {
     case 'hoy': return { desde: hoy, hasta: hoy }
+    case 'ayer': return { desde: sumarDias(hoy, -1), hasta: sumarDias(hoy, -1) }
     case 'semana': return ventana('semana', hoy, inicioSemana)
     case 'mes': return ventana('mes', hoy)
     case 'mes-pasado': return ventanaAnterior('mes', ventana('mes', hoy))

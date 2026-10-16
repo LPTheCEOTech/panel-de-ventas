@@ -24,6 +24,7 @@ test('sin parámetros abre en el mes en curso', () => {
 test('cada atajo resuelve su ventana', () => {
   const v = (r: string) => { const x = rango({ r }); return [x.desde, x.hasta] }
   assert.deepEqual(v('hoy'), ['2026-10-01', '2026-10-01'])
+  assert.deepEqual(v('ayer'), ['2026-09-30', '2026-09-30'])
   assert.deepEqual(v('semana'), ['2026-09-28', '2026-10-04'])
   assert.deepEqual(v('mes'), ['2026-10-01', '2026-10-31'])
   assert.deepEqual(v('mes-pasado'), ['2026-09-01', '2026-09-30'])
@@ -180,4 +181,11 @@ test('la URL del Panel conserva el rango y la persona', () => {
     '/panel?desde=2026-08-15&hasta=2026-09-10&persona=p1')
   assert.equal(urlDelPanel(null, 'p1'), '/panel?persona=p1')
   assert.equal(urlDelPanel(null), '/panel')
+})
+
+test('«Ayer» se reconoce y nombra; cada lista elige su período por defecto', () => {
+  assert.equal(atajoDe({ desde: '2026-09-30', hasta: '2026-09-30' }, HOY, 1), 'ayer')
+  assert.equal(etiquetaDeRango(rango({ r: 'ayer' }), HOY), 'Ayer')
+  assert.deepEqual(leerPedido({}, 1, 'semana'), { atajo: 'semana' })
+  assert.deepEqual(leerPedido({ r: 'raro' }, 1, 'semana'), { atajo: 'semana' })
 })
