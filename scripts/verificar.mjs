@@ -92,9 +92,10 @@ rankingClosers(personas.map((p) => ({ ...p, id: p.id })), closers).forEach((f, i
 
 // Con la semana medida, el ranking ordena por calificadas; sin medir, por
 // agendas. Las agendas de cada uno se comprueban en los dos casos.
-const porCalificadas = midieronCalificadas(setters)
+const filasSetters = rankingSetters(personas.map((p) => ({ ...p, id: p.id })), setters)
+const porCalificadas = filasSetters.some((f) => f.detalle.agendas !== undefined)
 console.log(`\n── Ranking de setters (por ${porCalificadas ? 'calificadas' : 'agendas'}) ──\n`)
-rankingSetters(personas.map((p) => ({ ...p, id: p.id })), setters).forEach((f, i) => {
+filasSetters.forEach((f, i) => {
   const o = ORO.setters[i]
   if (!o) { fallos.push(`setter de más en el puesto ${i + 1}`); return }
   const agendas = f.detalle.agendas ?? f.valor
@@ -109,7 +110,7 @@ console.log('\n── Agendas calificadas (009) ──\n')
 if (!tieneColumna) {
   console.log('⚠️  la base no tiene la columna `calificadas`: falta apretar «Actualizar ahora» en el panel')
   fallos.push('calificadas: la base no tiene la columna (falta la actualización 009)')
-} else if (!porCalificadas) {
+} else if (!midieronCalificadas(setters)) {
   console.log('⚠️  la columna existe, pero la semana de oro no tiene calificadas cargadas')
   fallos.push('calificadas: la semana de oro no tiene calificadas cargadas')
 } else {

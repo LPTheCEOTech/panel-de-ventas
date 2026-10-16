@@ -187,18 +187,21 @@ export function rankingClosers(
 }
 
 /**
- * Setters ordenados por agendas — o por CALIFICADAS, si el período midió algo.
+ * Setters ordenados por agendas — o por CALIFICADAS, si el período entero las
+ * midió.
  *
- * 🔴 Con calificadas, el valor es la suma de las medidas y el detalle lleva las
- * agendas de sus días medidos y el % calificado sobre ellas. Un día sin
- * medir suma 0 al orden: en la práctica todo el equipo empieza a cargar el
- * mismo día, el de la actualización. `detalle.agendas` presente = modo calificadas.
+ * 🔴 La misma regla que «de calif.» en el embudo: con días sin medir (el mes de
+ * la actualización), ordenar por las calificadas de cinco días y mostrar «26
+ * agendas» de alguien que tuvo 80 en el mes engaña. Ahí sigue por agendas.
+ * Con calificadas, el detalle lleva las agendas y el % calificado de cada uno.
+ * `detalle.agendas` presente = modo calificadas.
  */
 export function rankingSetters(
   personas: readonly Persona[],
   reportes: readonly ReporteSetter[]
 ): FilaRanking[] {
-  const porCalificadas = midieronCalificadas(reportes)
+  const todo = totales(reportes, [])
+  const porCalificadas = midieronCalificadas(reportes) && todo.agendasMedidas === todo.agendas
   const porPersona = new Map<string, ReporteSetter[]>()
   for (const r of reportes) {
     const lista = porPersona.get(r.personaId)
@@ -214,9 +217,7 @@ export function rankingSetters(
       ? {
           persona,
           valor: t.calificadas,
-          // las agendas de los días MEDIDOS: con «38 agendas · 97%» el que lee
-          // divide calificadas por agendas, y tiene que darle lo mismo
-          detalle: { tasa: tasa(t.calificadas, t.agendasMedidas), leads: t.leads, agendas: t.agendasMedidas },
+          detalle: { tasa: tasa(t.calificadas, t.agendasMedidas), leads: t.leads, agendas: t.agendas },
         }
       : {
           persona,

@@ -367,12 +367,10 @@ test('009 · 🔴 con medio período medido, la tasa sale de lo medido y Llamada
   const pasos = embudo(m)
   assert.deepEqual(pasos.map((p) => p.nombre), ['Leads', 'Agendas', 'Calificadas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
   assert.deepEqual(pasos[3].conversion, { etiqueta: 'de agenda', tasa: m.llamadasSobreAgendas })
-  // el ranking cuenta lo medido y su detalle también: calificadas ÷ agendas da el %
-  const [primero] = rankingSetters(PERSONAS_DEMO, mezcla)
-  assert.equal(primero.persona.nombre, 'Mateo Gil')
-  assert.equal(primero.valor, 19)
-  assert.equal(primero.detalle.agendas, 19)
-  assert.equal(porcentajeEntero(primero.detalle.tasa), '100%')
+  // y el ranking, con la misma regla: con días sin medir sigue por agendas
+  const filas = rankingSetters(PERSONAS_DEMO, mezcla)
+  assert.deepEqual(filas.map((f) => [f.persona.nombre, f.valor]), [['Sofía Lara', 38], ['Mateo Gil', 36], ['Valentina Paz', 30]])
+  assert.ok(filas.every((f) => f.detalle.agendas === undefined))
 })
 
 test('009 · la nota del embudo explica la comparación que se está haciendo', () => {
