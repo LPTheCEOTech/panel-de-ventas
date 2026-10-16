@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 
 import {
-  ATAJOS, encabezadoSemana, etiquetaDeRango, grillaDelMes, nombreDelMes, queryDe, sumarMeses,
+  ATAJOS, encabezadoSemana, etiquetaDeRango, grillaDelMes, nombreDelMes, sumarMeses, urlDelPanel,
   type Atajo, type Rango,
 } from '@/shared/calculo/rango'
 import { IconoAbajo, IconoCalendario, IconoDerecha, IconoIzquierda } from '@/shared/chasis/iconos'
@@ -22,12 +22,14 @@ import { IconoAbajo, IconoCalendario, IconoDerecha, IconoIzquierda } from '@/sha
  * ahí se toma la mecánica, no el comportamiento.
  */
 export function SelectorFechas({
-  rango, hoy, inicioSemana,
+  rango, hoy, inicioSemana, persona,
 }: {
   rango: Rango
   /** Hoy en la zona del negocio. Lo manda el servidor: el navegador puede estar en otra. */
   hoy: string
   inicioSemana: 0 | 1
+  /** 🔴 La persona elegida en «Ver a». Cambiar el período NO la borra. */
+  persona?: string
 }) {
   const router = useRouter()
   const [pendiente, empezar] = useTransition()
@@ -59,7 +61,7 @@ export function SelectorFechas({
   function ir(r: Pick<Rango, 'desde' | 'hasta' | 'atajo'>, etiqueta: string) {
     setAbierto(false)
     setOptimista(etiqueta)
-    empezar(() => router.push(`/panel?${new URLSearchParams(queryDe(r))}`))
+    empezar(() => router.push(urlDelPanel(r, persona)))
   }
 
   // Escape y toque afuera cierran sin aplicar. `pointerdown` y no `mousedown`:

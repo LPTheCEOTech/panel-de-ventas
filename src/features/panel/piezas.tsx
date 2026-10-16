@@ -329,6 +329,20 @@ export function SinEquipo() {
   )
 }
 
+/** Con una persona elegida, «sin datos» no es «tu equipo no empezó»: es que
+ *  esa persona no cargó nada en este período. */
+export function SinDatosDe({ nombre }: { nombre: string }) {
+  return (
+    <div className="card">
+      <div className="empty">
+        <div className="tile" style={{ width: 44, height: 44 }}><IconoEquipo size={22} /></div>
+        <h3>{nombre} no cargó nada en este período</h3>
+        <p>Prueba con otro período en el filtro de fechas, o vuelve a «Todo el equipo».</p>
+      </div>
+    </div>
+  )
+}
+
 export function LlamadaAEquipo() {
   return (
     <div className="card">

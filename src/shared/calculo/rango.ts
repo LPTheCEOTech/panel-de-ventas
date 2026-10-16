@@ -154,6 +154,28 @@ export function queryDe(r: { desde: string; hasta: string; atajo: Atajo | null }
   return r.atajo ? { r: r.atajo } : { desde: r.desde, hasta: r.hasta }
 }
 
+/**
+ * La persona que pide la URL del Panel (`?persona=<id>`), o `undefined`. Acá
+ * solo se mira la forma: si quien mira PUEDE pedirla y si existe lo decide el
+ * servidor. Un id con forma rara se ignora en vez de llegar a la base.
+ */
+export function leerPersona(sp: Parametros): string | undefined {
+  const p = uno(sp, 'persona')
+  return p && /^[\w-]{1,64}$/.test(p) ? p : undefined
+}
+
+/**
+ * La URL del Panel con un rango y una persona. 🔴 La arman los dos selectores
+ * (fechas y persona) y el nombre en Equipo: cada uno conserva lo que eligió el
+ * otro. Sin rango, el Panel abre en su período por defecto.
+ */
+export function urlDelPanel(r: { desde: string; hasta: string; atajo: Atajo | null } | null, persona?: string): string {
+  const q = new URLSearchParams(r ? queryDe(r) : {})
+  if (persona) q.set('persona', persona)
+  const texto = q.toString()
+  return texto ? `/panel?${texto}` : '/panel'
+}
+
 // ---------------------------------------------------------------- comparación
 
 /**

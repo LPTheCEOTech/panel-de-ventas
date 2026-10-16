@@ -8,8 +8,8 @@ import { test } from 'node:test'
 
 import { barrasPorMes } from './metricas'
 import {
-  atajoDe, deQueDe, diaDeLista, encabezadoSemana, esFecha, etiquetaDeRango, graficoDe, grillaDelMes, haceCuanto, leerPedido,
-  nombreDelMes, queryDe, rangoAnterior, resolverRango, sumarMeses, tituloDeRango, ventanaDeAtajo,
+  atajoDe, deQueDe, diaDeLista, encabezadoSemana, esFecha, etiquetaDeRango, graficoDe, grillaDelMes, haceCuanto, leerPedido, leerPersona,
+  nombreDelMes, queryDe, rangoAnterior, resolverRango, sumarMeses, tituloDeRango, urlDelPanel, ventanaDeAtajo,
   type Rango,
 } from './rango'
 
@@ -162,4 +162,22 @@ test('hace cuánto se cuenta contra el hoy del negocio', () => {
   assert.equal(haceCuanto('2026-09-30', HOY), 'ayer')
   assert.equal(haceCuanto('2026-09-26', HOY), 'hace 5 días')
   assert.equal(haceCuanto('2026-10-02', HOY), 'hoy')
+})
+
+test('la persona de la URL se lee solo si tiene forma de id', () => {
+  assert.equal(leerPersona({ persona: 'e7c8b7e3-ce7b-4b0b-8572-81de31467b91' }), 'e7c8b7e3-ce7b-4b0b-8572-81de31467b91')
+  assert.equal(leerPersona({ persona: 'demo-17' }), 'demo-17')
+  assert.equal(leerPersona({}), undefined)
+  assert.equal(leerPersona({ persona: "x' or 1=1" }), undefined)
+  assert.equal(leerPersona({ persona: 'a'.repeat(65) }), undefined)
+})
+
+test('la URL del Panel conserva el rango y la persona', () => {
+  const mes = rango({})
+  assert.equal(urlDelPanel(mes, 'p1'), '/panel?r=mes&persona=p1')
+  assert.equal(urlDelPanel(mes), '/panel?r=mes')
+  assert.equal(urlDelPanel({ desde: '2026-08-15', hasta: '2026-09-10', atajo: null }, 'p1'),
+    '/panel?desde=2026-08-15&hasta=2026-09-10&persona=p1')
+  assert.equal(urlDelPanel(null, 'p1'), '/panel?persona=p1')
+  assert.equal(urlDelPanel(null), '/panel')
 })
