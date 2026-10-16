@@ -1,5 +1,7 @@
 import { z } from 'zod'
 
+import { esFecha } from '@/shared/calculo/rango'
+
 /**
  * Lo que la API acepta. Se valida acá y no en el formulario: el formulario es
  * una comodidad, la API es la puerta. Un `fetch` a mano tiene que chocar con
@@ -36,3 +38,18 @@ export const zGasto = z.object({
 
 /** Solo la fecha (para el GET /api/gasto?fecha=…). */
 export const zConsultaGasto = z.object({ fecha })
+
+/** Un mes entero de gastos (GET /api/gasto?mes=AAAA-MM), para el historial. */
+export const zConsultaGastoMes = z.object({
+  mes: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'El mes tiene que ser AAAA-MM'),
+})
+
+/**
+ * Las llamadas de UN día (GET /api/llamadas?fecha=…&persona=…). La fecha tiene
+ * que existir de verdad: un `2026-02-30` llegaría a Postgres y reventaría en
+ * un 500 en vez de un 400.
+ */
+export const zConsultaLlamadas = z.object({
+  fecha: fecha.refine(esFecha, 'Esa fecha no existe'),
+  persona: personaId.optional(),
+})

@@ -46,11 +46,18 @@ export interface CapaDeDatos {
   sumaGastos(v: Ventana): Promise<number>
   /** UPSERT por fecha (PK). La misma cara visible que reportes. */
   guardarGasto(g: Gasto): Promise<void>
+  /** Los gastos de una ventana, del más nuevo al más viejo. Es el historial
+   *  que se ve debajo del formulario de Gasto. */
+  leerGastos(v: Ventana): Promise<Gasto[]>
 
   /** La fecha del primer dato cargado (llamada activa, reporte de setter o
    *  gasto), o `null` si no hay nada. Es donde empieza «Todo» en el Panel.
    *  Con `personaId`, solo lo de esa persona (el gasto no cuenta). */
   primeraFecha(personaId?: string): Promise<string | null>
+  /** El espejo de `primeraFecha` para UNA persona: el día de su último dato
+   *  (llamada activa o reporte de setter), o `null` si nunca cargó nada. Es el
+   *  «Último reporte: hace N días» de Equipo. */
+  ultimaFecha(personaId: string): Promise<string | null>
 
   /** 🔴 Fase D · una fila POR LLAMADA. Reemplaza al agregado diario del
    *  closer. Solo `activa=true`; el kernel las agrega con `agregarLlamadas()`. */

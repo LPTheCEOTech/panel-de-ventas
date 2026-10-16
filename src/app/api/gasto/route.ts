@@ -2,16 +2,28 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { datos } from '@/shared/datos/indice'
 import { exigir } from '@/shared/datos/guardias'
-import { zConsultaGasto, zGasto } from '../reportes/esquemas'
+import { ventana } from '@/shared/calculo/periodo'
+import { zConsultaGasto, zConsultaGastoMes, zGasto } from '../reportes/esquemas'
 
-/** ¿Ya hay un gasto para esa fecha? Alimenta el aviso de reemplazo.
- *  🔴 Antes no tenía barrera: un vendedor podía leer el gasto del negocio. */
+/**
+ * Dos preguntas en la misma ruta:
+ *  - `?fecha=` → ¿ya hay un gasto ese día? Alimenta el aviso de reemplazo.
+ *  - `?mes=AAAA-MM` → los gastos de ese mes, para el historial.
+ * 🔴 Antes no tenía barrera: un vendedor podía leer el gasto del negocio.
+ */
 export async function GET(request: NextRequest) {
   const permiso = await exigir('cargar-gasto')
   if (permiso instanceof NextResponse) return permiso
-  const p = zConsultaGasto.safeParse({
-    fecha: request.nextUrl.searchParams.get('fecha'),
-  })
+  const sp = request.nextUrl.searchParams
+
+  if (sp.has('mes')) {
+    const p = zConsultaGastoMes.safeParse({ mes: sp.get('mes') })
+    if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+    const gastos = await datos().leerGastos(ventana('mes', `${p.data.mes}-01`))
+    return NextResponse.json({ gastos })
+  }
+
+  const p = zConsultaGasto.safeParse({ fecha: sp.get('fecha') })
   if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
 
   const gasto = await datos().buscarGasto(p.data.fecha)

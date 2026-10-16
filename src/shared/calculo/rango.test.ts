@@ -8,7 +8,7 @@ import { test } from 'node:test'
 
 import { barrasPorMes } from './metricas'
 import {
-  atajoDe, deQueDe, encabezadoSemana, esFecha, etiquetaDeRango, graficoDe, grillaDelMes, leerPedido,
+  atajoDe, deQueDe, diaDeLista, encabezadoSemana, esFecha, etiquetaDeRango, graficoDe, grillaDelMes, haceCuanto, leerPedido,
   nombreDelMes, queryDe, rangoAnterior, resolverRango, sumarMeses, tituloDeRango, ventanaDeAtajo,
   type Rango,
 } from './rango'
@@ -150,4 +150,16 @@ test('meses: sumar, restar y nombrar', () => {
   assert.equal(sumarMeses('2026-12', 1), '2027-01')
   assert.equal(sumarMeses('2026-10', -14), '2025-08')
   assert.equal(nombreDelMes('2026-09'), 'Septiembre 2026')
+})
+
+test('una fecha de lista lleva el día de la semana', () => {
+  assert.equal(diaDeLista('2026-10-15'), 'jue 15 oct')
+  assert.equal(diaDeLista('2026-10-18'), 'dom 18 oct')
+})
+
+test('hace cuánto se cuenta contra el hoy del negocio', () => {
+  assert.equal(haceCuanto(HOY, HOY), 'hoy')
+  assert.equal(haceCuanto('2026-09-30', HOY), 'ayer')
+  assert.equal(haceCuanto('2026-09-26', HOY), 'hace 5 días')
+  assert.equal(haceCuanto('2026-10-02', HOY), 'hoy')
 })

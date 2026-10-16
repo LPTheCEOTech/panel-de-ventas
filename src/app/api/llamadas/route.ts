@@ -4,10 +4,12 @@ import { z } from 'zod'
 import { datos } from '@/shared/datos/indice'
 import { exigir, personaPermitida, type Permiso } from '@/shared/datos/guardias'
 import { puede } from '@/shared/datos/permisos'
+import { zConsultaLlamadas } from '../reportes/esquemas'
 
 /**
  * 🔴 Fase D · endpoint de llamadas granulares.
  *
+ * GET    → las llamadas de un día (ver abajo quién recibe qué).
  * POST   → crea una llamada (personaId sale de la sesión si es miembro).
  * PATCH  → edita una llamada existente.
  * DELETE → baja LÓGICA (activa=false). No hay hard delete.
@@ -67,6 +69,38 @@ async function soloLasSuyas(permiso: Permiso, id: string): Promise<NextResponse 
     return NextResponse.json({ error: 'Esa llamada no es tuya.' }, { status: 403 })
   }
   return null
+}
+
+/**
+ * Las llamadas de UN día. La usan Post Llamada (al cambiar la fecha) y el Día
+ * por día del Panel (al abrir un día).
+ *
+ * 🔴 La barrera es la misma de siempre: el dueño y el manager piden a quien
+ * quieran (o a todo el equipo, sin `persona`); el vendedor recibe SIEMPRE lo
+ * suyo, diga lo que diga la URL. Un curl con el id de otro cae del lado seguro.
+ */
+export async function GET(request: NextRequest) {
+  const sp = request.nextUrl.searchParams
+  const p = zConsultaLlamadas.safeParse({
+    fecha: sp.get('fecha'),
+    persona: sp.get('persona') || undefined,
+  })
+  if (!p.success) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
+
+  const permiso = await exigir()
+  if (permiso instanceof NextResponse) return permiso
+  const persona = puede(permiso.nivel, 'ver-negocio') ? p.data.persona : permiso.sesion?.usuario.personaId
+  if (!puede(permiso.nivel, 'ver-negocio') && !persona) {
+    return NextResponse.json({ error: 'Tu usuario no está vinculado a nadie del equipo.' }, { status: 403 })
+  }
+
+  try {
+    const llamadas = await datos().leerLlamadas({ desde: p.data.fecha, hasta: p.data.fecha }, persona ?? undefined)
+    return NextResponse.json({ llamadas })
+  } catch (e) {
+    console.error('[api/llamadas GET]', e)
+    return NextResponse.json({ error: 'No se pudieron leer las llamadas' }, { status: 500 })
+  }
 }
 
 export async function POST(request: NextRequest) {

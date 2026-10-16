@@ -163,6 +163,19 @@ export function capaDemo(vacia = false): CapaDeDatos {
       ].sort()
       return fechas[0] ?? null
     },
+    async ultimaFecha(personaId) {
+      const e = leer(vacia)
+      const fechas = [
+        ...(e.llamadas ?? []).filter((l) => l.activa && l.personaId === personaId).map((l) => l.fecha),
+        ...e.setter.filter((r) => r.personaId === personaId).map((r) => r.fecha),
+      ].sort()
+      return fechas.at(-1) ?? null
+    },
+    async leerGastos(v: Ventana) {
+      return (leer(vacia).gastos ?? [])
+        .filter((g) => dentro(g.fecha, v))
+        .sort((a, b) => b.fecha.localeCompare(a.fecha))
+    },
     async guardarGasto(g) {
       con((e) => {
         if (!e.gastos) e.gastos = []

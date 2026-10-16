@@ -35,6 +35,7 @@ export interface Rango extends Ventana {
 export type Pedido = { atajo: Atajo } | { ventana: Ventana }
 
 const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+const DIAS_CORTOS = ['dom', 'lun', 'mar', 'mié', 'jue', 'vie', 'sáb']
 const MESES_CORTOS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
 
 /** El piso de cualquier fecha que venga de afuera: evita recorrer siglos. */
@@ -248,6 +249,26 @@ export function deQueDe(r: Rango, inicioSemana: 0 | 1): string {
   if (esMesEntero(r)) return 'del mes'
   if (esAñoEntero(r)) return 'del año'
   return 'del período'
+}
+
+/**
+ * Una fecha en una lista: `mié 15 oct`. El día de la semana va porque en el
+ * Día por día y en el historial de gastos lo primero que se busca es «el
+ * lunes», no «el 13».
+ */
+export function diaDeLista(iso: string): string {
+  return `${DIAS_CORTOS[diaDeLaSemana(iso)]} ${diaCorto(iso)}`
+}
+
+/**
+ * Cuánto hace de una fecha, contra el hoy DEL NEGOCIO (no el reloj del
+ * navegador): `hoy` · `ayer` · `hace 5 días`. Una fecha posterior a hoy (un
+ * reporte cargado en otra zona) cuenta como hoy.
+ */
+export function haceCuanto(fecha: string, hoy: string): string {
+  if (fecha >= hoy) return 'hoy'
+  const n = diasEntre({ desde: fecha, hasta: hoy }) - 1
+  return n === 1 ? 'ayer' : `hace ${n} días`
 }
 
 // ---------------------------------------------------------------- calendario

@@ -225,6 +225,30 @@ export function capaSupabase(url: string, servicio: string): CapaDeDatos {
       return validas[0] ?? null
     },
 
+    async ultimaFecha(personaId: string): Promise<string | null> {
+      // Igual que `primeraFecha`, al revés: una fila por tabla en vez de un
+      // `max()` (los agregados de PostgREST vienen apagados y prenderlos es SQL).
+      const ultima = async (tabla: 'llamadas' | 'reportes_setter') => {
+        let q = sb.from(tabla).select('fecha').eq('persona_id', personaId)
+        if (tabla === 'llamadas') q = q.eq('activa', true)
+        const { data, error } = await q.order('fecha', { ascending: false }).limit(1)
+        reventar('ultimaFecha', error)
+        return (data?.[0]?.fecha as string | undefined) ?? null
+      }
+      const fechas = await Promise.all([ultima('llamadas'), ultima('reportes_setter')])
+      return fechas.filter((f): f is string => f !== null).sort().at(-1) ?? null
+    },
+
+    async leerGastos(v: Ventana): Promise<Gasto[]> {
+      // De a tandas por lo mismo que `sumaGastos`: un rango largo pasa las 1000.
+      const filas = await todasLasFilas<{ fecha: string; monto_cents: number; nota: string | null }>('leerGastos', (a, b) =>
+        sb.from('gastos').select('fecha, monto_cents, nota')
+          .gte('fecha', v.desde).lte('fecha', v.hasta)
+          .order('fecha', { ascending: false }).range(a, b)
+      )
+      return filas.map((f) => ({ fecha: f.fecha, montoCents: Number(f.monto_cents), nota: f.nota ?? null }))
+    },
+
     async guardarGasto(g: Gasto): Promise<void> {
       const { error } = await sb.from('gastos').upsert(
         {
