@@ -279,6 +279,33 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .cal-pie .helper{margin-right:auto;font-size:12px;color:var(--muted)}
 
+/* 🔴 Ver por persona: el mismo boton que el de fechas, con un <select> nativo
+   ENCIMA y transparente (el truco de la pastilla de rol). Se ve como el resto
+   de la cabecera y se maneja con el teclado y el lector de pantalla como un
+   select de verdad. Con alguien elegido se pinta como el atajo apretado: el
+   panel ya no es de todo el equipo y tiene que notarse. */
+.persona-btn{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 11px 7px 12px;
+  font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;font-family:var(--body);
+  white-space:nowrap;box-shadow:var(--sombra);max-width:260px}
+
+.persona-btn span{overflow:hidden;text-overflow:ellipsis}
+
+.persona-btn svg{color:var(--muted);flex-shrink:0}
+
+.persona-btn:hover{border-color:var(--m4)}
+
+.persona-btn:focus-within{outline:2px solid var(--m5);outline-offset:2px}
+
+.persona-btn select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+  font-size:16px}
+
+.persona-btn.elegida{background:var(--m1);border-color:var(--m4);color:var(--m7)}
+
+.persona-btn.elegida svg{color:var(--m6)}
+
+.persona-btn[data-pendiente]{opacity:.55}
+
 /* banda que dice QUE ES la pantalla. La de solo lectura no lleva caja: es una
    nota al pie arriba, no una tarjeta mas que compite con los datos. */
 .what{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;margin-bottom:16px;line-height:1.45}
@@ -536,6 +563,65 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .lbv b{font-family:var(--display);font-weight:800;font-size:15.5px;letter-spacing:-.4px}
 
+/* ---------- dia por dia ---------- */
+/* 🔴 La planilla que el manager armaba a mano: una fila por dia, abajo de
+   todo y a todo el ancho. Es una tabla de numeros: van alineados a la derecha
+   para que se comparen de un vistazo. Tiene su propio scroll horizontal para
+   no desbordar la pagina en una pantalla angosta. Abrir un dia muestra sus
+   llamadas con el closer, el lead y el cash. Un dia sin nada sale apagado y
+   no se abre: que nadie cargo tambien es dato. */
+.dxd{overflow-x:auto;margin:0 -4px}
+
+.dxd-h,.dxd-row{display:grid;
+  grid-template-columns:minmax(112px,1.4fr) repeat(4,minmax(64px,1fr)) minmax(92px,1.1fr) 22px;
+  align-items:center;gap:10px;min-width:580px;padding:9px 8px}
+
+.dxd-h{padding-top:0;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--faint);border-bottom:1px solid var(--border)}
+
+.dxd-h span:not(:first-child),.dxd-row > span:not(:first-child){text-align:right}
+
+.dxd-row{width:100%;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;
+  font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
+
+.dxd-row:hover{background:var(--hueco)}
+
+.dxd-row:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+
+.dxd-f{font-weight:600}
+
+.dxd-cash{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:-.3px;color:var(--m7)}
+
+.dxd-row svg{justify-self:end;color:var(--faint);transition:transform .15s}
+
+.dxd-row[aria-expanded="true"]{background:var(--hueco);border-bottom-color:transparent}
+
+.dxd-row[aria-expanded="true"] svg{transform:rotate(180deg);color:var(--muted)}
+
+.dxd-row.vacio{cursor:default;color:var(--faint)}
+
+.dxd-row.vacio:hover{background:none}
+
+.dxd-row.vacio .dxd-f{font-weight:400}
+
+.dxd-row.vacio .dxd-cash{color:var(--faint);font-weight:600}
+
+/* el padding derecho es el de la fila + la columna del chevron: asi el cash
+   de cada llamada cae debajo del cash del dia */
+.dxd-llamadas{min-width:580px;background:var(--hueco);border-bottom:1px solid var(--line);
+  padding:0 40px 6px 8px}
+
+.dxd-ll{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.5fr) 92px;
+  align-items:center;gap:10px;padding:8px 0 8px 14px;border-top:1px solid var(--line)}
+
+.dxd-ll .ll-cash{font-size:13.5px}
+
+.dxd-lead{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.dxd-msj{padding:10px 14px;font-size:12px;color:var(--faint)}
+
+.dxd-mas{display:flex;justify-content:center;padding-top:14px}
+
 /* ---------- pantallas de trabajo ---------- */
 /* 🔴 El eje que faltaba.
    Las cuatro pantallas de trabajo tienen DOS partes con roles distintos: donde
@@ -648,6 +734,18 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .llamada-row .del:hover{background:var(--hueco);color:var(--rojo)}
 
+/* 🔴 El dueño y el manager cargan por todos: cada fila dice de quién es. Al
+   vendedor no le sale la columna (siempre es él), por eso es un modificador
+   y no una sexta columna para todos. */
+.llamada-row.con-quien{grid-template-columns:36px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 90px 28px}
+
+.ll-quien{display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;font-weight:600;
+  color:var(--muted)}
+
+.ll-quien svg{color:var(--faint);flex-shrink:0}
+
+.ll-quien span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 
@@ -715,6 +813,51 @@ button,input,select,textarea{font:inherit;color:inherit}
 
 .calc.apilado .dv.principal b.sin{color:var(--m7);opacity:.4}
 
+/* 🔴 Lo que acaba de guardarse se confirma donde se miraba: en la misma
+   linea del boton. Sin esto, quedarse en la pantalla parece no haber hecho nada. */
+.form-actions .helper.ok{color:var(--m6);font-weight:600}
+
+/* ---------- gastos cargados ---------- */
+/* Un mes a la vez, con las mismas flechas del calendario. Cada renglon es un
+   boton: tocarlo sube ese dia al formulario para corregirlo. */
+.mes-nav{display:inline-flex;align-items:center;gap:2px}
+
+.mes-nav b{font-family:var(--display);font-size:13px;font-weight:700;min-width:124px;text-align:center}
+
+.gastos-lista{display:flex;flex-direction:column}
+
+.gasto-row{display:grid;grid-template-columns:120px minmax(0,1fr) 110px 22px;align-items:center;
+  gap:12px;width:100%;padding:10px 8px;background:none;border:0;border-bottom:1px solid var(--line);
+  font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
+
+.gasto-row:last-child{border-bottom:0}
+
+.gasto-row:hover{background:var(--hueco)}
+
+.gasto-row:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+
+.gasto-row[aria-current="true"]{background:var(--m1)}
+
+.gr-f{font-weight:600}
+
+.gr-nota{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.gr-monto{text-align:right;font-family:var(--display);font-weight:800;font-size:14.5px;letter-spacing:-.3px}
+
+.gasto-row svg{justify-self:end;color:var(--faint)}
+
+.gasto-row:hover svg{color:var(--m6)}
+
+.gastos-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  margin-top:4px;padding:12px 8px 0;border-top:1px solid var(--border)}
+
+.gastos-total span{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--faint)}
+
+.gastos-total b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px}
+
+.gastos-vacio{padding:18px 8px;font-size:12.5px;color:var(--faint);text-align:center}
+
 /* ---------- equipo ---------- */
 /* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es
    flex, no grid: la pastilla de estado aparece y desaparece, y con columnas
@@ -735,6 +878,19 @@ button,input,select,textarea{font:inherit;color:inherit}
    🔴 Con el selector de la clase pelada no alcanza: `.entry .en small` pesa
    mas y el renglon se colaba en escritorio, repetido con la pastilla. */
 .entry .en small.solo-chico{display:none}
+
+/* 🔴 El nombre lleva al Panel filtrado por esa persona: es lo que el manager
+   buscaba en «Contraseña». La flechita dice que se sale de la pantalla. */
+.entry .en a{display:inline-flex;align-items:center;gap:5px;max-width:100%;color:inherit;
+  text-decoration:none;border-radius:5px}
+
+.entry .en a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.entry .en a svg{color:var(--faint);flex-shrink:0}
+
+.entry .en a:hover{color:var(--m6);text-decoration:underline;text-underline-offset:3px}
+
+.entry .en a:hover svg{color:var(--m6)}
 
 /* lo que hizo esta semana es una COLUMNA, no un renglon chico debajo del
    nombre: es el dato por el que se entra a esta pantalla */
@@ -1014,6 +1170,9 @@ button,input,select,textarea{font:inherit;color:inherit}
   .llamada-row .ll-badges{grid-area:b}
   .llamada-row .ll-cash{grid-area:c}
   .llamada-row .del{grid-column:4;grid-row:1}
+  .llamada-row.con-quien{grid-template-columns:28px minmax(0,1fr) 70px 24px;
+    grid-template-areas:'n l l c' 'n q q q' 'n b b b'}
+  .llamada-row .ll-quien{grid-area:q}
   .plata-pie > div{padding-top:11px}
   .plata-pie b{font-size:15px}
   .tasas{padding:2px 15px}

@@ -239,6 +239,25 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   border-top:1px solid var(--line)}
 .cal-pie .helper{margin-right:auto;font-size:12px;color:var(--muted)}
 
+/* 🔴 Ver por persona: el mismo boton que el de fechas, con un <select> nativo
+   ENCIMA y transparente (el truco de la pastilla de rol). Se ve como el resto
+   de la cabecera y se maneja con el teclado y el lector de pantalla como un
+   select de verdad. Con alguien elegido se pinta como el atajo apretado: el
+   panel ya no es de todo el equipo y tiene que notarse. */
+.persona-btn{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--card);
+  border:1px solid var(--border);border-radius:var(--r-ctl);padding:7px 11px 7px 12px;
+  font-size:12.5px;font-weight:700;color:var(--ink);cursor:pointer;font-family:var(--body);
+  white-space:nowrap;box-shadow:var(--sombra);max-width:260px}
+.persona-btn span{overflow:hidden;text-overflow:ellipsis}
+.persona-btn svg{color:var(--muted);flex-shrink:0}
+.persona-btn:hover{border-color:var(--m4)}
+.persona-btn:focus-within{outline:2px solid var(--m5);outline-offset:2px}
+.persona-btn select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;
+  font-size:16px}
+.persona-btn.elegida{background:var(--m1);border-color:var(--m4);color:var(--m7)}
+.persona-btn.elegida svg{color:var(--m6)}
+.persona-btn[data-pendiente]{opacity:.55}
+
 /* banda que dice QUE ES la pantalla. La de solo lectura no lleva caja: es una
    nota al pie arriba, no una tarjeta mas que compite con los datos. */
 .what{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;margin-bottom:16px;line-height:1.45}
@@ -406,6 +425,44 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .lbv{text-align:right}
 .lbv b{font-family:var(--display);font-weight:800;font-size:15.5px;letter-spacing:-.4px}
 
+/* ---------- dia por dia ---------- */
+/* 🔴 La planilla que el manager armaba a mano: una fila por dia, abajo de
+   todo y a todo el ancho. Es una tabla de numeros: van alineados a la derecha
+   para que se comparen de un vistazo. Tiene su propio scroll horizontal para
+   no desbordar la pagina en una pantalla angosta. Abrir un dia muestra sus
+   llamadas con el closer, el lead y el cash. Un dia sin nada sale apagado y
+   no se abre: que nadie cargo tambien es dato. */
+.dxd{overflow-x:auto;margin:0 -4px}
+.dxd-h,.dxd-row{display:grid;
+  grid-template-columns:minmax(112px,1.4fr) repeat(4,minmax(64px,1fr)) minmax(92px,1.1fr) 22px;
+  align-items:center;gap:10px;min-width:580px;padding:9px 8px}
+.dxd-h{padding-top:0;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--faint);border-bottom:1px solid var(--border)}
+.dxd-h span:not(:first-child),.dxd-row > span:not(:first-child){text-align:right}
+.dxd-row{width:100%;background:none;border:0;border-bottom:1px solid var(--line);border-radius:0;
+  font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
+.dxd-row:hover{background:var(--hueco)}
+.dxd-row:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+.dxd-f{font-weight:600}
+.dxd-cash{font-family:var(--display);font-weight:800;font-size:14px;letter-spacing:-.3px;color:var(--m7)}
+.dxd-row svg{justify-self:end;color:var(--faint);transition:transform .15s}
+.dxd-row[aria-expanded="true"]{background:var(--hueco);border-bottom-color:transparent}
+.dxd-row[aria-expanded="true"] svg{transform:rotate(180deg);color:var(--muted)}
+.dxd-row.vacio{cursor:default;color:var(--faint)}
+.dxd-row.vacio:hover{background:none}
+.dxd-row.vacio .dxd-f{font-weight:400}
+.dxd-row.vacio .dxd-cash{color:var(--faint);font-weight:600}
+/* el padding derecho es el de la fila + la columna del chevron: asi el cash
+   de cada llamada cae debajo del cash del dia */
+.dxd-llamadas{min-width:580px;background:var(--hueco);border-bottom:1px solid var(--line);
+  padding:0 40px 6px 8px}
+.dxd-ll{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1.5fr) 92px;
+  align-items:center;gap:10px;padding:8px 0 8px 14px;border-top:1px solid var(--line)}
+.dxd-ll .ll-cash{font-size:13.5px}
+.dxd-lead{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dxd-msj{padding:10px 14px;font-size:12px;color:var(--faint)}
+.dxd-mas{display:flex;justify-content:center;padding-top:14px}
+
 /* ---------- pantallas de trabajo ---------- */
 /* 🔴 El eje que faltaba.
    Las cuatro pantallas de trabajo tienen DOS partes con roles distintos: donde
@@ -484,6 +541,14 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .llamada-row .del{background:none;border:0;color:var(--faint);cursor:pointer;
   padding:6px;border-radius:6px}
 .llamada-row .del:hover{background:var(--hueco);color:var(--rojo)}
+/* 🔴 El dueño y el manager cargan por todos: cada fila dice de quién es. Al
+   vendedor no le sale la columna (siempre es él), por eso es un modificador
+   y no una sexta columna para todos. */
+.llamada-row.con-quien{grid-template-columns:36px minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 90px 28px}
+.ll-quien{display:flex;align-items:center;gap:6px;min-width:0;font-size:12px;font-weight:600;
+  color:var(--muted)}
+.ll-quien svg{color:var(--faint);flex-shrink:0}
+.ll-quien span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .step{display:grid;grid-template-columns:36px 1fr 36px;background:var(--hueco);
   border:1px solid var(--border);border-radius:var(--r-ctl);overflow:hidden;max-width:150px}
 .step button{border:0;background:none;color:var(--muted);font-size:16px;cursor:pointer;height:38px;
@@ -527,6 +592,35 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
 .calc.apilado .dv.principal b{font-size:34px;letter-spacing:-1.2px;color:var(--m7)}
 .calc.apilado .dv.principal b.sin{color:var(--m7);opacity:.4}
 
+/* 🔴 Lo que acaba de guardarse se confirma donde se miraba: en la misma
+   linea del boton. Sin esto, quedarse en la pantalla parece no haber hecho nada. */
+.form-actions .helper.ok{color:var(--m6);font-weight:600}
+
+/* ---------- gastos cargados ---------- */
+/* Un mes a la vez, con las mismas flechas del calendario. Cada renglon es un
+   boton: tocarlo sube ese dia al formulario para corregirlo. */
+.mes-nav{display:inline-flex;align-items:center;gap:2px}
+.mes-nav b{font-family:var(--display);font-size:13px;font-weight:700;min-width:124px;text-align:center}
+.gastos-lista{display:flex;flex-direction:column}
+.gasto-row{display:grid;grid-template-columns:120px minmax(0,1fr) 110px 22px;align-items:center;
+  gap:12px;width:100%;padding:10px 8px;background:none;border:0;border-bottom:1px solid var(--line);
+  font-family:var(--body);font-size:13px;color:var(--ink);text-align:left;cursor:pointer}
+.gasto-row:last-child{border-bottom:0}
+.gasto-row:hover{background:var(--hueco)}
+.gasto-row:focus-visible{outline:2px solid var(--m5);outline-offset:-2px}
+.gasto-row[aria-current="true"]{background:var(--m1)}
+.gr-f{font-weight:600}
+.gr-nota{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gr-monto{text-align:right;font-family:var(--display);font-weight:800;font-size:14.5px;letter-spacing:-.3px}
+.gasto-row svg{justify-self:end;color:var(--faint)}
+.gasto-row:hover svg{color:var(--m6)}
+.gastos-total{display:flex;align-items:baseline;justify-content:space-between;gap:12px;
+  margin-top:4px;padding:12px 8px 0;border-top:1px solid var(--border)}
+.gastos-total span{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--faint)}
+.gastos-total b{font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.5px}
+.gastos-vacio{padding:18px 8px;font-size:12.5px;color:var(--faint);text-align:center}
+
 /* ---------- equipo ---------- */
 /* Renglones separados por una linea, no tarjetas dentro de una tarjeta. Y es
    flex, no grid: la pastilla de estado aparece y desaparece, y con columnas
@@ -541,6 +635,14 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
    🔴 Con el selector de la clase pelada no alcanza: `.entry .en small` pesa
    mas y el renglon se colaba en escritorio, repetido con la pastilla. */
 .entry .en small.solo-chico{display:none}
+/* 🔴 El nombre lleva al Panel filtrado por esa persona: es lo que el manager
+   buscaba en «Contraseña». La flechita dice que se sale de la pantalla. */
+.entry .en a{display:inline-flex;align-items:center;gap:5px;max-width:100%;color:inherit;
+  text-decoration:none;border-radius:5px}
+.entry .en a span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry .en a svg{color:var(--faint);flex-shrink:0}
+.entry .en a:hover{color:var(--m6);text-decoration:underline;text-underline-offset:3px}
+.entry .en a:hover svg{color:var(--m6)}
 /* lo que hizo esta semana es una COLUMNA, no un renglon chico debajo del
    nombre: es el dato por el que se entra a esta pantalla */
 .entry .hizo{width:152px;text-align:right;font-size:12px;color:var(--muted);white-space:nowrap;
@@ -753,6 +855,9 @@ body[data-view="mobile"] .ghl-frame{max-width:412px}
   .llamada-row .ll-badges{grid-area:b}
   .llamada-row .ll-cash{grid-area:c}
   .llamada-row .del{grid-column:4;grid-row:1}
+  .llamada-row.con-quien{grid-template-columns:28px minmax(0,1fr) 70px 24px;
+    grid-template-areas:'n l l c' 'n q q q' 'n b b b'}
+  .llamada-row .ll-quien{grid-area:q}
   .plata-pie > div{padding-top:11px}
   .plata-pie b{font-size:15px}
   .tasas{padding:2px 15px}
@@ -829,6 +934,9 @@ body[data-view="mobile"] .llamada-row .ll-lead{grid-area:l}
 body[data-view="mobile"] .llamada-row .ll-badges{grid-area:b}
 body[data-view="mobile"] .llamada-row .ll-cash{grid-area:c}
 body[data-view="mobile"] .llamada-row .del{grid-column:4;grid-row:1}
+body[data-view="mobile"] .llamada-row.con-quien{grid-template-columns:28px minmax(0,1fr) 70px 24px;
+    grid-template-areas:'n l l c' 'n q q q' 'n b b b'}
+body[data-view="mobile"] .llamada-row .ll-quien{grid-area:q}
 body[data-view="mobile"] .plata-pie > div{padding-top:11px}
 body[data-view="mobile"] .plata-pie b{font-size:15px}
 body[data-view="mobile"] .tasas{padding:2px 15px}
@@ -884,7 +992,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
       </div>
       <nav class="nav">
         <button data-nav="panel" aria-current="page">Panel</button>
-        <button data-nav="gasto">Gasto</button>
+        <button data-nav="gasto">Gasto en publicidad</button>
         <button data-nav="setter">Reporte Setter</button>
         <button data-nav="llamada">Post Llamada</button>
         <button data-nav="equipo">Equipo</button>
@@ -908,6 +1016,11 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
     <div class="page-head">
       <div><h1>Panel de Ventas</h1><div class="sub">Semana 20–26 de julio de 2026</div></div>
       <div class="head-actions">
+        <!-- 🔴 Ver por persona: un <select> nativo, invisible, encima del botón.
+             Con alguien elegido el panel se ve como lo vería esa persona. -->
+        <label class="persona-btn"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Todo el equipo</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+          <select aria-label="Ver a"><option selected>Todo el equipo</option><option>Sofía Lara</option><option>Mateo Gil</option><option>Andrea Ríos</option><option>Diego Torres</option><optgroup label="De baja"><option>Carlos Méndez</option></optgroup></select>
+        </label>
         <div class="fechas">
           <button class="fechas-btn" aria-haspopup="dialog" aria-expanded="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg><span>Esta semana</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
           <div class="fechas-pop" role="dialog" aria-label="Elegir período">
@@ -982,7 +1095,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
              (no comparte escala con los leads). Va AFUERA de .fn para no
              correr las reglas nth-child que colorean los seis pasos reales. -->
         <div class="fnr spend">
-          <span class="fn-n"><strong>Gasto</strong><small>costo de captación</small></span>
+          <span class="fn-n"><strong>Publicidad</strong><small>gasto en anuncios</small></span>
           <span class="fn-track" aria-hidden="true"></span>
           <span class="fn-v num">$14.4k</span>
         </div>
@@ -1045,6 +1158,27 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
             <span class="lbv"><b class="num">30</b></span></div>
         </div>
       </div>
+    </div>
+
+    <!-- 🔴 Día por día: abajo de todo, a todo el ancho. Una fila por día hasta
+         hoy (los días que no pasaron no salen). Abrir un día pide sus llamadas. -->
+    <div class="card banda">
+      <div class="card-head"><div><h3>Día por día</h3><p>del más reciente al más viejo · toca un día para ver sus llamadas</p></div><span class="chip n">4 días</span></div>
+      <div class="dxd">
+        <div class="dxd-h"><span>Día</span><span>Agendas</span><span>Llamadas</span><span>Asistieron</span><span>Cierres</span><span>Cash</span><span></span></div>
+          <button class="dxd-row" aria-expanded="true"><span class="dxd-f">jue 23 jul</span><span class="num">16</span><span class="num">15</span><span class="num">11</span><span class="num">4</span><span class="dxd-cash num">$8,700</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="dxd-llamadas">
+            <div class="dxd-ll"><span class="ll-quien"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Andrea Ríos</span></span><span class="dxd-lead">Sofía Ramírez</span><div class="ll-badges"><span class="pill set">asistió</span><span class="pill org-anuncios">anuncios</span><span class="pill amb">cerró</span></div><span class="ll-cash num">$1,500</span></div>
+            <div class="dxd-ll"><span class="ll-quien"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Diego Torres</span></span><span class="dxd-lead">Bruno Álvarez</span><div class="ll-badges"><span class="pill no">no asistió</span><span class="pill org-organico">orgánico</span></div><span class="ll-cash num">—</span></div>
+            <div class="dxd-ll"><span class="ll-quien"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Carlos Méndez</span></span><span class="dxd-lead">Mateo López</span><div class="ll-badges"><span class="pill set">asistió</span><span class="pill clo">reagendada</span><span class="pill org-referidos">referidos</span></div><span class="ll-cash num">—</span></div>
+          </div>
+          <button class="dxd-row" aria-expanded="false"><span class="dxd-f">mié 22 jul</span><span class="num">15</span><span class="num">14</span><span class="num">9</span><span class="num">3</span><span class="dxd-cash num">$6,300</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <button class="dxd-row" aria-expanded="false"><span class="dxd-f">mar 21 jul</span><span class="num">17</span><span class="num">15</span><span class="num">10</span><span class="num">4</span><span class="dxd-cash num">$7,200</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
+          <div class="dxd-row vacio"><span class="dxd-f">lun 20 jul</span><span class="num">0</span><span class="num">0</span><span class="num">0</span><span class="num">0</span><span class="dxd-cash num">—</span><span></span></div>
+      </div>
+      <div class="dxd-mas"><button class="btn-ghost btn-sm">Ver los 45 días</button></div>
+      <div class="note"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 16v-5M12 8h.01"/></svg>
+        <span>Las <b>agendas</b> son las que los setters reservaron ese día; las <b>llamadas</b>, las que se hicieron ese día. No tienen por qué coincidir.</span></div>
     </div>
   </section>
 
@@ -1110,11 +1244,11 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
   <section class="sc" data-s="gasto">
    <div class="hoja">
     <div class="page-head">
-      <div><h1>Gasto del día</h1><div class="sub">cuánto se gastó hoy en captación · uno por día</div></div>
+      <div><h1>Gasto en publicidad</h1><div class="sub">cuánto se invirtió en anuncios · uno por día</div></div>
     </div>
     <div class="what write">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-      <span>Al cerrar el día, registra cuánto gastaste en captación. Con esto el panel calcula el <b>CAC</b>, el <b>costo por asistida</b> y el <b>AOV</b>.</span>
+      <span>Al cerrar el día, registra cuánto gastaste en publicidad. Con esto el panel calcula el <b>CAC</b> y el <b>costo por asistida</b>.</span>
       <span class="badge-w">Se carga a mano</span>
     </div>
 
@@ -1126,7 +1260,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         </div>
         <div class="section-title">Cuánto</div>
         <div class="form-grid">
-          <div class="field c6"><label>Gasto del día <span class="req">*</span></label>
+          <div class="field c6"><label>Gasto en publicidad <span class="req">*</span></label>
             <div class="money-inp"><span class="cur">$</span><input class="num" value="220" inputmode="decimal"></div>
             <span class="hint">Si gastaste en varias plataformas, súmalas. La nota queda de ayuda-memoria.</span></div>
           <div class="field c6"><label>Nota (opcional)</label>
@@ -1134,8 +1268,9 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
             <span class="hint">Un renglón, para recordar de dónde salió el gasto.</span></div>
         </div>
         <div class="form-actions">
-          <span class="helper">Se guarda al enviar y el panel se actualiza al instante.</span>
-          <button class="btn-primary">Guardar gasto</button>
+          <!-- al guardar se queda en la pantalla: lo confirma acá -->
+          <span class="helper ok">Guardado: 25 de julio, $180.</span>
+          <button class="btn-primary">Reemplazar</button>
         </div>
       </div>
 
@@ -1143,7 +1278,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="card">
           <div class="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribes</p></div></div>
           <div class="calc apilado">
-            <div class="dv principal"><span>Gasto del día</span><b class="num">$220</b></div>
+            <div class="dv principal"><span>Gasto en publicidad</span><b class="num">$220</b></div>
             <div class="dv"><span>Fecha</span><b class="num">26 de julio</b></div>
           </div>
         </div>
@@ -1155,6 +1290,19 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <div class="form-actions"><span class="helper">Así el día no se cuenta dos veces.</span><button class="btn-ghost btn-sm">Traer lo que había</button></div>
         </div>
       </div>
+    </div>
+
+    <!-- 🔴 Historial: un mes a la vez. Tocar un día lo sube al formulario. -->
+    <div class="card" style="margin-top:16px">
+      <div class="card-head"><div><h3>Gastos cargados</h3><p>toca un día para corregirlo</p></div>
+        <div class="mes-nav"><button class="cal-flecha" aria-label="Mes anterior"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg></button><b>Julio 2026</b><button class="cal-flecha" aria-label="Mes siguiente" disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg></button></div></div>
+      <div class="gastos-lista">
+        <button class="gasto-row" aria-current="true"><span class="gr-f">dom 26 jul</span><span class="gr-nota">$5k Meta, $12k Google</span><span class="gr-monto num">$220</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="gasto-row"><span class="gr-f">sáb 25 jul</span><span class="gr-nota">Meta</span><span class="gr-monto num">$180</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="gasto-row"><span class="gr-f">vie 24 jul</span><span class="gr-nota"></span><span class="gr-monto num">$210</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+        <button class="gasto-row"><span class="gr-f">jue 23 jul</span><span class="gr-nota">Meta + Google</span><span class="gr-monto num">$260</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+      </div>
+      <div class="gastos-total"><span>Total de julio</span><b class="num">$870</b></div>
     </div>
    </div>
   </section>
@@ -1177,7 +1325,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="form-grid">
           <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
           <div class="field c8"><label>Setter <span class="req">*</span></label>
-            <select><option>Sofía Lara</option><option>Mateo Gil</option><option>Valentina Paz</option></select></div>
+            <select><option value="" disabled selected>Elige quién reporta</option><option>Sofía Lara</option><option>Mateo Gil</option><option>Valentina Paz</option></select></div>
         </div>
         <div class="section-title">Tu día</div>
         <div class="form-grid">
@@ -1295,8 +1443,10 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="section-title">Quién y cuándo</div>
         <div class="form-grid">
           <div class="field c4"><label>Fecha <span class="req">*</span></label><input type="date" value="2026-07-26"></div>
+          <!-- 🔴 El dueño y el manager eligen el closer: arranca vacío y obliga a
+               elegir. El vendedor ve su nombre fijo (.confirma-persona). -->
           <div class="field c8"><label>Closer <span class="req">*</span></label>
-            <div class="confirma-persona"><b>Andrea Ríos</b></div>
+            <select><option value="" disabled>Elige quién hizo la llamada</option><option selected>Andrea Ríos</option><option>Diego Torres</option></select>
           </div>
         </div>
         <!-- 🔴 Fase D (sesion 2) · nombre del lead obligatorio, arriba de los
@@ -1304,8 +1454,11 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
         <div class="section-title">Con quién</div>
         <div class="form-grid">
           <div class="field full c12"><label>Nombre del lead <span class="req">*</span></label>
-            <input type="text" value="Sofía Ramírez" maxlength="80" placeholder="Nombre y apellido del lead"></div>
+            <input type="text" value="sofia ramirez" maxlength="80" placeholder="Nombre y apellido del lead"></div>
         </div>
+        <!-- 🔴 Aviso de lead repetido: no bloquea, puede ser otra llamada real. -->
+        <div class="note warn"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 2 18a2 2 0 0 0 1.7 3h16.6A2 2 0 0 0 22 18L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+          <span><b>Sofía Ramírez ya tiene una llamada cargada el 26 de julio</b> (Andrea Ríos). Si es la misma, no la cargues de nuevo.</span></div>
         <!-- 🔴 Sesión 3 · origen del lead obligatorio SIN default. Segmented
              radio: 3 opciones, una sola activa a la vez. El closer tiene que
              elegir antes de poder Guardar. -->
@@ -1358,9 +1511,10 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
     <div class="card" style="margin-top:16px">
       <div class="card-head"><div><h3>Llamadas del día</h3><p>4 cargadas</p></div></div>
       <div class="llamadas-lista">
-        <div class="llamada-row">
+        <div class="llamada-row con-quien">
           <span class="ll-n">#1</span>
           <span class="ll-lead">Sofía Ramírez</span>
+          <span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Andrea Ríos</span></span>
           <div class="ll-badges">
             <span class="pill set">asistió</span>
             <span class="pill org-anuncios">anuncios</span>
@@ -1369,9 +1523,10 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <span class="ll-cash num">$1,500</span>
           <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
-        <div class="llamada-row">
+        <div class="llamada-row con-quien">
           <span class="ll-n">#2</span>
           <span class="ll-lead">Mateo López</span>
+          <span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Diego Torres</span></span>
           <div class="ll-badges">
             <span class="pill set">asistió</span>
             <span class="pill clo">reagendada</span>
@@ -1380,9 +1535,10 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <span class="ll-cash num">—</span>
           <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
-        <div class="llamada-row">
+        <div class="llamada-row con-quien">
           <span class="ll-n">#3</span>
           <span class="ll-lead">Valentina Pérez</span>
+          <span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Andrea Ríos</span></span>
           <div class="ll-badges">
             <span class="pill no">no asistió</span>
             <span class="pill org-organico">orgánico</span>
@@ -1390,9 +1546,10 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <span class="ll-cash num">—</span>
           <button class="del" title="Borrar" aria-label="Borrar"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
         </div>
-        <div class="llamada-row">
+        <div class="llamada-row con-quien">
           <span class="ll-n">#4</span>
           <span class="ll-lead">Bruno Álvarez</span>
+          <span class="ll-quien"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></svg><span>Diego Torres</span></span>
           <div class="ll-badges">
             <span class="pill set">asistió</span>
             <span class="pill org-organico">orgánico</span>
@@ -1420,7 +1577,7 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
 
     <div class="trabajo">
       <div class="card">
-        <div class="card-head"><div><h3>Tu equipo</h3><p>5 activos · 1 de baja</p></div><span class="chip n">esta semana</span></div>
+        <div class="card-head"><div><h3>Tu equipo</h3><p>5 activos · 1 de baja</p></div><span class="chip n">20–26 jul</span></div>
 
         <div class="entry yo"><span class="av2">AP</span>
           <span class="en"><strong>Ana Pérez</strong><small>Tú · ana@negocio.com</small></span>
@@ -1430,31 +1587,31 @@ body[data-view="mobile"] .barra-guardar .btn-primary{width:100%}
           <span class="del-hueco"></span></div>
 
         <div class="entry"><span class="av2">SL</span>
-          <span class="en"><strong>Sofía Lara</strong><small class="solo-chico">Setter</small></span>
+          <span class="en"><strong><a href="#" title="Ver su panel"><span>Sofía Lara</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a></strong><small class="solo-chico">Setter</small><small>Último reporte: hoy</small></span>
           <span class="pill rol set">Setter</span>
           <span class="hizo num"><b>38</b> agendas</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">LH</span>
-          <span class="en"><strong>Lucía Herrera</strong><small class="solo-chico">Manager</small></span>
+          <span class="en"><strong><a href="#" title="Ver su panel"><span>Lucía Herrera</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a></strong><small class="solo-chico">Manager</small><small>Último reporte: ayer</small></span>
           <span class="pill rol man">Manager</span>
           <span class="hizo num"><b>$9,600</b> · 5 cierres</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">MG</span>
-          <span class="en"><strong>Mateo Gil</strong><small class="solo-chico">Setter</small></span>
+          <span class="en"><strong><a href="#" title="Ver su panel"><span>Mateo Gil</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a></strong><small class="solo-chico">Setter</small><small>Último reporte: hace 4 días</small></span>
           <span class="pill rol set">Setter</span>
           <span class="hizo num"><b>36</b> agendas</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">AR</span>
-          <span class="en"><strong>Andrea Ríos</strong><small class="solo-chico">Closer</small></span>
+          <span class="en"><strong><a href="#" title="Ver su panel"><span>Andrea Ríos</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a></strong><small class="solo-chico">Closer</small><small>Último reporte: hoy</small></span>
           <span class="pill rol clo">Closer</span>
           <span class="hizo num"><b>$19,800</b> · 11 cierres</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
 
         <div class="entry"><span class="av2">DT</span>
-          <span class="en"><strong>Diego Torres</strong><small class="solo-chico">Setter y closer</small></span>
+          <span class="en"><strong><a href="#" title="Ver su panel"><span>Diego Torres</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M8 7h9v9"/></svg></a></strong><small class="solo-chico">Setter y closer</small><small>Último reporte: ayer</small></span>
           <span class="pill rol amb">Setter y closer</span>
           <span class="hizo num"><b>$14,400</b> · 8 cierres</span>
           <button class="del" title="Dar de baja"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
