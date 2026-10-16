@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import type { Barra, FilaRanking, Metricas, MetricasConCosto, PasoEmbudo, Tasa } from '@/shared/calculo/metricas'
+import type { AvisoEmbudo, Barra, FilaRanking, Metricas, MetricasConCosto, PasoEmbudo, Tasa } from '@/shared/calculo/metricas'
 import { EL_GUION } from '@/shared/formato'
 import {
   dinero, dineroCorto, iniciales, numero, plural, porcentaje, porcentajeEntero, puntos,
@@ -139,22 +139,45 @@ function Tasa_({
  * tasa es una proporción, y una proporción se ve— y la banda de arriba pasa de
  * nueve cajas a dos piezas.
  */
-export function Tasas({ m, deltas }: { m: Metricas; deltas: [number | null, number | null, number | null] }) {
+export interface Deltas {
+  agenda: number | null; calificacion: number | null; asistencia: number | null; cierre: number | null
+}
+
+/**
+ * 🔴 009 · la tasa de calificación es el cuarto renglón, debajo de la de agenda
+ * («una métrica más debajo de Agendas», pedido del dueño), y SOLO si el período midió
+ * calificadas: sin medir, la banda es la de siempre. Su contexto dice las
+ * agendas de los días MEDIDOS, que es de donde sale el porcentaje.
+ */
+export function Tasas({ m, deltas }: { m: Metricas; deltas: Deltas }) {
   return (
     <div className="card tasas">
-      <Tasa_ etiqueta="Tasa de agenda" valor={m.tasaAgenda} diferencia={deltas[0]}
+      <Tasa_ etiqueta="Tasa de agenda" valor={m.tasaAgenda} diferencia={deltas.agenda}
         contexto={<><b>{numero(m.agendas)}</b> agendas de <b>{numero(m.leads)}</b> leads</>} />
-      <Tasa_ etiqueta="Tasa de asistencia" valor={m.tasaAsistencia} diferencia={deltas[1]}
+      {m.midioCalificadas && (
+        <Tasa_ etiqueta="Tasa de calificación" valor={m.tasaCalificacion} diferencia={deltas.calificacion}
+          contexto={<><b>{numero(m.calificadas)}</b> calificadas de <b>{numero(m.agendasMedidas)}</b> agendas</>} />
+      )}
+      <Tasa_ etiqueta="Tasa de asistencia" valor={m.tasaAsistencia} diferencia={deltas.asistencia}
         contexto={<><b>{numero(m.asistieron)}</b> asistieron de <b>{numero(m.llamadas)}</b> llamadas</>} />
-      <Tasa_ etiqueta="Tasa de cierre" valor={m.tasaCierre} diferencia={deltas[2]}
+      <Tasa_ etiqueta="Tasa de cierre" valor={m.tasaCierre} diferencia={deltas.cierre}
         contexto={<><b>{numero(m.cierres)}</b> cierres de <b>{numero(m.asistieron)}</b> asistencias</>} />
     </div>
   )
 }
 
+const AVISOS_EMBUDO: Record<Exclude<AvisoEmbudo, null>, React.ReactNode> = {
+  agendas: <>Las <b>agendas</b> y las <b>llamadas</b> no tienen por qué coincidir: la agenda la carga
+    el setter y la llamada el closer. La diferencia es la que se cae entre los dos.</>,
+  calificadas: <>Las <b>calificadas</b> y las <b>llamadas</b> no tienen por qué coincidir: la calificada
+    la carga el setter y la llamada el closer. La diferencia es la que se cae entre los dos.</>,
+  cobertura: <>Hay días de este período sin <b>agendas calificadas</b> cargadas: por eso las llamadas
+    se comparan con las agendas.</>,
+}
+
 export function Embudo({
-  pasos, simbolo, avisoAgendas, deQue,
-}: { pasos: PasoEmbudo[]; simbolo: string; avisoAgendas: boolean; deQue: string }) {
+  pasos, simbolo, aviso, deQue,
+}: { pasos: PasoEmbudo[]; simbolo: string; aviso: AvisoEmbudo; deQue: string }) {
   // 🔴 Fase A · el paso Gasto se renderiza AFUERA de `.fn`: el gasto NO es un
   // conteo del funnel, es el costo que lo produjo. Los colores salen de la
   // clase `p-<clave>` de cada paso, no de su posición (con Calificadas el
@@ -193,13 +216,10 @@ export function Embudo({
           </div>
         ))}
       </div>
-      {avisoAgendas && (
+      {aviso && (
         <div className="note">
           <IconoInfo />
-          <span>
-            Las <b>agendas</b> y las <b>llamadas</b> no tienen por qué coincidir: la agenda la carga
-            el setter y la llamada el closer. La diferencia es la que se cae entre los dos.
-          </span>
+          <span>{AVISOS_EMBUDO[aviso]}</span>
         </div>
       )}
     </div>
@@ -305,12 +325,18 @@ export function RankingClosers({ filas, simbolo }: { filas: FilaRanking[]; simbo
   )
 }
 
+/** 🔴 009 · con calificadas en el período, el kernel ordena por ellas y trae
+ *  las agendas en el detalle (`detalle.agendas` presente = ese modo). */
 export function RankingSetters({ filas }: { filas: FilaRanking[] }) {
+  const porCalificadas = filas.some((f) => f.detalle.agendas !== undefined)
   return (
     <Ranking
-      titulo="Ranking · Setters" subtitulo="por agendas" Icono={IconoMedalla} filas={filas}
+      titulo="Ranking · Setters" subtitulo={porCalificadas ? 'por agendas calificadas' : 'por agendas'}
+      Icono={IconoMedalla} filas={filas}
       formatear={(v) => numero(v)}
-      detalle={(f) => `${porcentajeEntero(f.detalle.tasa)} de agenda · ${plural(f.detalle.leads ?? 0, 'lead')}`}
+      detalle={(f) => porCalificadas
+        ? `${plural(f.detalle.agendas ?? 0, 'agenda')} · ${porcentajeEntero(f.detalle.tasa)} calificadas`
+        : `${porcentajeEntero(f.detalle.tasa)} de agenda · ${plural(f.detalle.leads ?? 0, 'lead')}`}
     />
   )
 }

@@ -190,7 +190,7 @@ export function rankingClosers(
  * Setters ordenados por agendas — o por CALIFICADAS, si el período midió algo.
  *
  * 🔴 Con calificadas, el valor es la suma de las medidas y el detalle lleva las
- * agendas y el % calificado de cada uno (sobre SUS agendas medidas). Un día sin
+ * agendas de sus días medidos y el % calificado sobre ellas. Un día sin
  * medir suma 0 al orden: en la práctica todo el equipo empieza a cargar el
  * mismo día, el de la actualización. `detalle.agendas` presente = modo calificadas.
  */
@@ -214,7 +214,9 @@ export function rankingSetters(
       ? {
           persona,
           valor: t.calificadas,
-          detalle: { tasa: tasa(t.calificadas, t.agendasMedidas), leads: t.leads, agendas: t.agendas },
+          // las agendas de los días MEDIDOS: con «38 agendas · 97%» el que lee
+          // divide calificadas por agendas, y tiene que darle lo mismo
+          detalle: { tasa: tasa(t.calificadas, t.agendasMedidas), leads: t.leads, agendas: t.agendasMedidas },
         }
       : {
           persona,
@@ -403,6 +405,19 @@ export function embudo(m: Metricas, gastoCents?: number): PasoEmbudo[] {
     { clave: 'cierres', nombre: 'Cierres', valor: m.cierres, ancho: ancho(m.cierres), conversion: { etiqueta: 'cierre', tasa: m.tasaCierre } },
     { clave: 'cash', nombre: 'Cash', valor: m.cashCents, ancho: Math.max(4, anchoCash), conversion: { etiqueta: 'cobro', tasa: m.porcentajeCobro }, esDinero: true },
   ]
+}
+
+/**
+ * Qué dice la nota de abajo del embudo. 🔴 Con calificadas medidas, Llamadas se
+ * compara contra ellas y la nota también; con días sin medir, la nota explica
+ * por qué Llamadas sigue «de agenda». `null` = los dos números coinciden.
+ */
+export type AvisoEmbudo = 'agendas' | 'calificadas' | 'cobertura' | null
+
+export function avisoDelEmbudo(m: Metricas): AvisoEmbudo {
+  if (!m.midioCalificadas) return m.agendas !== m.llamadas ? 'agendas' : null
+  if (!m.coberturaCompleta) return 'cobertura'
+  return m.calificadas !== m.llamadas ? 'calificadas' : null
 }
 
 export function enVentana<T extends { fecha: string }>(filas: readonly T[], v: Ventana): T[] {

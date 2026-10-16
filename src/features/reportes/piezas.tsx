@@ -5,31 +5,39 @@ import { useId } from 'react'
 import { EL_GUION } from '@/shared/formato'
 
 /** El `− n ＋` del mockup. El input queda editable: escribir 24 es más rápido
- *  que apretar 24 veces, y en el celular abre el teclado numérico. */
+ *  que apretar 24 veces, y en el celular abre el teclado numérico.
+ *
+ *  Con `onVaciar`, el contador puede quedar VACÍO (`valor = null`): es «todavía
+ *  no lo dijiste», que no es lo mismo que 0. Con `tope`, nunca pasa de ahí. */
 export function Stepper({
-  nombre, valor, onCambio, etiqueta, pista, ancho = 'c3',
+  nombre, valor, onCambio, onVaciar, tope, etiqueta, pista, ancho = 'c3',
 }: {
-  nombre: string; valor: number; onCambio: (n: number) => void
+  nombre: string; valor: number | null; onCambio: (n: number) => void
+  onVaciar?: () => void
+  tope?: number
   etiqueta: string; pista?: string
   /** Cuántas de las 12 columnas ocupa. Un contador de dos dígitos no necesita
    *  el mismo ancho que un monto de cinco cifras. */
   ancho?: 'c3' | 'c4' | 'c6' | 'c8'
 }) {
   const id = useId()
+  const acotar = (n: number) => Math.max(0, tope === undefined ? n : Math.min(n, tope))
   return (
     <div className={`field ${ancho}`}>
       <label htmlFor={id}>{etiqueta} <span className="req">*</span></label>
       <div className="step">
         {/* 🔴 no baja de 0: un día con −1 llamadas rompe cualquier tasa */}
-        <button type="button" onClick={() => onCambio(Math.max(0, valor - 1))} aria-label={`Restar uno a ${etiqueta}`}>−</button>
+        <button type="button" onClick={() => onCambio(acotar((valor ?? 1) - 1))} aria-label={`Restar uno a ${etiqueta}`}>−</button>
         <input
-          id={id} name={nombre} className="num" inputMode="numeric" value={valor}
+          id={id} name={nombre} className="num" inputMode="numeric" value={valor ?? ''}
           onChange={(e) => {
-            const n = Number(e.target.value.replace(/\D/g, ''))
-            onCambio(Number.isFinite(n) ? n : 0)
+            const texto = e.target.value.replace(/\D/g, '')
+            if (texto === '' && onVaciar) { onVaciar(); return }
+            const n = Number(texto)
+            onCambio(acotar(Number.isFinite(n) ? n : 0))
           }}
         />
-        <button type="button" onClick={() => onCambio(valor + 1)} aria-label={`Sumar uno a ${etiqueta}`}>＋</button>
+        <button type="button" onClick={() => onCambio(acotar((valor ?? 0) + 1))} aria-label={`Sumar uno a ${etiqueta}`}>＋</button>
       </div>
       {pista && <span className="hint">{pista}</span>}
     </div>

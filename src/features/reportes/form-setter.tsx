@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation'
 
 import { tasa } from '@/shared/calculo/metricas'
 import { IconoAviso, IconoLapiz } from '@/shared/chasis/iconos'
-import { fechaLarga, numero, porcentaje } from '@/shared/formato'
+import { EL_GUION, fechaLarga, numero, porcentaje } from '@/shared/formato'
 import type { Persona, ReporteSetter } from '@/shared/tipos'
 import type { OpcionPersona } from '@/features/filtros/barra-filtros'
 import { useLista, type Pagina } from '@/features/filtros/use-lista'
 import { Derivado, Stepper } from './piezas'
 import { ReportesCargados } from './reportes-cargados'
 
-interface Existente { conversaciones: number; agendas: number }
+interface Existente { conversaciones: number; agendas: number; calificadas: number | null }
 
 /**
  * El reporte de fin de día del setter, con lo ya cargado abajo.
@@ -21,9 +21,14 @@ interface Existente { conversaciones: number; agendas: number }
  * por el equipo manda varios seguidos y quiere ver que quedaron en la lista.
  * Para el dueño y el manager el select vuelve a vacío: el próximo reporte es
  * de otra persona.
+ *
+ * 🔴 Agendas calificadas (009) solo aparece si la base ya tiene la columna
+ * (`conCalificadas`). Arranca VACÍO —no 0— y es obligatorio en un reporte con
+ * agendas; nunca más que las agendas. Un reporte viejo que nunca la midió se
+ * puede corregir dejándola en blanco: no se inventan datos para atrás.
  */
 export function FormSetter({
-  personas, hoy, bloqueadoA, lista: primera, setters, nombres, inicioSemana,
+  personas, hoy, bloqueadoA, lista: primera, setters, nombres, inicioSemana, conCalificadas,
 }: {
   personas: Persona[]
   hoy: string
@@ -34,6 +39,8 @@ export function FormSetter({
   setters?: OpcionPersona[]
   nombres: Record<string, string>
   inicioSemana: 0 | 1
+  /** La base aplicó la 009: hay dónde guardar las calificadas. */
+  conCalificadas: boolean
 }) {
   const router = useRouter()
   const [fecha, setFecha] = useState(hoy)
@@ -44,6 +51,7 @@ export function FormSetter({
   const [personaId, setPersonaId] = useState(bloqueadoA ?? '')
   const [conversaciones, setConversaciones] = useState(0)
   const [agendas, setAgendas] = useState(0)
+  const [calificadas, setCalificadas] = useState<number | null>(null)
   const [cargado, setExistente] = useState<Existente | null>(null)
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -69,12 +77,19 @@ export function FormSetter({
   const existente = personaId ? cargado : null
   const t = tasa(agendas, conversaciones)
   const persona = personas.find((p) => p.id === personaId)
+  // 🔴 Nunca más que las agendas, y con 0 agendas no hay nada que calificar:
+  // se manda 0 sin preguntar. Se DERIVA al mostrar, no se pisa el estado: el
+  // que reescribe «12» en Agendas pasa por 1 mientras tipea, y recortar ahí le
+  // borraría las calificadas que ya había puesto.
+  const calificadasAMandar = agendas === 0 ? 0 : calificadas === null ? null : Math.min(calificadas, agendas)
+  const viejoSinMedir = existente !== null && existente.calificadas === null
+  const faltaCalificadas = conCalificadas && calificadasAMandar === null && !viejoSinMedir
 
   /** Tocar un reporte de la lista lo sube al formulario para corregirlo. */
   function elegir(r: ReporteSetter) {
     setFecha(r.fecha)
     if (!bloqueadoA) setPersonaId(r.personaId)
-    setConversaciones(r.conversaciones); setAgendas(r.agendas)
+    setConversaciones(r.conversaciones); setAgendas(r.agendas); setCalificadas(r.calificadas)
     setGuardado(null); setError(null)
     formulario.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
@@ -84,7 +99,10 @@ export function FormSetter({
     try {
       const r = await fetch('/api/reportes/setter', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ fecha, personaId, conversaciones, agendas }),
+        body: JSON.stringify({
+          fecha, personaId, conversaciones, agendas,
+          ...(conCalificadas ? { calificadas: calificadasAMandar } : {}),
+        }),
       })
       if (!r.ok) {
         const d = await r.json().catch(() => null)
@@ -92,7 +110,7 @@ export function FormSetter({
         return
       }
       setGuardado(`Guardado: ${persona?.nombre ?? 'el reporte'}, ${fechaLarga(fecha)}.`)
-      setConversaciones(0); setAgendas(0)
+      setConversaciones(0); setAgendas(0); setCalificadas(null)
       setPersonaId(bloqueadoA ?? '')
       lista.recargar()
       router.refresh()
@@ -109,7 +127,7 @@ export function FormSetter({
         <IconoLapiz />
         <span>
           Al terminar tu día, registra tus números. Con esto el panel calcula la{' '}
-          <b>tasa de agenda</b> del equipo.
+          <b>tasa de agenda</b>{conCalificadas && <> y la <b>tasa de calificación</b></>} del equipo.
         </span>
         <span className="badge-w">Se carga a mano</span>
       </div>
@@ -140,10 +158,16 @@ export function FormSetter({
 
         <div className="section-title">Tu día</div>
         <div className="form-grid">
-          <Stepper ancho="c6" nombre="conversaciones" etiqueta="Conversaciones iniciadas" valor={conversaciones}
+          <Stepper ancho={conCalificadas ? 'c4' : 'c6'} nombre="conversaciones" etiqueta="Conversaciones iniciadas" valor={conversaciones}
             onCambio={(n) => { setConversaciones(n); setGuardado(null) }} pista="Con cuántas personas empezaste una conversación hoy." />
-          <Stepper ancho="c6" nombre="agendas" etiqueta="Agendas" valor={agendas}
+          <Stepper ancho={conCalificadas ? 'c4' : 'c6'} nombre="agendas" etiqueta="Agendas" valor={agendas}
             onCambio={(n) => { setAgendas(n); setGuardado(null) }} pista="Cuántas llamadas quedaron agendadas." />
+          {conCalificadas && (
+            <Stepper ancho="c4" nombre="calificadas" etiqueta="Agendas calificadas" valor={calificadasAMandar}
+              tope={agendas} onCambio={(n) => { setCalificadas(n); setGuardado(null) }}
+              onVaciar={() => { setCalificadas(null); setGuardado(null) }}
+              pista="De esas agendas, cuántas tienen el dinero para invertir." />
+          )}
         </div>
 
         {error && (
@@ -153,8 +177,10 @@ export function FormSetter({
         <div className="form-actions">
           {guardado
             ? <span className="helper ok" role="status">{guardado}</span>
-            : <span className="helper">Se guarda al enviar y el panel se actualiza al instante.</span>}
-          <button className="btn-primary" onClick={enviar} disabled={enviando || !personaId} type="button">
+            : faltaCalificadas
+              ? <span className="helper">Falta: cuántas agendas fueron calificadas.</span>
+              : <span className="helper">Se guarda al enviar y el panel se actualiza al instante.</span>}
+          <button className="btn-primary" onClick={enviar} disabled={enviando || !personaId || faltaCalificadas} type="button">
             {enviando ? 'Guardando…' : existente ? 'Reemplazar' : 'Enviar reporte'}
           </button>
         </div>
@@ -165,6 +191,10 @@ export function FormSetter({
           <div className="card-head"><div><h3>Lo que estás por mandar</h3><p>se actualiza mientras escribes</p></div></div>
           <div className="calc apilado">
             <Derivado principal etiqueta="Tasa de agenda" valor={porcentaje(t)} />
+            {conCalificadas && (
+              <Derivado etiqueta="Tasa de calificación"
+                valor={calificadasAMandar === null ? EL_GUION : porcentaje(tasa(calificadasAMandar, agendas))} />
+            )}
             <Derivado etiqueta="Agendas" valor={numero(agendas)} />
             <Derivado etiqueta="Conversaciones" valor={numero(conversaciones)} />
           </div>
@@ -176,7 +206,9 @@ export function FormSetter({
             <IconoAviso />
             <span>
               <b>{persona?.nombre} ya cargó el {fechaLarga(fecha)}</b> — {numero(existente.conversaciones)} conversaciones
-              y {numero(existente.agendas)} agendas. Si envías de nuevo, se <b>reemplaza</b> lo
+              {conCalificadas && existente.calificadas !== null
+                ? <>, {numero(existente.agendas)} agendas y {numero(existente.calificadas)} calificadas</>
+                : <> y {numero(existente.agendas)} agendas</>}. Si envías de nuevo, se <b>reemplaza</b> lo
               anterior. No se suma.
             </span>
           </div>
@@ -184,7 +216,10 @@ export function FormSetter({
             <span className="helper">Así el día no se cuenta dos veces.</span>
             <button
               className="btn-ghost" type="button"
-              onClick={() => { setConversaciones(existente.conversaciones); setAgendas(existente.agendas) }}
+              onClick={() => {
+                setConversaciones(existente.conversaciones); setAgendas(existente.agendas)
+                setCalificadas(existente.calificadas)
+              }}
             >
               Traer lo que había
             </button>
@@ -196,7 +231,7 @@ export function FormSetter({
 
       <ReportesCargados
         lista={lista} hoy={hoy} inicioSemana={inicioSemana} nombres={nombres} setters={setters}
-        enFormulario={{ fecha, personaId }} onElegir={elegir}
+        enFormulario={{ fecha, personaId }} onElegir={elegir} conCalificadas={conCalificadas}
       />
     </>
   )

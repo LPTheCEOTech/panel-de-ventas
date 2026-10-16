@@ -34,7 +34,11 @@ export default async function ReporteSetter() {
   // también los de baja (tienen historia).
   const hoy = hoyEn(config.zonaHoraria)
   const semana = resolverRango({ atajo: 'semana' }, hoy, config.inicioSemana)
-  const lista = pagina(semana, await capa.leerReportesSetter(semana, propia?.id))
+  const [filas, conCalificadas] = await Promise.all([
+    capa.leerReportesSetter(semana, propia?.id),
+    capa.tieneCalificadas(),
+  ])
+  const lista = pagina(semana, filas)
   const setters = esMiembro ? undefined : equipo
     .filter((p) => p.rol === 'setter' || p.rol === 'ambos')
     .map(({ id, nombre, activo }) => ({ id, nombre, activo }))
@@ -61,6 +65,7 @@ export default async function ReporteSetter() {
         <FormSetter
           personas={personas} hoy={hoy} bloqueadoA={bloqueadoA}
           lista={lista} setters={setters} nombres={nombres} inicioSemana={config.inicioSemana}
+          conCalificadas={conCalificadas}
         />
       )}
     </div>

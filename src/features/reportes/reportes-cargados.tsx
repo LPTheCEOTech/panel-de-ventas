@@ -3,7 +3,7 @@
 import { tasa } from '@/shared/calculo/metricas'
 import { diaDeLista } from '@/shared/calculo/rango'
 import { IconoAviso, IconoInfo, IconoLapiz } from '@/shared/chasis/iconos'
-import { numero, plural, porcentaje } from '@/shared/formato'
+import { EL_GUION, numero, plural, porcentaje } from '@/shared/formato'
 import type { ReporteSetter } from '@/shared/tipos'
 import { BarraFiltros, type OpcionPersona } from '@/features/filtros/barra-filtros'
 import type { Lista } from '@/features/filtros/use-lista'
@@ -15,7 +15,7 @@ import { Quien } from '@/features/llamadas/piezas'
  * formulario para corregirlo.
  */
 export function ReportesCargados({
-  lista, hoy, inicioSemana, nombres, setters, enFormulario, onElegir,
+  lista, hoy, inicioSemana, nombres, setters, enFormulario, onElegir, conCalificadas,
 }: {
   lista: Lista<ReporteSetter>
   hoy: string
@@ -26,6 +26,8 @@ export function ReportesCargados({
   /** El reporte que está en el formulario: su renglón se marca. */
   enFormulario: { fecha: string; personaId: string }
   onElegir: (r: ReporteSetter) => void
+  /** La base aplicó la 009: entra la columna Calificadas («—» = no se midió). */
+  conCalificadas: boolean
 }) {
   const filas = lista.filas
   const agendas = filas.reduce((s, r) => s + r.agendas, 0)
@@ -50,9 +52,11 @@ export function ReportesCargados({
           <p>Cada setter manda uno al terminar su día. Para ver otros días, cambia el período arriba.</p>
         </div>
       ) : (
-        <div className="rep">
+        <div className={conCalificadas ? 'rep con-calif' : 'rep'}>
           <div className="rep-h">
-            <span>Día</span><span>Setter</span><span>Conversaciones</span><span>Agendas</span><span>Tasa</span><span />
+            <span>Día</span><span>Setter</span><span>Conversaciones</span><span>Agendas</span>
+            {conCalificadas && <span>Calificadas</span>}
+            <span>Tasa</span><span />
           </div>
           {filas.map((r) => (
             <button
@@ -64,6 +68,9 @@ export function ReportesCargados({
               <Quien nombre={nombres[r.personaId]} />
               <span className="num">{numero(r.conversaciones)}</span>
               <span className="num">{numero(r.agendas)}</span>
+              {conCalificadas && (r.calificadas === null
+                ? <span className="num sin" title="Este día no se midió">{EL_GUION}</span>
+                : <span className="num">{numero(r.calificadas)}</span>)}
               <span className="rep-tasa num">{porcentaje(tasa(r.agendas, r.conversaciones))}</span>
               <IconoLapiz size={14} />
             </button>

@@ -1,6 +1,6 @@
 import {
-  agregarLlamadas, barrasPorDia, barrasPorMes, barrasPorSemana, delta, embudo, metricas, metricasConCosto,
-  rankingClosers, rankingSetters,
+  agregarLlamadas, avisoDelEmbudo, barrasPorDia, barrasPorMes, barrasPorSemana, delta, embudo, metricas,
+  metricasConCosto, rankingClosers, rankingSetters,
 } from '@/shared/calculo/metricas'
 import { diaPorDia } from '@/shared/calculo/dia-por-dia'
 import { hoyEn } from '@/shared/calculo/periodo'
@@ -13,6 +13,7 @@ import { datos } from '@/shared/datos/indice'
 import { puede } from '@/shared/datos/permisos'
 import {
   CashPorDia, Costos, Embudo, LlamadaAEquipo, Plata, RankingClosers, RankingSetters, SinDatosDe, SinEquipo, Tasas,
+  type Deltas,
 } from '@/features/panel/piezas'
 import { DiaPorDia } from '@/features/panel/dia-por-dia'
 import { SelectorFechas } from '@/features/panel/selector-fechas'
@@ -83,11 +84,12 @@ export default async function PanelDeVentas({
 
   const m = metricasConCosto(setters, closers, gastoCents)
   const mPrevia = metricas(settersPrevios, closersPrevios)
-  const deltas: [number | null, number | null, number | null] = [
-    delta(m.tasaAgenda, mPrevia.tasaAgenda),
-    delta(m.tasaAsistencia, mPrevia.tasaAsistencia),
-    delta(m.tasaCierre, mPrevia.tasaCierre),
-  ]
+  const deltas: Deltas = {
+    agenda: delta(m.tasaAgenda, mPrevia.tasaAgenda),
+    calificacion: delta(m.tasaCalificacion, mPrevia.tasaCalificacion),
+    asistencia: delta(m.tasaAsistencia, mPrevia.tasaAsistencia),
+    cierre: delta(m.tasaCierre, mPrevia.tasaCierre),
+  }
 
   const deQue = deQueDe(v, config.inicioSemana)
   const hayEquipo = personas.some((p) => p.activo)
@@ -162,7 +164,7 @@ export default async function PanelDeVentas({
                  Sin arg, el kernel devuelve 6 pasos y el embudo no muestra la
                  franja gris de arriba. */
               pasos={deUna ? embudo(m) : embudo(m, gastoCents)} simbolo={config.simbolo}
-              avisoAgendas={m.agendas !== m.llamadas}
+              aviso={avisoDelEmbudo(m)}
               deQue={deQue}
             />
             <CashPorDia

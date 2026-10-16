@@ -11,7 +11,7 @@ import {
 import { dineroCorto, dinero, porcentaje, porcentajeEntero, puntos, EL_GUION, iniciales, tituloDeVentana } from '../formato'
 import {
   agregarLlamadas, aov, barrasPorDia, barrasPorSemana, cac, costoPorLlamadaAsistida,
-  delta, embudo, medido, metricas, metricasConCosto, rankingClosers, rankingSetters, tasa,
+  avisoDelEmbudo, delta, embudo, medido, metricas, metricasConCosto, rankingClosers, rankingSetters, tasa,
 } from './metricas'
 import { diasDe, ventana, ventanaAnterior } from './periodo'
 
@@ -319,7 +319,7 @@ test('009 · la semana de oro medida entera da los números de oro', () => {
   assert.equal(m.agendasMedidas, ORO.agendas)
   assert.equal(porcentaje(m.tasaCalificacion), ORO.tasaCalificacion)
   assert.equal(porcentajeEntero(m.llamadasSobreCalificadas), ORO.llamadasSobreCalificadas)
-  // 🔴 Leandro: asistencia, cierre y cobro NO cambian
+  // 🔴 asistencia, cierre y cobro NO cambian: las no calificadas se borran del calendario
   assert.equal(porcentaje(m.tasaAsistencia), ORO.tasaAsistencia)
   assert.equal(porcentaje(m.tasaCierre), ORO.tasaCierre)
   assert.equal(porcentajeEntero(m.porcentajeCobro), ORO.cobro)
@@ -367,6 +367,20 @@ test('009 · 🔴 con medio período medido, la tasa sale de lo medido y Llamada
   const pasos = embudo(m)
   assert.deepEqual(pasos.map((p) => p.nombre), ['Leads', 'Agendas', 'Calificadas', 'Llamadas', 'Asistieron', 'Cierres', 'Cash'])
   assert.deepEqual(pasos[3].conversion, { etiqueta: 'de agenda', tasa: m.llamadasSobreAgendas })
+  // el ranking cuenta lo medido y su detalle también: calificadas ÷ agendas da el %
+  const [primero] = rankingSetters(PERSONAS_DEMO, mezcla)
+  assert.equal(primero.persona.nombre, 'Mateo Gil')
+  assert.equal(primero.valor, 19)
+  assert.equal(primero.detalle.agendas, 19)
+  assert.equal(porcentajeEntero(primero.detalle.tasa), '100%')
+})
+
+test('009 · la nota del embudo explica la comparación que se está haciendo', () => {
+  assert.equal(avisoDelEmbudo(metricas(SIN_MEDIR, REPORTES_CLOSER_DEMO)), 'agendas') // 104 ≠ 96
+  assert.equal(avisoDelEmbudo(metricas(REPORTES_SETTER_DEMO, REPORTES_CLOSER_DEMO)), 'calificadas') // 100 ≠ 96
+  const mezcla = REPORTES_SETTER_DEMO.map((r) => (r.fecha < '2026-07-23' ? { ...r, calificadas: null } : r))
+  assert.equal(avisoDelEmbudo(metricas(mezcla, REPORTES_CLOSER_DEMO)), 'cobertura')
+  assert.equal(avisoDelEmbudo(metricas([], [])), null)
 })
 
 test('009 · 🔴 divisores 0 y reportes viejos sin el campo', () => {
