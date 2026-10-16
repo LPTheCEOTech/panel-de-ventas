@@ -228,6 +228,29 @@ end $$;
 
 
 -- =============================================================
+-- 009 · CALIFICADAS (cuántas de las agendas del setter califican)
+-- NULL = ese día no se midió. Los paneles ya instalados la reciben con
+-- el botón «Actualizar ahora».
+-- =============================================================
+
+alter table reportes_setter
+  add column if not exists calificadas int null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'reportes_setter_calificadas_no_negativas'
+  ) then
+    alter table reportes_setter
+      add constraint reportes_setter_calificadas_no_negativas
+      check (calificadas >= 0);
+  end if;
+end $$;
+
+notify pgrst, 'reload schema';
+
+
+-- =============================================================
 -- CONFIGURACIÓN INICIAL
 -- Deja una fila mínima para que la app arranque. Todos los valores se
 -- editan después desde /ajustes en la propia app.
@@ -347,13 +370,14 @@ grant execute on function aplicar_migracion(text, text) to service_role;
 -- panel no ofrezca actualizaciones que la base ya tiene.
 insert into migraciones_aplicadas (id) values
   ('001_esquema'), ('002_permisos'), ('003_gastos'), ('004_logo'),
-  ('005_usuarios'), ('006_llamadas'), ('007_lead_nombre'), ('008_origen_lead')
+  ('005_usuarios'), ('006_llamadas'), ('007_lead_nombre'), ('008_origen_lead'),
+  ('009_calificadas')
   on conflict (id) do nothing;
 
 
 -- =============================================================
 -- COMPROBACIÓN FINAL
--- Esperado (en orden): 1, 1, 1, 1, 1, 1, 1, 1, 1, ≥1, 1
+-- Esperado (en orden): 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, ≥1, 1
 -- Si algún número da 0, algo faltó y hay que revisar la parte
 -- correspondiente antes de seguir a Vercel.
 -- =============================================================
@@ -367,6 +391,7 @@ select
   (select count(*) from information_schema.tables  where table_schema='public' and table_name='llamadas')                                 as llamadas_ok,
   (select count(*) from information_schema.columns where table_schema='public' and table_name='llamadas' and column_name='lead_nombre')   as lead_nombre_ok,
   (select count(*) from information_schema.columns where table_schema='public' and table_name='llamadas' and column_name='origen_lead')   as origen_lead_ok,
+  (select count(*) from information_schema.columns where table_schema='public' and table_name='reportes_setter' and column_name='calificadas') as calificadas_ok,
   (select count(*) from information_schema.routines where routine_schema='public' and routine_name='aplicar_migracion')                    as actualizador_ok,
   (select count(*) from usuarios where rol='admin')                                                                                       as admins_registrados,
   (select count(*) from storage.buckets where id='logos' and public = true)                                                                as bucket_logos_ok;

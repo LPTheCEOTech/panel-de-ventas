@@ -23,9 +23,33 @@ export interface Migracion {
   sql: string
 }
 
+/**
+ * 🔴 El SQL de cada una es EL MISMO que `supabase/migraciones/<id>.sql` (sin
+ * los comentarios) y que su bloque en `docs/todo-en-uno.sql`. Lo vigila
+ * `migraciones.test.ts`: si se tocan por separado, el gate falla.
+ */
 export const MIGRACIONES: Migracion[] = [
-  // Todavía no hay ninguna posterior a la instalación. La primera va a ser
-  // la de alertas a Discord.
+  {
+    id: '009_calificadas',
+    titulo: 'Agendas calificadas: tus setters ya pueden cargar cuántas de sus agendas califican.',
+    sql: `
+alter table reportes_setter
+  add column if not exists calificadas int null;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_constraint where conname = 'reportes_setter_calificadas_no_negativas'
+  ) then
+    alter table reportes_setter
+      add constraint reportes_setter_calificadas_no_negativas
+      check (calificadas >= 0);
+  end if;
+end $$;
+
+notify pgrst, 'reload schema';
+`,
+  },
 ]
 
 export function idsDeMigraciones(): string[] {

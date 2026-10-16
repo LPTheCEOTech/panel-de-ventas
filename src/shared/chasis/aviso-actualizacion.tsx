@@ -11,6 +11,11 @@ import estilos from './aviso-actualizacion.module.css'
  *
  * `sinActualizador` es el caso de una base instalada antes de que existiera
  * el actualizador: ahí el botón no puede hacer nada y hay que decirlo claro.
+ *
+ * 🔴 A esas bases NO se las manda a «volver a correr el SQL de instalación»:
+ * el archivo crudo, sin reemplazar los placeholders, crea un admin con una
+ * contraseña que está escrita en el propio archivo. Soporte les manda
+ * `docs/actualizador.sql`, que solo instala el actualizador.
  */
 export function AvisoActualizacion({
   titulos, sinActualizador,
@@ -52,7 +57,7 @@ export function AvisoActualizacion({
       <span className={estilos.texto}>
         <b>Hay una actualización para tu panel.</b>{' '}
         {titulos.length === 1 ? titulos[0] : `${titulos.length} mejoras nuevas.`}
-        {sinActualizador && ' Para aplicarla tienes que volver a correr el SQL de instalación una vez.'}
+        {sinActualizador && ' Para aplicarla, escríbele a soporte: te mandamos un paso corto y queda lista. Tu panel sigue funcionando igual mientras tanto.'}
         {estado === 'error' && <span className={estilos.error}> {error}</span>}
       </span>
       {!sinActualizador && (
