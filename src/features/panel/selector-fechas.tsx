@@ -22,7 +22,7 @@ import { IconoAbajo, IconoCalendario, IconoDerecha, IconoIzquierda } from '@/sha
  * ahí se toma la mecánica, no el comportamiento.
  */
 export function SelectorFechas({
-  rango, hoy, inicioSemana, persona,
+  rango, hoy, inicioSemana, persona, onElegir, ocupado,
 }: {
   rango: Rango
   /** Hoy en la zona del negocio. Lo manda el servidor: el navegador puede estar en otra. */
@@ -30,6 +30,12 @@ export function SelectorFechas({
   inicioSemana: 0 | 1
   /** 🔴 La persona elegida en «Ver a». Cambiar el período NO la borra. */
   persona?: string
+  /** 🔴 Modo lista (Post Llamada, Reporte Setter, Gasto): en vez de navegar el
+   *  Panel, avisa el período elegido y la lista se pide sola. «Todo» llega
+   *  como atajo: el rango lo resuelve el servidor. */
+  onElegir?: (r: Pick<Rango, 'desde' | 'hasta' | 'atajo'>) => void
+  /** Mientras la lista se pide, el botón se apaga como cuando el Panel navega. */
+  ocupado?: boolean
 }) {
   const router = useRouter()
   const [pendiente, empezar] = useTransition()
@@ -61,7 +67,8 @@ export function SelectorFechas({
   function ir(r: Pick<Rango, 'desde' | 'hasta' | 'atajo'>, etiqueta: string) {
     setAbierto(false)
     setOptimista(etiqueta)
-    empezar(() => router.push(urlDelPanel(r, persona)))
+    if (onElegir) onElegir(r)
+    else empezar(() => router.push(urlDelPanel(r, persona)))
   }
 
   // Escape y toque afuera cierran sin aplicar. `pointerdown` y no `mousedown`:
@@ -100,14 +107,15 @@ export function SelectorFechas({
   const tramo = ini && fin ? [ini, fin] : ini && punta ? (punta < ini ? [punta, ini] : [ini, punta]) : null
   const borrador = ini && fin ? { desde: ini, hasta: fin, atajo: null } : null
   const hoyMes = hoy.slice(0, 7)
-  const etiqueta = optimista && pendiente ? optimista : etiquetaDeRango(rango, hoy)
+  const cargando = pendiente || !!ocupado
+  const etiqueta = optimista && cargando ? optimista : etiquetaDeRango(rango, hoy)
 
   return (
     <div className="fechas" ref={caja}>
       <button
         ref={boton} type="button" className="fechas-btn"
         aria-haspopup="dialog" aria-expanded={abierto}
-        data-pendiente={pendiente || undefined}
+        data-pendiente={cargando || undefined}
         onClick={() => (abierto ? cerrar() : abrir())}
       >
         <IconoCalendario />

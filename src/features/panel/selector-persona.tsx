@@ -18,15 +18,20 @@ interface Opcion { id: string; nombre: string }
  * 🔴 La persona vive en la URL, igual que el rango, y cada selector conserva
  * lo que eligió el otro (`urlDelPanel`). Si quien mira no puede pedir a otra
  * persona, el servidor ignora el parámetro: este componente ni se dibuja.
+ * En las listas de las pantallas de carga va en modo lista (`onElegir`).
  */
 export function SelectorPersona({
-  rango, persona, activas, deBaja,
+  rango, persona, activas, deBaja, onElegir, ocupado,
 }: {
-  rango: Pick<Rango, 'desde' | 'hasta' | 'atajo'>
+  /** El período que se conserva al navegar el Panel. En modo lista no hace falta. */
+  rango?: Pick<Rango, 'desde' | 'hasta' | 'atajo'>
   persona?: string
   activas: Opcion[]
   /** Los de baja tienen historia: sus números siguen contando en los períodos en que trabajaron. */
   deBaja: Opcion[]
+  /** Modo lista: avisa a quién se eligió (`''` = todo el equipo) en vez de navegar. */
+  onElegir?: (id: string) => void
+  ocupado?: boolean
 }) {
   const router = useRouter()
   const [pendiente, empezar] = useTransition()
@@ -34,15 +39,17 @@ export function SelectorPersona({
 
   const nombreDe = (id: string | undefined) =>
     (id && [...activas, ...deBaja].find((p) => p.id === id)?.nombre) || 'Todo el equipo'
-  const etiqueta = pendiente && optimista ? optimista : nombreDe(persona)
+  const cargando = pendiente || !!ocupado
+  const etiqueta = cargando && optimista ? optimista : nombreDe(persona)
 
   function elegir(id: string) {
     setOptimista(nombreDe(id))
-    empezar(() => router.push(urlDelPanel(rango, id || undefined)))
+    if (onElegir) onElegir(id)
+    else empezar(() => router.push(urlDelPanel(rango ?? null, id || undefined)))
   }
 
   return (
-    <label className={`persona-btn${persona ? ' elegida' : ''}`} data-pendiente={pendiente || undefined}>
+    <label className={`persona-btn${persona ? ' elegida' : ''}`} data-pendiente={cargando || undefined}>
       <IconoPersona />
       <span>{etiqueta}</span>
       <IconoAbajo />

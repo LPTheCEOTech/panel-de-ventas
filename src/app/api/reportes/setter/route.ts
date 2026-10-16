@@ -4,7 +4,8 @@ import { datos } from '@/shared/datos/indice'
 import { exigir, personaPermitida } from '@/shared/datos/guardias'
 import { puede } from '@/shared/datos/permisos'
 import { zConsulta, zSetter } from '../esquemas'
-import { leerFiltro, masNuevasPrimero, rangoDelFiltro, TOPE_LISTA } from '../filtro'
+import { pagina } from '@/shared/calculo/listas'
+import { leerFiltro, rangoDelFiltro } from '../filtro'
 
 /**
  * Dos preguntas en la misma ruta:
@@ -40,8 +41,8 @@ export async function GET(request: NextRequest) {
   }
   try {
     const rango = await rangoDelFiltro(filtro!, 'semana', persona)
-    const todos = masNuevasPrimero(await datos().leerReportesSetter(rango, persona))
-    return NextResponse.json({ rango, reportes: todos.slice(0, TOPE_LISTA), total: todos.length })
+    const p = pagina(rango, await datos().leerReportesSetter(rango, persona))
+    return NextResponse.json({ rango, reportes: p.filas, total: p.total })
   } catch (e) {
     console.error('[api/reportes/setter GET]', e)
     return NextResponse.json({ error: 'No se pudieron leer los reportes' }, { status: 500 })

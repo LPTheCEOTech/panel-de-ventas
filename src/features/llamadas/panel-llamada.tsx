@@ -9,8 +9,10 @@ import { esFecha, haceCuanto } from '@/shared/calculo/rango'
 import { IconoAviso, IconoLapiz } from '@/shared/chasis/iconos'
 import { dinero, fechaLarga, porcentajeEntero } from '@/shared/formato'
 import type { Llamada, OrigenLead, Persona } from '@/shared/tipos'
+import type { OpcionPersona } from '@/features/filtros/barra-filtros'
+import { useLista, type Pagina } from '@/features/filtros/use-lista'
 import { CampoDinero } from '@/features/reportes/piezas'
-import { ListaDelDia } from './lista-del-dia'
+import { LlamadasCargadas } from './llamadas-cargadas'
 import { etiquetaOrigen } from './piezas'
 
 /**
@@ -22,9 +24,12 @@ import { etiquetaOrigen } from './piezas'
  * lista. Puede borrar (baja lógica) y el contador y el panel se
  * recalculan al instante.
  *
- * 🔴 La lista y el contador SIGUEN al campo Fecha. Antes la pantalla traía
- * solo las de hoy: al elegir ayer quedaba todo en cero y parecía que las
- * llamadas se habían perdido. Ahora cambiar la fecha pide ese día.
+ * 🔴 Dos cosas distintas, con fechas distintas:
+ *  - el card lateral y el aviso de lead repetido SIGUEN al campo Fecha del
+ *    formulario (el día que se está cargando);
+ *  - la lista de abajo tiene SUS filtros (período + persona), los mismos del
+ *    Panel. Antes la lista era solo de hoy: al pasar la medianoche parecía
+ *    que las llamadas se habían perdido.
  *
  * `bloqueadoA`: si es vendedor, el server ya sabe quién carga y le manda su
  * personaId. El dueño y el manager reciben el `<select>`, vacío.
@@ -33,14 +38,20 @@ import { etiquetaOrigen } from './piezas'
 const ORIGENES: readonly OrigenLead[] = ['organico', 'anuncios', 'referidos'] as const
 
 export function PanelLlamada({
-  personas, hoy, simbolo, iniciales, bloqueadoA, nombres,
+  personas, hoy, simbolo, deHoy, bloqueadoA, nombres, lista: primera, closers, inicioSemana,
 }: {
   personas: Persona[]
   hoy: string
   simbolo: string
-  iniciales: Llamada[]
+  /** Las llamadas de hoy: el formulario arranca en hoy. */
+  deHoy: Llamada[]
   bloqueadoA?: string
   nombres?: Record<string, string>
+  /** La primera página de la lista de abajo (Esta semana). */
+  lista: Pagina<Llamada>
+  /** Las opciones del filtro de persona; sin esto (vendedor) no hay filtro. */
+  closers?: OpcionPersona[]
+  inicioSemana: 0 | 1
 }) {
   const router = useRouter()
   const [personaId, setPersonaId] = useState(bloqueadoA ?? '')
@@ -58,7 +69,9 @@ export function PanelLlamada({
   const [guardando, setGuardando] = useState(false)
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [llamadas, setLlamadas] = useState<Llamada[]>(iniciales)
+  // las del día del FORMULARIO (no las de la lista)
+  const [llamadas, setLlamadas] = useState<Llamada[]>(deHoy)
+  const lista = useLista<Llamada>('/api/llamadas', 'llamadas', primera)
   // 🔴 Cada cambio de fecha numera su pedido: si se elige el 13 y enseguida
   // el 12, la respuesta del 13 puede llegar después y pisar la del 12.
   const pedido = useRef(0)
@@ -135,6 +148,7 @@ export function PanelLlamada({
       const d = await r.json().catch(() => null)
       if (!r.ok) { setError(d?.error ?? 'No se pudo guardar.'); return }
       setLlamadas((xs) => [...xs, d.llamada as Llamada])
+      lista.recargar()
       // limpia el formulario para la siguiente. `origenLead` vuelve a ''
       // — es una elección por-llamada, no se autoretiene. El closer SÍ se
       // queda: se cargan varias seguidas del mismo.
@@ -271,7 +285,7 @@ export function PanelLlamada({
             <div className="card-head">
               <div>
                 <h3>{esHoy ? 'Hoy' : fechaLarga(fecha)}</h3>
-                <p>{esHoy ? fechaLarga(fecha) : haceCuanto(fecha, hoy)}</p>
+                <p>{cargando ? 'cargando…' : esHoy ? fechaLarga(fecha) : haceCuanto(fecha, hoy)}</p>
               </div>
             </div>
             <div className="calc apilado">
@@ -286,11 +300,12 @@ export function PanelLlamada({
         </div>
       </div>
 
-      <ListaDelDia
-        llamadas={llamadas} fecha={fecha} esHoy={esHoy} cargando={cargando}
-        simbolo={simbolo} nombres={nombres}
+      <LlamadasCargadas
+        lista={lista} hoy={hoy} inicioSemana={inicioSemana} simbolo={simbolo}
+        nombres={nombres} closers={closers}
         onBorrada={(id) => {
           setLlamadas((xs) => xs.map((l) => (l.id === id ? { ...l, activa: false } : l)))
+          lista.setFilas((xs) => xs.filter((l) => l.id !== id))
           router.refresh()
         }}
       />

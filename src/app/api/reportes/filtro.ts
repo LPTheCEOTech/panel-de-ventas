@@ -23,9 +23,6 @@ const zFiltro = z.object({
 
 export type Filtro = z.infer<typeof zFiltro>
 
-/** Con «Todo» una lista serían miles de filas: se mandan las más recientes. */
-export const TOPE_LISTA = 500
-
 /** El filtro de la query, o `null` si viene malformado (→ 400). */
 export function leerFiltro(sp: URLSearchParams): Filtro | null {
   const crudo = Object.fromEntries(
@@ -45,9 +42,4 @@ export async function rangoDelFiltro(f: Filtro, porDefecto: Atajo, persona?: str
   const pedido = leerPedido(f, config.inicioSemana, porDefecto)
   const primera = 'atajo' in pedido && pedido.atajo === 'todo' ? await capa.primeraFecha(persona) : null
   return resolverRango(pedido, hoyEn(config.zonaHoraria), config.inicioSemana, primera)
-}
-
-/** Del más nuevo al más viejo. `sort` es estable: dentro de un día queda el orden de carga. */
-export function masNuevasPrimero<T extends { fecha: string }>(filas: readonly T[]): T[] {
-  return [...filas].sort((a, b) => b.fecha.localeCompare(a.fecha))
 }

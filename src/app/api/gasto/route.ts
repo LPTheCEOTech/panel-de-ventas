@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { datos } from '@/shared/datos/indice'
 import { exigir } from '@/shared/datos/guardias'
 import { zConsultaGasto, zGasto } from '../reportes/esquemas'
-import { leerFiltro, rangoDelFiltro, TOPE_LISTA } from '../reportes/filtro'
+import { pagina } from '@/shared/calculo/listas'
+import { leerFiltro, rangoDelFiltro } from '../reportes/filtro'
 
 /**
  * Dos preguntas en la misma ruta:
@@ -22,8 +23,8 @@ export async function GET(request: NextRequest) {
     if (!filtro) return NextResponse.json({ error: 'Consulta inválida' }, { status: 400 })
     try {
       const rango = await rangoDelFiltro(filtro, 'mes')
-      const gastos = await datos().leerGastos(rango)
-      return NextResponse.json({ rango, gastos: gastos.slice(0, TOPE_LISTA), total: gastos.length })
+      const p = pagina(rango, await datos().leerGastos(rango))
+      return NextResponse.json({ rango, gastos: p.filas, total: p.total })
     } catch (e) {
       console.error('[api/gasto GET]', e)
       return NextResponse.json({ error: 'No se pudieron leer los gastos' }, { status: 500 })

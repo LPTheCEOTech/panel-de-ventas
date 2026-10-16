@@ -1,7 +1,9 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
-import { hoyEn, ventana } from '@/shared/calculo/periodo'
+import { pagina } from '@/shared/calculo/listas'
+import { hoyEn } from '@/shared/calculo/periodo'
+import { resolverRango } from '@/shared/calculo/rango'
 import { IconoAviso } from '@/shared/chasis/iconos'
 import { exigirPagina } from '@/shared/datos/guardias'
 import { datos } from '@/shared/datos/indice'
@@ -17,7 +19,6 @@ export default async function LlamadaPage() {
   const capa = datos()
   const [config, { sesion, nivel }] = await Promise.all([capa.leerConfiguracion(), exigirPagina()])
   const hoy = hoyEn(config.zonaHoraria)
-  const v = ventana('dia', hoy, config.inicioSemana)
 
   const equipo = await capa.leerPersonas()
   const todas = equipo.filter(
@@ -42,11 +43,19 @@ export default async function LlamadaPage() {
   const nombres = esMiembro ? undefined
     : Object.fromEntries(equipo.map((p) => [p.id, p.nombre]))
 
-  // Fase D · las llamadas del día para el (miembro) o para todos (admin).
-  // La lista arranca poblada — así el contador vivo tiene con qué contar
-  // desde el primer render.
+  // 🔴 La lista de abajo tiene SUS filtros y abre en «Esta semana»: hoy arriba
+  // y los días anteriores debajo. Antes era solo hoy, y al pasar la medianoche
+  // «se desaparecía» todo. La primera página llega con la pantalla; el resto
+  // lo pide la lista. El vendedor ve solo lo suyo.
   const filtro = esMiembro ? propia?.id : undefined
-  const iniciales = await capa.leerLlamadas(v, filtro)
+  const semana = resolverRango({ atajo: 'semana' }, hoy, config.inicioSemana)
+  const lista = pagina(semana, await capa.leerLlamadas(semana, filtro))
+  // El formulario arranca en hoy: su card y el aviso de lead salen de las de hoy.
+  const deHoy = lista.filas.filter((l) => l.fecha === hoy)
+  // El filtro de persona de la lista: los closers, también los de baja (tienen historia).
+  const closers = esMiembro ? undefined : equipo
+    .filter((p) => p.rol === 'closer' || p.rol === 'ambos')
+    .map(({ id, nombre, activo }) => ({ id, nombre, activo }))
 
   return (
     <div className="hoja">
@@ -78,9 +87,12 @@ export default async function LlamadaPage() {
           personas={personas}
           hoy={hoy}
           simbolo={config.simbolo}
-          iniciales={iniciales}
+          deHoy={deHoy}
           bloqueadoA={bloqueadoA}
           nombres={nombres}
+          lista={lista}
+          closers={closers}
+          inicioSemana={config.inicioSemana}
         />
       )}
     </div>

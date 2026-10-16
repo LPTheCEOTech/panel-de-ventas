@@ -5,7 +5,8 @@ import { datos } from '@/shared/datos/indice'
 import { exigir, personaPermitida, type Permiso } from '@/shared/datos/guardias'
 import { puede } from '@/shared/datos/permisos'
 import { zConsultaLlamadas } from '../reportes/esquemas'
-import { leerFiltro, masNuevasPrimero, rangoDelFiltro, TOPE_LISTA } from '../reportes/filtro'
+import { pagina } from '@/shared/calculo/listas'
+import { leerFiltro, rangoDelFiltro } from '../reportes/filtro'
 
 /**
  * 🔴 Fase D · endpoint de llamadas granulares.
@@ -109,8 +110,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ llamadas })
     }
     const rango = await rangoDelFiltro(filtro!, 'semana', persona)
-    const todas = masNuevasPrimero(await datos().leerLlamadas(rango, persona))
-    return NextResponse.json({ rango, llamadas: todas.slice(0, TOPE_LISTA), total: todas.length })
+    const p = pagina(rango, await datos().leerLlamadas(rango, persona))
+    return NextResponse.json({ rango, llamadas: p.filas, total: p.total })
   } catch (e) {
     console.error('[api/llamadas GET]', e)
     return NextResponse.json({ error: 'No se pudieron leer las llamadas' }, { status: 500 })
